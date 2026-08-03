@@ -1,0 +1,1959 @@
+\startcontents[chapter]
+\chapter{Bayesian Networks}
+\label{ch:bayesiannetworks}
+\minitocboxed
+
+\section{Introduction and Motivation}
+
+Bayesian Networks (BNs) represent one of the most elegant and powerful frameworks for reasoning under uncertainty, seamlessly marrying the structural intuition of graph theory with the rigorous calculus of probability theory. At their core, BNs are defined by two complementary pillars, each of which contributes an indispensable element to their modelling prowess.
+
+The first pillar is the \emph{Directed Acyclic Graph} (DAG). This graphical structure provides a qualitative map of the dependencies among the variables of interest. The second, equally crucial pillar is the factorisation of the joint probability density function (pdf) into a product of conditional distributions. For a given topological ordering of the variables, \(\{X_1, \dots, X_n\}\), the joint pdf is expressed as\hat{}
+\[
+P(X_1, \dots, X_n) = \prod_{i=1}^{n} P(X_i \mid \mathrm{Pa}(X_i)),
+\]
+where \(\mathrm{Pa}(X_i)\) denotes the set of parents of \(X_i\) in the graph.
+
+A Bayesian network encodes a joint probability distribution over a set of
+variables as a product of simpler conditional distributions, one per variable.
+The directed acyclic graph (DAG) that forms the backbone of the network makes
+the conditional independence structure of the distribution explicit, enabling
+efficient inference and compact storage.
+
+This factorisation holds for any multivariate distribution, provided that an appropriate ordering of the variables is chosen (see the Rosenblatt transformation). It reveals that learning a Bayesian network can be performed locally by modelling each variable conditional on its parents, a remarkable property whose importance should not be overlooked.
+
+In this chapter we define d‑separation, derive the chain rule, present exact inference algorithms (variable elimination, belief propagation, junction tree), and discuss the important distinction between marginalising hidden variables and retaining them parametrically.
+
+Crucially, this framework establishes Bayesian networks as an intrinsically \emph{holistic} joint model over the entire set of variables. Unlike discriminative models or standard regression setups, BNs do not arbitrarily designate a subset of variables as ``inputs'' and another as ``outputs''. They provide a complete, symmetric, and non-discriminatory representation of the stochastic structure of all variables. There is no inherent direction of prediction; the model is not tailored to a specific forecasting task, but rather to faithfully reproducing the whole joint behaviour without exceptions. This all-encompassing nature is what makes BNs a truly generative and universally applicable tool.
+
+The magic of the graphical component does not stop at factorisation. By simply inspecting the DAG and applying the graphical criterion of \emph{d-separation}, one can immediately determine, without performing a single numerical calculation, which variables must be considered to predict a target set \(\mathbf{G}\), and how the network can be pruned if only a specific subset of variables is of interest. Perhaps most astonishingly, the graph allows us to answer, at a glance, the subtle query: \emph{which variables provide genuinely new information about the group \(\mathbf{G}\) that is not already contained in another group \(\mathbf{H}\)?} The fact that such a question admits a purely graphical answer is not only surprising but constitutes a cornerstone contribution to both classical statistics and Artificial Intelligence, where the central challenge is often to infer output variables from observed inputs.
+
+Complementing this qualitative insight, the factorised representation provides the quantitative machinery to compute any probability of interest in a computationally efficient manner. The development of exact and approximate \emph{evidence propagation} algorithms stands as another marvel of Bayesian networks. These algorithms allow us to efficiently update our beliefs in the light of new evidence, evaluating any desired posterior probability without having to re-evaluate the entire joint distribution from scratch.
+
+Finally, to fully appreciate the scope of Bayesian networks, we must elevate the perspective from pure probability to Bayesian inference itself. By treating the parameters of the conditional distributions as random variables—and thus incorporating them as new nodes in the graph—we transform parametric families into hierarchical mixtures. This extension gracefully generalises parametric models into much richer, more flexible families, and even paves the way towards non-parametric methodologies.
+
+In this chapter, we will develop these ideas in depth, illustrating how the synergy between graph topology, factorised probabilities, multiple orderings, and Bayesian inference provides a complete and elegant solution to the problem of learning and reasoning from data.
+
+\textbf{Chapter organization.}
+Section~\ref{sec:dsep} introduces the key graphical concept of
+d-separation, which characterises all conditional independences encoded by the
+graph. Section~\ref{sec:markovblanket} defines the useful concept of Markov blanket and shows some illustrative examples.  Section~\ref{sec:chainrule} derives the fundamental factorisation of the
+joint distribution. Section~\ref{sec:examples} illustrates the formalism with
+three worked examples of increasing complexity. Section~\ref{sec:inference}
+develops three exact inference algorithms---Variable Elimination, Belief
+Propagation, and the Junction Tree algorithm---with full numerical traces.
+Section~\ref{sec:paradigms} discusses the important distinction between
+marginalising and retaining hidden variables during inference. The chapter
+closes with Section~\ref{sec:factorisation} with a universal factorisation
+result that reveals the deep connection between Bayesian networks and copula
+theory, an example in Section~\ref{sec:vehiclesafety} and with a summary of implications
+for machine learning in Section~\ref{sec:implications}.
+
+% ------------------------------------------------------------
+\begin{definition}[Bayesian Network]
+A Bayesian Network $\mathcal{B} = (G, P)$ consists of two elements:
+\begin{itemize}
+    \item A directed acyclic graph $G = (V, E)$ where:
+    \begin{itemize}
+        \item $V = \{X_1, X_2, \ldots, X_n\}$ is a set of nodes representing
+              random variables.
+        \item $E$ is a set of directed edges representing direct conditional
+              dependencies.
+    \end{itemize}
+    \item A set of conditional probability distributions
+          $P = \{P(X_i \mid \mathrm{Pa}(X_i)) : X_i \in V\}$,
+          where $\mathrm{Pa}(X_i)$ denotes the parents of node $X_i$ in $G$.
+\end{itemize}
+\end{definition}
+
+The network must satisfy the \textbf{Markov condition}: each variable is
+conditionally independent of its non-descendants given its parents. Formally,
+\[
+X_i \perp \mathrm{NonDesc}(X_i) \mid \mathrm{Pa}(X_i),
+\]
+where the notation $X \perp Y \mid Z$ is used to express that $X$ is conditionally independent of $Y$ given $Z$,
+which means that the parents, $\mathrm{Pa}(X_i)$, of any variable, $X_i$, capture all the information about $X_i$ that is contained in its non-descendant variables, $\mathrm{NonDesc}(X_i)$.
+
+% ============================================================
+\section{D-Separation}\label{sec:dsep}
+% ============================================================
+
+D-separation (directional separation) is the graphical criterion used to read
+off all conditional independence statements implied by a Bayesian network,
+without performing any probability calculations. Two disjoint sets of variables
+$\mathbf{A}$ and $\mathbf{B}$ are \emph{d-separated} by a set $\mathbf{C}$ if
+every undirected path between any node in $\mathbf{A}$ and any node in
+$\mathbf{B}$ is \emph{blocked} by $\mathbf{C}$. If $\mathbf{A}$ and
+$\mathbf{B}$ are d-separated by $\mathbf{C}$, then
+$\mathbf{A} \perp \mathbf{B} \mid \mathbf{C}$ holds in every distribution
+compatible with the graph.
+
+To build an intuition for how conditional dependencies flow in a directed graphical model, we examine the three elementary connection patterns---often referred to as the \emph{chain}, the \emph{fork}, and the \emph{collider}. Each pattern involves three variables and represents a distinct causal or associational story. For each, we provide a concrete example, state the resulting conditional (in)dependence property, give the joint factorization, and highlight how copulas enter the conditional factors.
+
+A path is blocked by $\mathbf{C}$ when at least one of the following
+conditions holds for some intermediate node $Y$ on the path:
+
+\begin{itemize}
+\item \textbf{Pattern 1 — Chain (Serial Connection)} ($X \to Y \to Z$).
+The node $Y$ is in $\mathbf{C}$. Conditioning on $Y$ blocks the flow of
+information along the chain.
+
+\begin{description}
+\item[Example:] Let \(X\) be \emph{Cloud Cover} (\%). \(Y\) be \emph{Rainfall} (mm). \(Z\) be \emph{Wetness of Grass} (soil moisture index).
+\item[Story:] Clouds cause rain, and rain directly causes the grass to become wet.
+\item[Independence property:] \(X\) and \(Z\) are conditionally independent given \(Y\). Once we observe the actual rainfall \(Y\), knowing the preceding cloud cover \(X\) gives no additional information about the current wetness \(Z\). Formally,
+\[
+X \perp Z \mid Y.
+\]
+\item[Joint factorization:] Following the chain rule and the conditional independence, the joint distribution decomposes as
+\[
+P(X,Y,Z) = P(X) \cdot P(Y \mid X) \cdot P(Z \mid Y),
+\]
+which implies $Z \perp Y \mid X$ and also $Y \perp Z \mid X$, its symmetric counterpart.
+\item[Role of copulas:] Each conditional term, such as \(P(Y \mid X)\) and \(P(Z \mid Y)\), can be expressed using a conditional copula. For instance, the dependence between rainfall and cloud cover is captured by a copula linking their marginal distributions, while a separate conditional copula links wetness to rainfall. The chain concatenates these bivariate dependencies into a sequential, directed pathway.
+\end{description}
+
+\item \textbf{Pattern 2 — Fork (common cause)(Diverging Connection)} ($X \leftarrow Y \to Z$).
+The node $Z$ is in $\mathbf{C}$. Conditioning on the common cause $Y$ renders
+$X$ and $Z$ independent.
+
+\begin{description}
+\item[Example:] Let \(Y\) be \emph{Age} (years). \(X\) be \emph{Health Score} (0--100). \(Z\) be \emph{Annual Income} (\$).
+\item[Story:] Age is a common cause (confounder) that influences both health and income: older individuals tend to have declining health, but they also accumulate more work experience and higher salaries. This creates a spurious marginal correlation between health and income in the population.
+\item[Independence property:] \(X\) and \(Z\) are conditionally independent given \(Y\). If we compare two individuals of exactly the same age, any observed correlation between their health score and income disappears (assuming age is the only common driver). Formally,
+\[
+X \perp Z \mid Y.
+\]
+\item[Joint factorization:] The fork yields the decomposition
+\[
+P(X,Y,Z) = P(Y) \cdot P(X \mid Y) \cdot P(Z \mid Y),
+\]
+which implies $X \perp Z \mid Y$ and also $Z \perp X \mid Y$, its symmetric counterpart.
+\item[Role of copulas:] The joint conditional behavior of \((X,Y)\) given \(Z\) is captured by a \emph{conditional copula} with parameter \(\theta(Z)\) that may vary with age. The marginal conditional distributions \(P(X \mid Z)\) and \(P(Y \mid Z)\) are linked by this copula, which is precisely how copula-based regression models handle confounders.
+\end{description}
+
+\item \textbf{Pattern 3 — Collider (Converging Connection)} ($X \to Z \leftarrow Y$).
+The node $Y$ is \emph{not} in $\mathbf{C}$, and neither is any of its
+descendants. Here the path is blocked by \emph{not} conditioning on $Z$. If
+$Z$ (or one of its descendants) enters $\mathbf{C}$, the path becomes
+\emph{active} and a previously absent dependence is induced between $X$ and
+$Y$---a phenomenon known as \emph{explaining away} or \emph{Berkson's paradox}.
+
+\begin{description}
+\item[Example:] Let \(X\) be \emph{Natural Talent} (high/low). \(Z\) be \emph{Practice Effort} (high/low). \(Y\) be \emph{Movie Quality} (high/low), where a movie is considered high-quality if it has \emph{either} high talent \emph{or} high effort.
+\item[Story:] Talent and effort are marginally independent in the general population---naturally gifted individuals do not systematically practice more or less than others. However, both contribute to the final outcome, movie quality.
+\item[Independence property:] Marginally, \(X\) and \(Z\) are independent:
+\[
+P(X,Z) = P(X)P(Z).
+\]
+But conditioned on the collider \(Y\), they become dependent. This is the well-known \emph{explaining away} effect: given that the movie is a hit (\(Y=1\)), if we learn that the director has \emph{no} talent (\(X=0\)), we immediately infer that they must have invested \emph{enormous} effort (\(Z=1\)).
+\item[Joint factorization:] The collider factorization is
+\[
+P(X,Y,Z) = P(X) \cdot P(Z) \cdot P(Y \mid X,Z),
+\]
+which shows the mutual (symmetric) independence of $X$ and $Y$.
+\item[Role of copulas:] The term \(P(Y \mid X,Z)\) is a bivariate conditional response function. A copula naturally models this by first describing the joint distribution of \((X,Z)\) (which, in this case, is independent, so the copula is the independence copula) and then linking it to the outcome \(Y\). More generally, a conditional copula can capture how the two inputs synergistically affect the output, providing a flexible tool for modeling interaction effects in the conditional likelihood.
+\end{description}
+\end{itemize}
+
+These three patterns are the atomic building blocks of any directed acyclic graph (DAG). By composing chains, forks, and colliders, any high-dimensional joint distribution can be factorized into a product of local conditional distributions:
+\[
+P(X_1, \dots, X_n) = \prod_{i=1}^n P(X_i \mid \text{Pa}(X_i)),
+\]
+where \(\text{Pa}(X_i)\) denotes the set of parents of node \(X_i\). In each pattern, the conditional factor \(P(X_i \mid \text{Pa}(X_i))\) can be flexibly specified via copulas (e.g., Gaussian, Archimedean, or mixed discrete-continuous copulas), thus directly linking the discrete graphical structure with the rich dependence modelling capabilities of copula theory (Chapters~\ref{ch:copulas} and~\ref{ch:ArchimedeanCopulas}).
+
+\medskip
+The three patterns are illustrated in Figure~\ref{fig:dsep}.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    every node/.style={circle, draw, thick,
+                       minimum size=0.65cm, font=\small},
+    obs/.style ={fill=gray!35},
+    arr/.style ={->, thick},
+    lbl/.style ={rectangle, draw=none, fill=none,
+                 font=\small\itshape, align=center},
+    node distance=1.05cm
+]
+
+%% --- Chain ---
+\begin{scope}[xshift=0cm]
+  \node (X1) {$X$};
+  \node[obs, right=of X1] (Y1) {$Y$};
+  \node[right=of Y1] (Z1) {$Z$};
+
+  \draw[arr] (X1) -- (Y1);
+  \draw[arr] (Y1) -- (Z1);
+
+  \node[lbl, below=0.55cm of Y1]
+  {\textbf{Chain}\\
+   $X \to Y \to Z$\\
+   $X \perp Z \mid Y$};
+\end{scope}
+
+%% --- Fork ---
+\begin{scope}[xshift=4.4cm]
+  \node (X2) {$X$};
+  \node[obs, right=of X2] (Y2) {$Y$};
+  \node[right=of Y2] (Z2) {$Z$};
+
+  \draw[arr] (Y2) -- (X2);
+  \draw[arr] (Y2) -- (Z2);
+
+  \node[lbl, below=0.55cm of Y2]
+  {\textbf{Fork}\\
+   $X \leftarrow Y \to Z$\\
+   $X \perp Z \mid Y$};
+\end{scope}
+
+%% --- Collider ---
+\begin{scope}[xshift=8.8cm]
+  \node (X3) {$X$};
+  \node[right=of X3] (Y3) {$Y$};
+  \node[right=of Y3] (Z3) {$Z$};
+
+  \draw[arr] (X3) -- (Y3);
+  \draw[arr] (Z3) -- (Y3);
+
+  \node[lbl, below=0.55cm of Y3]
+  {\textbf{Collider}\\
+   $X \to Y \leftarrow Z$\\
+   $X \perp Z$\\
+   $X \not\perp Z \mid Y$};
+\end{scope}
+
+\end{tikzpicture}
+
+\caption{
+The three elementary d-separation patterns.
+Conditioning on $Y$ blocks the path in chain and fork structures.
+In a collider, conditioning on $Y$ activates the path.
+}
+
+\label{fig:dsep}
+
+\end{figure}
+
+% ============================================================
+\section{The Markov Blanket: Localising Information}\label{sec:markovblanket}
+% ============================================================
+
+Imagine you are tasked with predicting the state of a specific node, say \(A\), in a Bayesian network with hundreds of interconnected variables. Do you need to collect evidence from every single node in the graph?
+Intuitively, the answer should be no. The probabilistic influence that flows through a network is mediated by the graphical structure; once we know the state of certain key neighbours, the rest of the world becomes irrelevant to \(A\). For this reason, we prefer the term "Markov capsule" rather than "Markov blanket", since it refers to a subnetwork that is isolated from the rest in terms of conditional dependencies.
+
+The graphical concept that formalises this intuition is the \textbf{Markov blanket}. It provides the ultimate answer to the question: "What is the minimum set of nodes I must observe to make all other nodes uninformative about my target?" Identifying this set is the cornerstone of efficient inference, feature selection, and model interpretation.
+
+Given a variable or a set of variables, the corresponding Markov blanket identifies the set of input variables that should be known in order to extract the maximum possible information about them, and also those with no information at all. This is highly relevant to the way artificial intelligence is currently conceived and developed.
+
+% ------------------------------------------------------------
+\subsection{Definition and Graphical Composition}
+% ------------------------------------------------------------
+
+\begin{definition}[Markov Blanket]
+Let \(\mathcal{B} = (G, P)\) be a Bayesian network over variables \(\mathbf{X} = \{X_1, \dots, X_n\}\).
+The \emph{Markov blanket} of a node \(X_i\), denoted \(\mathrm{MB}(X_i)\), is the minimal set of nodes that, when conditioned upon, renders \(X_i\) conditionally independent of all the remaining variables in the network. Formally,
+\[
+X_i \perp \mathbf{X} \setminus \bigl(\{X_i\} \cup \mathrm{MB}(X_i)\bigr) \;\big|\; \mathrm{MB}(X_i).
+\]
+\end{definition}
+
+In a directed acyclic graph (DAG), the Markov blanket of \(X_i\) has a simple and intuitive composition that can be read directly from the graph:
+
+\[
+\boxed{
+\mathrm{MB}(X_i) = \mathrm{Pa}(X_i) \;\cup\; \mathrm{Ch}(X_i) \;\cup\; \mathrm{Pa}\bigl(\mathrm{Ch}(X_i)\bigr)
+}
+\]
+
+This set consists of exactly three types of neighbours:
+\begin{enumerate}
+    \item \textbf{Parents} \(\mathrm{Pa}(X_i)\): The direct causes of \(X_i\).
+    \item \textbf{Children} \(\mathrm{Ch}(X_i)\): The direct effects of \(X_i\).
+    \item \textbf{Co-parents} (or Spouses) \(\mathrm{Pa}(\mathrm{Ch}(X_i))\): Other parents of \(X_i\)'s children. These are included because of the \emph{collider} effect: if a child is observed, its parents become correlated (explaining away), so they are needed to shield \(X_i\) from external influence.
+\end{enumerate}
+
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+  every node/.style={draw, rounded corners=4pt, minimum width=1.5cm,
+                     minimum height=0.65cm, align=center, font=\small},
+  ggp/.style ={fill=blue!12, draw=blue!45!black, text=blue!40!black},
+  gp/.style ={fill=blue!25, draw=blue!60!black, text=blue!50!black},
+  par/.style ={fill=green!22, draw=green!50!black, text=green!35!black, font=\small\bfseries},
+  noi/.style ={fill=yellow!65, draw=orange!65!black, text=brown!70!black, font=\bfseries,
+               minimum width=1.7cm, minimum height=0.8cm},
+  ch/.style ={fill=orange!20,draw=orange!55!black, text=orange!45!black},
+  gc/.style ={fill=orange!40,draw=orange!65!black, text=brown!60!black},
+  m/.style  ={fill=blue!12, draw=blue!45!black, text=blue!40!black}, % non-descendants
+  ndarr/.style ={-{Stealth[length=5pt]}, blue!55!black, line width=0.7pt},
+  pararr/.style={-{Stealth[length=5pt]}, green!50!black, line width=0.9pt},
+  darr/.style ={-{Stealth[length=5pt]}, orange!60!black,line width=0.9pt},
+  xarr/.style ={-{Stealth[length=5pt]}, gray!65, line width=0.7pt, dashed},
+]
+
+% ── ROW 1: Great-grandparents (y=0) ──────────────────────────────
+\node[ggp] (G1) at (0, 0) {$G_1$};
+\node[ggp] (G2) at (2.2, 0) {$G_2$};
+\node[ggp] (G3) at (5.0, 0) {$G_3$};
+\node[ggp] (G4) at (7.8, 0) {$G_4$};
+\node[ggp] (G5) at (10.0,0) {$G_5$};
+
+% ── ROW 2: Grandparents (y=-2) ────────────────────────────────────
+\node[gp] (P1) at (1.1, -2) {$P_1$};
+\node[gp] (P2) at (5.0, -2) {$P_2$};
+\node[gp] (P3) at (8.9, -2) {$P_3$};
+
+% ── ROW 3: Parents (y=-4) ─────────────────────────────────────────
+\node[par] (B) at (1.1, -4) {$B$};
+\node[par] (C) at (5.0, -4) {$C$};
+\node[par] (D) at (8.9, -4) {$D$};
+
+% ── ROW 4: Interest node A (y=-6.2) ───────────────────────────
+\node[noi] (A) at (5.0, -6.2){$A$};
+
+% ── ROW 5: Children (y=-8.2) ──────────────────────────────────────
+\node[ch] (H1) at (2.4, -8.2){$H_1$};
+\node[ch] (H2) at (5.0, -8.2){$H_2$};
+\node[ch] (H3) at (7.6, -8.2){$H_3$};
+
+% ── ROW 6: Grandchildren (y=-10.2) ───────────────────────────────
+\node[gc] (N1) at (1.0,-10.2){$N_1$};
+\node[gc] (N2) at (3.2,-10.2){$N_2$};
+\node[gc] (N3) at (6.8,-10.2){$N_3$};
+\node[gc] (N4) at (9.0,-10.2){$N_4$};
+
+% ── New Non-descendants (M nodes) ────────────────────────────────
+\node[m] (M1) at (-1.8, -8.2) {$M_1$};
+\node[m] (M2) at (11.8, -8.5) {$M_2$};
+\node[m] (M3) at (11.8, -10.5) {$M_3$};  % Ahora debajo de M2 en la misma vertical
+
+% ── BACKGROUND ZONES (más oscuros) ─────────────────────────────────
+\begin{pgfonlayer}{background}
+  % Non-descendants (blue)
+  \node[draw=blue!50, dashed, fill=blue!18, rounded corners=8pt,
+        inner sep=12pt, fit=(G1)(G5)(P1)(P3)(M1)(M2)(M3)] {};
+
+  % Parents (green)
+  \node[draw=green!55, dashed, fill=green!18, rounded corners=8pt,
+        inner sep=8pt, fit=(B)(C)(D)] {};
+
+  % Descendants (orange)
+  \node[draw=orange!60, dashed, fill=orange!18, rounded corners=8pt,
+        inner sep=10pt, fit=(H1)(H3)(N1)(N4)] {};
+\end{pgfonlayer}
+
+% ── EDGES: great-grandparents → grandparents ──────────────────────
+\draw[ndarr] (G1) -- (P1);
+\draw[ndarr] (G2) -- (P1);
+\draw[ndarr] (G2) -- (P2);
+\draw[ndarr] (G3) -- (P2);
+\draw[ndarr] (G3) -- (P3);
+\draw[ndarr] (G4) -- (P3);
+\draw[ndarr] (G5) -- (P3);
+
+% lateral edges among great-grandparents
+\draw[ndarr] (G1) -- (G2);
+\draw[ndarr] (G4) -- (G5);
+
+% ── EDGES: grandparents → parents ────────────────────────────────
+\draw[pararr] (P1) -- (B);
+\draw[pararr] (P2) -- (C);
+\draw[pararr] (P3) -- (D);
+
+% cross edge: P1 also influences C
+\draw[pararr] (P1) to[out=-20, in=160] (C);
+
+% ── EDGES: parents → A ───────────────────────────────────────────
+\draw[pararr] (B) -- (A);
+\draw[pararr] (C) -- (A);
+\draw[pararr] (D) -- (A);
+
+% ── EDGES: A → children → grandchildren ──────────────────────────
+\draw[darr] (A) -- (H1);
+\draw[darr] (A) -- (H2);
+\draw[darr] (A) -- (H3);
+\draw[darr] (H1) -- (N1);
+\draw[darr] (H1) -- (N2);
+\draw[darr] (H2) -- (N2);
+\draw[darr] (H3) -- (N3);
+\draw[darr] (H3) -- (N4);
+
+% Additional requested edges
+\draw[darr] (B) -- (H1);
+\draw[ndarr] (D) -- (M3);
+\draw[ndarr] (B) -- (M1);     % Nuevo: B → M1
+\draw[ndarr] (G5) -- (M2);    % Nuevo: G5 → M2
+
+% ── CROSS EDGES (d-separated) ─────────────────────────────────────
+% Eliminados: P2-N3 y G5-H3
+
+% ── LEGEND (top right) ────────────────────────────────────────────
+\node[draw=gray!30, fill=gray!8, rounded corners=6pt, inner sep=8pt, align=left, font=\small]
+  at (13.8, -1.2) {
+    \begin{tabular}{l}
+      \textcolor{blue!40}{\rule{8pt}{8pt}} \ Non-descendants \\
+      \textcolor{green!40}{\rule{8pt}{8pt}} \ Parents $\mathrm{Pa}(A)$ \\
+      \textcolor{orange!50}{\rule{8pt}{8pt}} \ Descendants $\mathrm{Desc}(A)$ \\
+      \textcolor{yellow!70}{\rule{8pt}{8pt}} \ Interest Node $A$
+    \end{tabular}
+  };
+
+\end{tikzpicture}%
+}% end resizebox
+
+\caption{Bayesian network illustrating the \textbf{Markov condition}: each variable is
+conditionally independent of its non-descendants given its parents. \label{fig:markov-condition}}
+
+\end{figure}
+
+Figure \ref{fig:markov-condition} illustrates which nodes can supply relevant information about node $A$.  Formally,
+\[
+  X_i \perp \mathrm{NonDesc}(X_i) \mid \mathrm{Pa}(X_i).
+\]
+Node~$A$ (yellow) is conditionally independent of the blue zone
+(non-descendants, including $M_i$) given the green zone (parents $B, C, D$). In other words, once nodes $B, C, D$ have been observed, the non-descendant nodes do not provide extra information on node $A$, not already included in its parents, that is, there is no information relevant to node $A$, in the nodes of its non-descendant nodes, not already included in its parents.
+
+\subsection{Why Does the Markov Blanket Matter?}
+% ------------------------------------------------------------
+
+The power of the Markov blanket lies in its ability to \emph{localise} probabilistic inference. Once the variables in \(\mathrm{MB}(X_i)\) are observed, the graph outside this blanket becomes entirely disconnected from \(X_i\) in terms of information flow.
+
+This property is a direct consequence of the d-separation criteria discussed in Section~\ref{sec:dsep}. Any path connecting \(X_i\) to an outside node \(Y\) must pass through the blanket:
+\begin{itemize}
+    \item Paths \emph{incoming} to \(X_i\) are blocked by its parents.
+    \item Paths \emph{outgoing} from \(X_i\) are blocked by its children.
+    \item Paths that bypass \(X_i\) but connect to its descendants are blocked by the co-parents when the children are conditioned upon.
+\end{itemize}
+
+\begin{theorem}[Informational Isolation]
+For any variable \(X_i\) in a Bayesian network, the conditional posterior distribution given \emph{all other variables} depends only on the variables in its Markov blanket:
+\[
+P\bigl(X_i \mid \mathbf{X} \setminus \{X_i\}\bigr) \propto P\bigl(X_i \mid \mathrm{MB}(X_i)\bigr).
+\]
+Consequently, a node outside the blanket contributes \emph{zero} additional information about \(X_i\) once the blanket is known.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Consider the factorisation of the joint distribution. The only factors in the chain rule that contain \(X_i\) are:
+\begin{enumerate}
+    \item The conditional probability of \(X_i\) given its parents: \(P(X_i \mid \mathrm{Pa}(X_i))\).
+    \item The conditional probabilities of its children \(C_j\) given their parents: \(P(C_j \mid \mathrm{Pa}(C_j))\), where \(\mathrm{Pa}(C_j)\) includes \(X_i\) and its co-parents.
+\end{enumerate}
+All other factors in the joint distribution do not contain \(X_i\). Therefore, when calculating the conditional distribution of \(X_i\) given everything else, all terms not involving \(X_i\) cancel out in the numerator and denominator. The only terms that survive are precisely those involving \(X_i\), its parents, its children, and its co-parents. \qed
+\end{proof}
+
+\subsection{Illustrative Examples from the Markov Condition Graph}
+% ------------------------------------------------------------
+
+Let us ground this concept using the comprehensive network shown in Figure~\ref{fig:markov-condition}. This graph is an excellent testbed because it clearly separates the blue zone (non-descendants), green zone (parents), and orange zone (descendants).
+
+\paragraph{Example 1: The Node of Interest \(A\).}
+For the yellow node \(A\) in Figure~\ref{fig:markov-condition}, its Markov blanket is:
+\[
+\mathrm{MB}(A) = \{B, C, D, H_1, H_2, H_3\},
+\]
+as depicted in Figure \ref{fig:mb_A}.
+Here, \(B, C, D\) are its parents (green zone), and \(H_1, H_2, H_3\) are its children (orange zone). There are no additional co-parents for \(H_2\) or \(H_3\), and \(B\) is already listed as a parent.
+This formalises the caption of Figure~\ref{fig:markov-condition}: if we have already observed the green zone (\(B, C, D\)), the blue non-descendants (\(M_1, M_2, M_3\), and the entire upper hierarchy) are uninformative. However, note the \textbf{added power} of the blanket: if we also observe the children \(H_1, H_2, H_3\), even the orange descendants (\(N_1...N_4\)) become irrelevant to \(A\).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  every node/.style={draw, rounded corners=4pt, minimum width=1.5cm,
+                     minimum height=0.65cm, align=center, font=\small},
+  par/.style ={fill=green!40, draw=green!60!black, text=green!30!black, font=\small\bfseries},
+  noi/.style ={fill=yellow!70, draw=orange!70!black, text=brown!70!black, font=\bfseries,
+               minimum width=1.7cm, minimum height=0.8cm},
+  ch/.style ={fill=orange!40,draw=orange!70!black, text=orange!50!black},
+  mb/.style ={draw=red!70, thick, dashed},
+  arr/.style ={-{Stealth[length=5pt]}, line width=1.2pt},
+  pararr/.style={-{Stealth[length=5pt]}, green!60!black, line width=1.2pt},
+  darr/.style ={-{Stealth[length=5pt]}, orange!70!black, line width=1.2pt},
+]
+
+% Nodes
+\node[par] (B) at (0, 0) {$B$};
+\node[par] (C) at (3, 0) {$C$};
+\node[par] (D) at (6, 0) {$D$};
+\node[noi] (A) at (3, -2.5){$A$};
+\node[ch] (H1) at (0, -5){$H_1$};
+\node[ch] (H2) at (3, -5){$H_2$};
+\node[ch] (H3) at (6, -5){$H_3$};
+
+% Edges
+\draw[pararr] (B) -- (A);
+\draw[pararr] (C) -- (A);
+\draw[pararr] (D) -- (A);
+\draw[darr] (A) -- (H1);
+\draw[darr] (A) -- (H2);
+\draw[darr] (A) -- (H3);
+\draw[darr] (B) -- (H1); % additional direct edge
+
+% Markov Blanket highlight
+\node[mb, fit=(B)(C)(D)(A)(H1)(H2)(H3), inner sep=12pt, label=above:{\textbf{Markov Blanket of } $A$}] {};
+
+\end{tikzpicture}
+\caption{Markov blanket of node $A$: $\mathrm{MB}(A) = \{B, C, D, H_1, H_2, H_3\}$.}
+\label{fig:mb_A}
+\end{figure}
+
+\paragraph{Example 2: The Parent Node \(B\).}
+Consider the node \(B\) in the same figure. Its Markov blanket is:
+\[
+\mathrm{MB}(B) = \{P_1, A, H_1, M_1, C, D\},
+\]
+as shown in Figure \ref{fig:mb_B}.
+Let us decompose this:
+\begin{itemize}
+    \item \textbf{Parents:} \(\{P_1\}\) (the immediate predecessor).
+    \item \textbf{Children:} \(\{A, H_1, M_1\}\) (the nodes \(B\) directly points to).
+    \item \textbf{Co-parents:} \(\{C, D\}\) (the other parents of child \(A\)) and \(\{A\}\) (the other parent of child \(H_1\), already listed).
+\end{itemize}
+Once a researcher has measured \(P_1, A, H_1, M_1, C,\) and \(D\), the entire top tier of great-grandparents (\(G_1...G_5\)) and the bottom tier of grandchildren (\(N_1...N_4\)) provide absolutely no additional insight into the state of \(B\).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  every node/.style={draw, rounded corners=4pt, minimum width=1.5cm,
+                     minimum height=0.65cm, align=center, font=\small},
+  gp/.style ={fill=blue!30, draw=blue!60!black, text=blue!40!black},
+  par/.style ={fill=green!40, draw=green!60!black, text=green!30!black, font=\small\bfseries},
+  noi/.style ={fill=yellow!70, draw=orange!70!black, text=brown!70!black, font=\bfseries},
+  ch/.style ={fill=orange!40,draw=orange!70!black, text=orange!50!black},
+  mb/.style ={draw=red!70, thick, dashed},
+  arr/.style ={-{Stealth[length=5pt]}, line width=1.2pt},
+  pararr/.style={-{Stealth[length=5pt]}, green!60!black, line width=1.2pt},
+  darr/.style ={-{Stealth[length=5pt]}, orange!70!black, line width=1.2pt},
+]
+
+% Nodes
+\node[gp] (P1) at (0, 2) {$P_1$};
+\node[par] (B) at (0, 0) {$B$};
+\node[noi] (A) at (4, -1){$A$};
+\node[ch] (H1) at (2, -3){$H_1$};
+\node[ch] (M1) at (-2, -3){$M_1$};
+\node[par] (C) at (3, 1) {$C$};
+\node[par] (D) at (5, 1) {$D$};
+
+% Edges (relevant to blanket)
+\draw[pararr] (P1) -- (B);
+\draw[pararr] (B) -- (A);
+\draw[pararr] (C) -- (A);
+\draw[pararr] (D) -- (A);
+\draw[darr] (B) -- (H1);
+\draw[darr] (A) -- (H1);
+\draw[pararr] (B) -- (M1); % B influences M1
+
+% Markov Blanket highlight
+\node[mb, fit=(P1)(B)(A)(H1)(M1)(C)(D), inner sep=15pt, label=above:{\textbf{Markov Blanket of } $B$}] {};
+
+\end{tikzpicture}
+\caption{Markov blanket of node $B$: $\mathrm{MB}(B) = \{P_1, A, H_1, M_1, C, D\}$.}
+\label{fig:mb_B}
+\end{figure}
+
+\paragraph{Example 3: The Leaf Node \(N_1\).}
+For a leaf node (a node with no children), the blanket simplifies dramatically. For \(N_1\):
+\[
+\mathrm{MB}(N_1) = \{H_1\},
+\]
+as indicated in Figure \ref{fig:mb_N1}.
+Since \(N_1\) has no children and no co-parents, its only parent \(H_1\) completely shields it from the rest of the network. Predicting \(N_1\) relies solely on \(H_1\); the rest of the graph is irrelevant.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  every node/.style={draw, rounded corners=4pt, minimum width=1.5cm,
+                     minimum height=0.65cm, align=center, font=\small},
+  ch/.style ={fill=orange!40,draw=orange!70!black, text=orange!50!black},
+  gc/.style ={fill=orange!60,draw=orange!80!black, text=brown!70!black},
+  mb/.style ={draw=red!70, thick, dashed},
+  darr/.style ={-{Stealth[length=5pt]}, orange!70!black, line width=1.2pt},
+]
+
+% Nodes
+\node[ch] (H1) at (0, 0) {$H_1$};
+\node[gc] (N1) at (0, -3){$N_1$};
+
+% Edge
+\draw[darr] (H1) -- (N1);
+
+% Markov Blanket highlight
+\node[mb, fit=(H1)(N1), inner sep=10pt, label=above:{\textbf{Markov Blanket of } $N_1$}] {};
+
+\end{tikzpicture}
+\caption{Markov blanket of leaf node $N_1$: $\mathrm{MB}(N_1) = \{H_1\}$.}
+\label{fig:mb_N1}
+\end{figure}
+
+\subsection{Practical Implications for the Reader}
+% ------------------------------------------------------------
+
+Why should a practitioner care about the Markov blanket beyond theoretical elegance? Here are four compelling reasons that highlight the value of "reading the graph":
+
+\begin{enumerate}
+    \item \textbf{Feature Selection in Machine Learning:} In predictive modelling, the Markov blanket of a target variable \(Y\) identifies the \emph{optimal} set of features. All variables outside the blanket are redundant for predicting \(Y\). This drastically reduces dimensionality and eliminates noise, a principle extensively used in causal feature selection algorithms.
+
+    \item \textbf{Computational Efficiency (Local Inference):} When performing inference via Markov Chain Monte Carlo (MCMC) or Gibbs sampling, updating a node \(X_i\) requires computing its conditional distribution \(P(X_i \mid \text{rest})\). Thanks to the blanket, this computation only needs to read the values of its parents, children, and co-parents---not the entire dataset. This local property is what makes scalable inference possible on large graphical models.
+
+    \item \textbf{Explaining Away and Causal Reasoning:} The inclusion of co-parents in the blanket reveals a fascinating causal phenomenon. For node \(A\) (which is a collider for \(B\) and \(E\) in the classic alarm example), observing the child (the Alarm) activates the path between \(B\) and \(E\). The Markov blanket warns us that to predict \(B\), we must account for \(E\) precisely because they share the child \(A\).
+
+    \item \textbf{Model Debugging and Sensitivity:} If a model is overly sensitive to a node outside the Markov blanket of your query variable, you know something is structurally wrong. The graph explicitly dictates that such a node \emph{cannot} influence your query once the blanket is observed. This acts as a powerful sanity check for modellers.
+\end{enumerate}
+
+In summary, the Markov blanket provides a sharp, graph-theoretic knife to cut away the irrelevant "noise" of a vast network. Instead of being overwhelmed by hundreds of variables, the user can focus on the small, local neighbourhood—the blanket—that actually matters. This is the true art of using graphical information: knowing what to look at, and more importantly, knowing what to safely ignore.
+
+% ============================================================
+\section{The Chain Rule for Bayesian Networks}\label{sec:chainrule}
+% ============================================================
+
+The joint probability distribution represented by a Bayesian network
+factorises using the chain rule of probability together with the Markov
+condition. For a network with variables $X_1, \ldots, X_n$ ordered
+consistently with the DAG (i.e.\ parents precede children), the joint
+distribution (pdf) is:
+\begin{equation}\label{eq:chainrule}
+  P(X_1, X_2, \ldots, X_n)
+  = \prod_{i=1}^{n} P\!\left(X_i \mid \mathrm{Pa}(X_i)\right).
+\end{equation}
+
+\noindent\textit{Derivation.} Starting from the general (non-graphical) chain
+rule and applying the Markov condition at each step:
+\begin{align}
+P(X_1, \ldots, X_n)
+  &= P(X_1)\cdot P(X_2\mid X_1)\cdot P(X_3\mid X_1,X_2)
+     \cdots P(X_n\mid X_1,\ldots,X_{n-1}) \notag\\
+  &= \prod_{i=1}^{n} P(X_i \mid X_1, \ldots, X_{i-1}) \notag\\
+  &= \prod_{i=1}^{n} P\!\left(X_i \mid \mathrm{Pa}(X_i)\right). \notag
+\end{align}
+The last equality holds because the Markov condition guarantees that the
+ancestors of $X_i$ that are not its parents are conditionally irrelevant
+given $\mathrm{Pa}(X_i)$.
+
+This factorisation is the cornerstone of Bayesian networks: it decomposes a
+potentially complex joint distribution over $n$ variables into $n$ simpler
+conditional distributions, one per node, enabling compact representation and
+efficient inference.
+
+\medskip
+
+\paragraph{Remark on conditioning for continuous variables.}
+The chain rule in \eqref{eq:chainrule} is written using the standard conditional probability notation $P(\cdot \mid \cdot)$.
+For continuous variables, the events $\{X_i = x_i\}$ have probability zero, so the usual product rule $P(A|B)=P(A\cap B)/P(B)$ does not directly apply.
+However, the factorisation remains valid when interpreted as a limit, or more elegantly, by conditioning on \emph{events of positive probability} such as $\{X_i \le x_i\}$ or intervals.
+In this book we introduce a modified conditional operator $\parallel$ (double bar) that conditions exclusively on events with strictly positive probability.
+The chain rule then becomes an exact product of conditional CDFs:
+\[
+F(x_1,\dots,x_n) = \prod_{i=1}^{n} F_i\bigl(x_i \;\big\|\; x_1,\dots,x_{i-1}\bigr),
+\]
+where $F_i(x_i \parallel x_1,\dots,x_{i-1}) = P(X_i \le x_i \mid X_1 \le x_1,\dots,X_{i-1} \le x_{i-1})$.
+A full treatment of this operator, its properties, and its practical advantages (numerical stability, applicability to Bayesian networks with continuous variables, and the ability to condition on arbitrary intervals) is given in Chapter~\ref{ch:newaitool}.
+
+The examples in the next section illustrate this factorisation concretely
+and show how the accompanying conditional probability tables (CPTs) fully
+specify the network.
+% ============================================================
+\section{Examples}\label{sec:examples}
+% ============================================================
+
+The three examples below progress in complexity: a minimal two-edge network,
+the classic five-variable alarm network, and a disease-symptom network with
+four observed outcomes.
+
+% ------------------------------------------------------------
+\subsection{Medical Diagnosis: Simple Cold Network}
+% ------------------------------------------------------------
+
+Consider a simple medical diagnosis scenario with three binary variables:
+\begin{itemize}
+    \item $C$: Has the person a cold? ($C=1$ yes, $C=0$ no)
+    \item $F$: Does the person have fever?
+    \item $S$: Does the person sneeze?
+\end{itemize}
+
+The variable $C$ influences both $F$ and $S$, yielding the factorisation:
+\begin{equation}
+    P(C, F, S) = P(C)\,P(F \mid C)\,P(S \mid C).
+\end{equation}
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    every node/.style={circle, draw, thick, minimum size=1cm, font=\large},
+    arr/.style={->, thick},
+    node distance=2cm
+]
+    \node[fill=cyan!30]   (C) {$C$};
+    \node[fill=red!30,  below left=of C]  (F) {$F$};
+    \node[fill=green!30, below right=of C] (S) {$S$};
+    \draw[arr] (C) -- (F);
+    \draw[arr] (C) -- (S);
+    \node[rectangle, draw=none, right=3.2cm of C, font=\small, align=left]
+         {$C$: Cold\\$F$: Fever\\$S$: Sneezing};
+\end{tikzpicture}
+\caption{Simple Medical Diagnosis Bayesian Network. Cold $C$ is the common
+         cause of fever $F$ and sneezing $S$; given $C$, the two symptoms
+         are conditionally independent (fork pattern).}
+\label{fig:simple_medical_bn}
+\end{figure}
+
+\textbf{Conditional Probability Tables:}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{cc}
+\hline
+$C$ & $P(C)$ \\\hline
+True  & 0.20 \\
+False & 0.80 \\\hline
+\end{tabular}
+\caption{Prior probability for Cold.}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ccc}
+\hline
+$C$ & $P(F=\text{True}\mid C)$ & $P(F=\text{False}\mid C)$ \\\hline
+True  & 0.60 & 0.40 \\
+False & 0.10 & 0.90 \\\hline
+\end{tabular}
+\caption{Conditional probability table for Fever given Cold.}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ccc}
+\hline
+$C$ & $P(S=\text{True}\mid C)$ & $P(S=\text{False}\mid C)$ \\\hline
+True  & 0.85 & 0.15 \\
+False & 0.05 & 0.95 \\\hline
+\end{tabular}
+\caption{Conditional probability table for Sneezing given Cold.}
+\end{table}
+
+\FloatBarrier
+
+% ------------------------------------------------------------
+\subsection{Burglar Alarm Network}
+% ------------------------------------------------------------
+
+The classic alarm network has five variables:
+\begin{itemize}
+    \item $B$: Burglary occurs
+    \item $E$: Earthquake occurs
+    \item $A$: Alarm sounds
+    \item $J$: John calls
+    \item $M$: Mary calls
+\end{itemize}
+
+Both $B$ and $E$ can trigger the alarm; the alarm in turn influences whether
+John and Mary call. John and Mary's calls are conditionally independent given
+the alarm state. The joint distribution factorises as:
+\[
+P(B,E,A,J,M) = P(B)\,P(E)\,P(A\mid B,E)\,P(J\mid A)\,P(M\mid A).
+\]
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    every node/.style={circle, draw, thick, minimum size=1cm, font=\large},
+    arr/.style={->, thick},
+    node distance=2cm
+]
+    \node[fill=orange!50]  (B) {$B$};
+    \node[fill=red!40, right=of B] (E) {$E$};
+    \node[fill=yellow!50,
+          below right=1.5cm and 0.5cm of B] (A) {$A$};
+    \node[fill=blue!25,  below left=of A]  (J) {$J$};
+    \node[fill=green!30, below right=of A] (M) {$M$};
+    \draw[arr] (B) -- (A);
+    \draw[arr] (E) -- (A);
+    \draw[arr] (A) -- (J);
+    \draw[arr] (A) -- (M);
+    \node[rectangle, draw=none, right=3.5cm of A, font=\small, align=left]
+         {$B$: Burglary\\$E$: Earthquake\\$A$: Alarm\\$J$: John calls\\$M$: Mary calls};
+\end{tikzpicture}
+\caption{Burglar Alarm Bayesian Network. Both $B$ and $E$ can trigger the
+         alarm $A$ (collider), which influences whether John $J$ and Mary
+         $M$ call.}
+\label{fig:burglar_alarm_bn}
+\end{figure}
+
+\textbf{Complete Conditional Probability Tables:}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{cc}
+\hline
+$B$ & $P(B)$ \\\hline
+True  & 0.001 \\
+False & 0.999 \\\hline
+\end{tabular}
+\quad
+\begin{tabular}{cc}
+\hline
+$E$ & $P(E)$ \\\hline
+True  & 0.002 \\
+False & 0.998 \\\hline
+\end{tabular}
+\caption{Prior probabilities for Burglary and Earthquake.}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{cccc}
+\hline
+$B$ & $E$ & $P(A=\text{True}\mid B,E)$ & $P(A=\text{False}\mid B,E)$ \\\hline
+True  & True  & 0.950 & 0.050 \\
+True  & False & 0.940 & 0.060 \\
+False & True  & 0.290 & 0.710 \\
+False & False & 0.001 & 0.999 \\\hline
+\end{tabular}
+\caption{Conditional probability table for Alarm given Burglary and Earthquake.}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ccc}
+\hline
+$A$ & $P(J=\text{True}\mid A)$ & $P(J=\text{False}\mid A)$ \\\hline
+True  & 0.90 & 0.10 \\
+False & 0.05 & 0.95 \\\hline
+\end{tabular}
+\quad
+\begin{tabular}{ccc}
+\hline
+$A$ & $P(M=\text{True}\mid A)$ & $P(M=\text{False}\mid A)$ \\\hline
+True  & 0.70 & 0.30 \\
+False & 0.01 & 0.99 \\\hline
+\end{tabular}
+\caption{Conditional probability tables for John calls and Mary calls given Alarm.}
+\end{table}
+
+\FloatBarrier
+
+% ------------------------------------------------------------
+\subsection{Medical Diagnosis: COVID-19 vs Influenza}
+% ------------------------------------------------------------
+
+Consider a medical diagnosis network distinguishing between COVID-19 and
+Influenza:
+\begin{itemize}
+    \item $D$: Disease (Influenza or COVID-19)
+    \item $S_1$: Loss of smell/taste
+    \item $S_2$: Fever
+    \item $S_3$: Shortness of breath
+    \item $T$: COVID-19 rapid test result
+\end{itemize}
+
+Under the naïve Bayes assumption, all four observable variables are
+conditionally independent given the disease:
+\[
+P(D,S_1,S_2,S_3,T) = P(D)\,P(S_1\mid D)\,P(S_2\mid D)\,P(S_3\mid D)\,P(T\mid D).
+\]
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+    every node/.style={circle, draw, thick, minimum size=1cm, font=\normalsize},
+    arr/.style={->, thick},
+    node distance=2.0cm
+]
+    \node[fill=purple!40] (D) {$D$};
+    \node[fill=red!30, below left=2cm and 2.8cm of D]  (S1) {$S_1$};
+    \node[fill=red!30, below left=2cm and 0.8cm of D]  (S2) {$S_2$};
+    \node[fill=red!30, below right=2cm and 0.8cm of D] (S3) {$S_3$};
+    \node[fill=blue!25, below right=2cm and 2.8cm of D] (T)  {$T$};
+    \draw[arr] (D) -- (S1);
+    \draw[arr] (D) -- (S2);
+    \draw[arr] (D) -- (S3);
+    \draw[arr] (D) -- (T);
+    \node[rectangle, draw=none, right=4.5cm of D, font=\small, align=left]
+         {$D$: Disease\\$S_1$: Loss of smell\\$S_2$: Fever\\$S_3$: Shortness of breath\\$T$: COVID test};
+\end{tikzpicture}
+\caption{COVID-19 vs Influenza Diagnosis Bayesian Network. The disease $D$
+         is the common cause (fork) for all observable nodes; given $D$, all
+         symptoms and the test result are mutually independent.}
+\label{fig:general_medical_bn}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{ccc}
+\hline
+$D$ & $P(S_1=\text{True}\mid D)$ & $P(S_2=\text{True}\mid D)$ \\\hline
+COVID-19  & 0.70 & 0.80 \\
+Influenza & 0.10 & 0.90 \\\hline
+\end{tabular}
+\caption{CPTs for loss of smell/taste $S_1$ and fever $S_2$ given disease.}
+\end{table}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{cccc}
+\hline
+$D$ & $P(S_3=\text{True}\mid D)$ & $P(T=\text{Positive}\mid D)$ \\\hline
+COVID-19  & 0.60 & 0.92 \\
+Influenza & 0.20 & 0.03 \\\hline
+\end{tabular}
+\caption{CPTs for shortness of breath $S_3$ and COVID-19 test result $T$ given disease.}
+\end{table}
+
+\FloatBarrier
+
+\medskip
+Having seen three concrete examples, we now turn to the algorithms that
+enable efficient probabilistic inference in networks of arbitrary structure.
+% ============================================================
+\section{Inference Methods in Bayesian Networks}\label{sec:inference}
+% ============================================================
+
+This section presents correctness theorems, proofs, pseudocode, and worked
+examples for three standard exact inference methods: Variable Elimination (VE),
+Belief Propagation on trees (BP), and the Junction Tree algorithm. All three
+methods compute the same quantity---the posterior distribution $P(Q\mid e)$
+---but differ in how they organise the computation to minimise cost.
+
+\paragraph{Notation and basic facts.}
+Let $\mathbf{X}=\{X_1,\dots,X_n\}$ be discrete random variables. A Bayesian
+network defines a joint probability distribution
+\[
+P(\mathbf{x})=\prod_{i=1}^n P(x_i \mid \mathrm{Pa}(X_i))=\prod_{i=1}^n f_i,
+\]
+and each conditional probability table (CPT) is treated as a factor
+$f_i=P(x_i\mid\mathrm{Pa}(X_i))$ over its scope
+$\mathrm{Scope}(f_i)=\{X_i\}\cup\mathrm{Pa}(X_i)$.
+
+Usual queries are of the form $P(Q\mid e)$, where $Q$ is a query variable
+and $e$ is observed evidence.
+
+\paragraph{Variables in inference queries.}
+\begin{itemize}
+\item \textbf{$e$ (evidence)}: Observed variables and their observed values,
+      e.g.\ $e=\{E=t,C=f\}$, where $t$ and $f$ mean true and false, respectively.
+\item \textbf{$Q$ (query variables)}: Variables whose posterior distribution
+      we wish to compute.
+\item \textbf{$Z$ (hidden variables)}: All variables that are neither query
+      nor evidence: $Z=\mathbf{X}\setminus(Q\cup\mathbf{E})$.
+      These must be marginalised out during inference.
+\item \textbf{$Z_e$ (normalisation constant)}: $P(e)$, the probability of
+      the evidence; ensures $P(Q\mid e)$ sums to one over all values of $Q$.
+\end{itemize}
+
+\paragraph{Bayes' formula and inference.}
+The fundamental goal is:
+\[
+\boxed{P(Q\mid e)=\frac{P(Q,e)}{P(e)}
+      =\frac{\displaystyle\sum_Z\prod_i f_i\big|_e}{Z_e}},
+\]
+where $f_i\big|_e$ denotes restricting factor $f_i$ to be consistent with
+evidence $e$. All three methods compute this quantity by efficiently
+organising the nested sums and products, exploiting distributivity to
+factor common terms out of summations.
+
+\paragraph{Standard factor operations.}
+\begin{itemize}
+\item \textbf{Product}: $(f\cdot g)(\mathbf{z})
+      =f(\mathbf{z}_{\mathrm{Scope}(f)})\cdot g(\mathbf{z}_{\mathrm{Scope}(g)})$.
+\item \textbf{Marginalisation (sum-out)}:
+      $\bigl(\sum_X f\bigr)(\mathbf{y})=\sum_x f(\mathbf{y},x)$.
+\item \textbf{Restriction}: Given evidence $e=\{X=x\}$, set $X=x$ in $f$,
+      reducing its scope by one variable.
+\item \textbf{Normalise}: $\tilde\phi(Q)=\phi(Q)/\sum_Q\phi(Q)$.
+\end{itemize}
+
+Throughout the examples, $t$ means ``true'' and $f$ means ``false'' for
+binary variables.
+
+% ------------------------------------------------------------
+\subsection{Variable Elimination (VE)}
+% ------------------------------------------------------------
+
+\begin{theorem}[Correctness of Variable Elimination]
+Let $\{f_i\}$ be the factors (CPTs) of a Bayesian network over variables
+$\mathbf{X}$. Let $Q$ be a query variable, $e$ observed evidence, and $Z$
+the set of non-query, non-evidence variables. For any elimination order
+$\pi$ that removes all variables in $Z$, the Variable Elimination algorithm
+computes
+\[
+P(Q\mid e) \;=\; \frac{1}{Z_e}\;\sum_{Z}\prod_i f_i\,,
+\]
+where $Z_e$ is the normalisation constant. The result is the exact posterior
+distribution.
+\end{theorem}
+
+\begin{proof}
+Because the joint distribution factorises as $\prod_i f_i$, and multiplication
+and marginalisation are associative and commutative, we may reorder sums and
+products. For any variable $Y\in Z$, let $\mathcal{F}_Y$ be the factors that
+depend on $Y$ and $\mathcal{F}_{\setminus Y}$ the remaining factors. Then
+\[
+\sum_Y \prod_{f\in\mathcal{F}} f
+= \Bigl(\prod_{f\in\mathcal{F}_{\setminus Y}} f\Bigr)
+  \Bigl(\sum_{y}\prod_{f\in\mathcal{F}_Y} f\Bigr),
+\]
+because the first product does not depend on $y$ and can be factored out.
+Repeating in the order $\pi$ eliminates all hidden variables and produces
+exactly $\sum_Z\prod_i f_i$. Normalising by $Z_e$ yields $P(Q\mid e)$. \qed
+\end{proof}
+
+\paragraph{Pseudocode.}
+\vspace*{3mm}
+\begin{algorithmbox}
+\begin{verbatim}
+VariableElimination(Factors F, Query Q, Evidence e, Order list):
+  1) Incorporate evidence: restrict factors
+     for each f in F:  f := restrict(f, e)
+  2) Eliminate hidden variables in list
+     for Z in list:
+       if Z == Q or Z in e: continue
+       G := { f in F | Z in scope(f) }
+       if G is empty: continue
+       f_prod := product(G)
+       f_marg := sum_out(f_prod, Z)
+       F := (F \ G) union { f_marg }
+  3) Multiply remaining factors and normalise
+     f_final := product(F)
+     f_Q     := marginalize_all_but(f_final, Q)
+     return normalize(f_Q)
+\end{verbatim}
+\end{algorithmbox}
+
+\paragraph{Example A (Alarm network) --- full trace.}
+
+\textbf{Network and CPTs.}
+Variables: $B$ (burglary), $E$ (earthquake), $A$ (alarm), $J$ (John calls),
+$M$ (Mary calls). All binary. Factors:
+\[
+P(B=t)=0.001,\quad P(E=t)=0.002,
+\]
+\[
+P(A=t\mid B,E)=
+\begin{cases}
+0.95 & (B=t,E=t)\\0.94 & (B=t,E=f)\\0.29 & (B=f,E=t)\\0.001 & (B=f,E=f)
+\end{cases}
+\]
+\[
+P(J=t\mid A=t)=0.90,\quad P(J=t\mid A=f)=0.05,\quad
+P(M=t\mid A=t)=0.70,\quad P(M=t\mid A=f)=0.01.
+\]
+
+\textbf{Query and evidence.} Compute $P(B\mid J=t,M=t)$.
+Elimination order $\pi=[A,E]$.
+
+\textbf{Step 1: incorporate evidence.}
+Restrict $f_J,f_M$ to $J=t,M=t$, yielding factors over $A$:
+\[
+\phi_J(A)=P(J=t\mid A)=\begin{cases}0.90 & A=t\\0.05 & A=f\end{cases},\quad
+\phi_M(A)=P(M=t\mid A)=\begin{cases}0.70 & A=t\\0.01 & A=f\end{cases}.
+\]
+Active factors: $f_B,f_E,f_A,\phi_J,\phi_M$.
+
+\textbf{Step 2: eliminate $A$.}
+\[
+g(B,E)=\sum_{A} f_A(A,B,E)\,\phi_J(A)\,\phi_M(A).
+\]
+\[
+\begin{array}{ccc}
+B & E & g(B,E)\\\midrule
+t & t & 0.95{\cdot}0.63+0.05{\cdot}0.0005=0.598525\\
+t & f & 0.94{\cdot}0.63+0.06{\cdot}0.0005=0.592230\\
+f & t & 0.29{\cdot}0.63+0.71{\cdot}0.0005=0.183055\\
+f & f & 0.001{\cdot}0.63+0.999{\cdot}0.0005=0.001130
+\end{array}
+\]
+
+\textbf{Step 3: eliminate $E$.}
+\[
+h(B)=\sum_E P(E)\,g(B,E).
+\]
+\[
+h(t)=0.002{\cdot}0.598525+0.998{\cdot}0.592230=0.592243,\quad
+h(f)=0.002{\cdot}0.183055+0.998{\cdot}0.001130=0.001493.
+\]
+
+\textbf{Step 4: multiply by $P(B)$ and normalise.}
+\[
+u(t)=0.001{\cdot}0.592243=0.000592,\quad u(f)=0.999{\cdot}0.001493=0.001492.
+\]
+\[
+P(B=t\mid J=t,M=t)=\frac{0.000592}{0.000592+0.001492}\approx\mathbf{0.2842}.
+\]
+
+\paragraph{Example B (Chain of length 5) --- full trace.}
+Chain $X_1\to X_2\to X_3\to X_4\to X_5$, all binary.
+Transition $P(X_{i+1}=t\mid X_i=t)=0.8$, $P(X_{i+1}=t\mid X_i=f)=0.2$.
+Prior $P(X_1=t)=0.5$. Evidence $X_5=t$. Query: $P(X_1\mid X_5=t)$.
+
+Backward messages (VE eliminating $X_4,X_3,X_2$):
+\[
+m_4=(0.8,0.2),\quad m_3=(0.68,0.32),\quad m_2=(0.608,0.392),\quad
+m_1=(0.5648,0.4352).
+\]
+Unnormalised: $u(t)=0.5{\cdot}0.5648=0.2824$, $u(f)=0.5{\cdot}0.4352=0.2176$;
+normalise (sum $=0.5$) to obtain
+\[
+P(X_1=t\mid X_5=t)=\mathbf{0.5648},\quad P(X_1=f\mid X_5=t)=0.4352.
+\]
+
+The convergence of MCMC averages follows from classical results on the Strong Law of Large Numbers and the Central Limit Theorem for ergodic Markov chains.
+
+% ------------------------------------------------------------
+\subsection{Belief Propagation (Sum--Product) on Trees}
+% ------------------------------------------------------------
+
+In belief propagation, a \textbf{message} $m_{Y\to f}(y)$ summarises the
+probability information that variable node $Y$ sends to factor node $f$,
+representing the marginal contribution from $Y$'s subtree.
+
+\paragraph{Collect and distribute phases.}
+\begin{itemize}
+\item \textbf{Collect}: Messages flow from leaves toward the chosen root,
+      so each node accumulates information from all its subtrees.
+\item \textbf{Distribute}: Messages flow from root back to leaves,
+      completing the information exchange.
+\end{itemize}
+
+\paragraph{Message update rules.}
+\begin{itemize}
+\item \textbf{Variable to factor}:
+$m_{X\to f}(x)=\prod_{g\in\mathrm{nb}(X)\setminus\{f\}} m_{g\to X}(x)$.
+\item \textbf{Factor to variable}:
+$m_{f\to X}(x)=\sum_{\sim\{X\}}\Bigl[f(\mathbf{Y})\prod_{Y\in\mathrm{nb}(f)\setminus\{X\}} m_{Y\to f}(y)\Bigr]$.
+\item \textbf{Belief at $X$}:
+$b(x)\propto\prod_{f\in\mathrm{nb}(X)} m_{f\to X}(x)$.
+\end{itemize}
+
+\begin{theorem}[Correctness of Belief Propagation on Trees]
+On a tree-structured factor graph, the sum--product message passing algorithm
+terminates after a single collect/distribute sweep and produces exact marginal
+beliefs $b(x_i)=P(x_i\mid e)$ at every variable node $X_i$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+On a tree, removing any edge disconnects the graph into two independent
+subtrees. The message from subtree $A$ to subtree $B$ summarises the full
+joint probability of $A$ given their shared variable. Because the tree has
+no cycles, each message is computed exactly once from fully correct incoming
+messages (leaf messages are trivially correct), and the product of incoming
+messages at any variable yields the exact marginal by the same distributivity
+argument used in VE. \qed
+\end{proof}
+
+\paragraph{Example C (V-shaped tree) --- full trace.}
+Network: $X\to Y$, $Y\to Z_1$, $Y\to Z_2$. Root $X$, evidence $Z_1=t,Z_2=t$.
+
+CPTs: $P(X=t)=0.5$; $P(Y=t\mid X=t)=0.8$, $P(Y=t\mid X=f)=0.2$;
+$P(Z_i=t\mid Y=t)=0.9$, $P(Z_i=t\mid Y=f)=0.1$ for $i=1,2$.
+
+Messages from leaves:
+\[
+m_{Z_i\to Y}(y)=P(Z_i=t\mid y)=(0.9,0.1),\quad i=1,2.
+\]
+Message from $Y$ to $X$:
+\[
+m_{Y\to X}(x)=\sum_y P(y\mid x)\,m_{Z_1\to Y}(y)\,m_{Z_2\to Y}(y).
+\]
+\[
+m_{Y\to X}(t)=0.8{\cdot}0.81+0.2{\cdot}0.01=0.650,\quad
+m_{Y\to X}(f)=0.2{\cdot}0.81+0.8{\cdot}0.01=0.170.
+\]
+Belief at $X$:
+\[
+u(t)=0.5{\cdot}0.650=0.325,\quad u(f)=0.5{\cdot}0.170=0.085,
+\quad Z=0.41.
+\]
+\[
+P(X=t\mid Z_1=Z_2=t)=0.325/0.41\approx\mathbf{0.7927}.
+\]
+
+% ------------------------------------------------------------
+\subsection{Junction Tree Algorithm}
+% ------------------------------------------------------------
+
+When the factor graph contains cycles, exact belief propagation requires
+transforming the model into a tree of \emph{cliques} (the junction tree) and
+running message passing at the clique level.
+
+\paragraph{Key definitions.}
+\begin{itemize}
+\item \textbf{Clique}: A fully connected subset of nodes; a
+      \emph{maximal clique} cannot be extended while preserving the clique
+      property.
+\item \textbf{Running intersection property}: For any variable $X$, all
+      cliques containing $X$ form a connected subtree in the junction tree.
+\end{itemize}
+
+\paragraph{Construction steps.}
+\begin{enumerate}
+\item \textbf{Moralise}: For each node with multiple parents, connect all
+      parents with an undirected edge.
+\item \textbf{Triangulate}: Add fill-in edges to make the moralised graph
+      chordal (eliminate all cycles of length $\geq4$ without a chord).
+\item \textbf{Find maximal cliques} in the triangulated graph.
+\item \textbf{Build a maximum-weight spanning tree} on the cliques, with
+      edge weight $|C_i\cap C_j|$, ensuring the running intersection
+      property.
+\item \textbf{Initialise clique potentials}: Assign each CPT to one clique
+      whose scope contains the CPT's scope; multiply all CPTs assigned to
+      the same clique.
+\item \textbf{Collect/distribute}: Run message passing on the clique tree.
+      After calibration, any variable's marginal is obtained from any
+      calibrated clique that contains it.
+\end{enumerate}
+
+\begin{theorem}[Junction Tree Calibration Correctness]
+After a collect/distribute sweep with clique messages
+\[
+m_{C\to D}(S_{CD})
+=\sum_{C\setminus S_{CD}}\Phi_C\prod_{E\in\mathrm{nb}(C)\setminus\{D\}} m_{E\to C},
+\]
+the calibrated potential of every clique $C$ equals the marginal of the
+full joint over $C$, and the exact posterior of any variable is obtained
+by marginalising the calibrated potential of any clique containing it.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+The running intersection property ensures that the separator $S_{CD}=C\cap D$
+separates the two subtrees rooted at $C$ and $D$ in the junction tree.
+By induction on tree structure, after a collect sweep each clique $C$
+holds the marginal of the joint over $C$ multiplied by the incoming
+messages, which together represent the full joint. Normalisation then
+yields exact marginals. The computation is algebraically identical to
+Variable Elimination organised differently to enable multiple queries.
+\end{proof}
+
+\paragraph{Pseudocode.}
+\vspace*{3mm}
+\begin{algorithmbox}
+\begin{verbatim}
+JunctionTreeInference(BayesianNetwork BN, Query X, Evidence e):
+  1) Moralise BN
+  2) Triangulate moralised graph (min-fill / min-degree heuristic)
+  3) Extract maximal cliques {C}
+  4) Build junction tree (max-weight spanning tree on clique adjacency)
+  5) Initialise potentials:
+       for each clique C: Phi_C := product of CPTs with scope subset of C
+       restrict Phi_C by evidence e
+  6) Choose root clique R
+  7) Collect: messages from leaves to root
+  8) Distribute: messages from root to leaves
+  9) Extract query: pick clique C containing X,
+       marginalise calibrated Phi_C to X, normalise
+  return P(X | e)
+\end{verbatim}
+\end{algorithmbox}
+
+\vspace*{3mm}
+\begin{examplebox}
+\paragraph{Example D (Alarm network via Junction Tree) --- full trace.}
+
+\textbf{Step 1: moralise.} Parents of $A$ are $\{B,E\}$; add edge $B$--$E$.
+
+\textbf{Step 2: triangulate.} The triangle $B$--$A$--$E$ has chord $B$--$E$
+already present; no fill-in needed.
+
+\textbf{Step 3: cliques.}
+$C_1=\{B,E,A\}$, $C_2=\{A,J\}$, $C_3=\{A,M\}$.
+Separators: $S_{12}=S_{13}=\{A\}$.
+
+\textbf{Step 4: assign potentials.}
+\[
+\Phi_{C_1}(B,E,A):=P(B)\,P(E)\,P(A\mid B,E),\quad
+\Phi_{C_2}(A,J):=P(J\mid A),\quad
+\Phi_{C_3}(A,M):=P(M\mid A).
+\]
+Incorporate evidence $J=t,M=t$:
+$\Phi_{C_2}^{(e)}(A)=\phi_J(A)$, $\Phi_{C_3}^{(e)}(A)=\phi_M(A)$.
+
+\textbf{Step 5: collect from leaves to $C_1$.}
+\[
+m_{C_2\to C_1}(A)=\phi_J(A)=(0.90,0.05),\quad
+m_{C_3\to C_1}(A)=\phi_M(A)=(0.70,0.01).
+\]
+\[
+\Psi_{C_1}(B,E,A)
+=P(B)\,P(E)\,P(A\mid B,E)\,\phi_J(A)\,\phi_M(A).
+\]
+
+\textbf{Step 6: extract marginal of $B$.}
+Marginalising $\Psi_{C_1}$ over $A$ and then $E$ reproduces exactly the VE
+arithmetic in Example~A, yielding
+\[
+P(B=t\mid J=t,M=t)\approx\mathbf{0.2842}.
+\]
+
+The key advantage of the Junction Tree over VE is that once the tree is
+calibrated, any other marginal (e.g.\ $P(E\mid J=t,M=t)$ or
+$P(A\mid J=t,M=t)$) can be read off from the appropriate calibrated clique
+without rerunning elimination.
+\end{examplebox}
+
+% ------------------------------------------------------------
+\subsection{Comparison and Practical Remarks}
+% ------------------------------------------------------------
+
+\begin{itemize}
+\item \textbf{VE}: Exact for any BN; cost dominated by the largest
+      intermediate factor, exponential in treewidth. Best when answering
+      a single or few queries.
+\item \textbf{BP (sum--product on trees)}: Linear-time in the number of
+      nodes for trees; exact on trees and polytrees. On graphs with cycles,
+      loopy BP is approximate and may not converge.
+\item \textbf{Junction Tree}: Converts the graph to a clique tree;
+      complexity exponential in the size of the largest clique (treewidth).
+      Once calibrated, all marginals are available cheaply---best when many
+      queries are needed on the same network and evidence.
+\end{itemize}
+
+\paragraph{When to use which.}
+Use \textbf{VE} for single queries with a good elimination order (min-fill,
+min-degree heuristics). Use \textbf{BP} when the model is a tree or polytree.
+Use the \textbf{Junction Tree} when the network is loopy and multiple queries
+or full marginals are required.
+
+\medskip
+The inference framework just described assumes that we always marginalise out
+all non-query variables. The next section discusses whether this is always
+the right choice.
+% ============================================================
+\section{Role of Non-Query, Non-Evidence Variables}\label{sec:paradigms}
+% ============================================================
+
+In Bayesian network inference the standard goal is to compute $P(A\mid B)$
+where $A$ is a query variable and $B$ represents observed evidence. However,
+there is a fundamental choice in how to handle the remaining (hidden) variables
+$C=\mathcal{X}\setminus(A\cup B)$:
+
+\begin{enumerate}
+    \item \textbf{Eliminate $C$ completely}: compute $P(A\mid B)=\sum_C P(A\mid B,C)\,P(C\mid B)$.
+    \item \textbf{Retain $C$ parametrically}: compute $P(A\mid B,C)$ as a
+          function of $C$.
+\end{enumerate}
+
+Option~1 is the standard approach in applied Bayesian inference. Option~2
+provides a richer characterisation of uncertainty and is foundational in
+sensitivity analysis, value-of-information studies, and causal inference.
+
+\subsection{Mathematical Framework}
+
+\begin{definition}[Variable Partition]
+Given a Bayesian network with variables $\mathcal{X}=\{X_1,\ldots,X_n\}$,
+partition them into three disjoint sets:
+\begin{itemize}
+    \item $A$: Query variable(s) of interest.
+    \item $B$: Evidence variables (observed).
+    \item $C=\mathcal{X}\setminus(A\cup B)$: Hidden/latent variables
+          (unobserved).
+\end{itemize}
+\end{definition}
+
+\begin{definition}[Paradigm 1 --- Marginal Conditional Probability]
+The \emph{marginal conditional probability} eliminates all hidden variables:
+\begin{equation}
+P(A\mid B)=\sum_{c\in\mathrm{Val}(C)} P(A\mid B,c)\,P(c\mid B).
+\end{equation}
+Output: a single probability distribution over $A$.
+\end{definition}
+
+\begin{definition}[Paradigm 2 --- Parametric Conditional Probability]
+The \emph{parametric conditional probability} retains dependency on $C$:
+\begin{equation}
+P(A\mid B,C):\mathrm{Val}(C)\to[0,1],\quad
+P(A\mid B,c)=\frac{P(A,B,c)}{\sum_{a}P(a,B,c)}.
+\end{equation}
+Output: a function mapping $C$-configurations to distributions over $A$.
+\end{definition}
+
+\subsection{Relationship Between Paradigms}
+
+\begin{theorem}[Law of Total Probability for Conditionals]
+The marginal conditional probability is the expectation of the parametric
+conditional with respect to the posterior of $C$:
+\begin{equation}
+P(A\mid B)=\mathbb{E}_{C\mid B}[P(A\mid B,C)]
+=\sum_{c\in\mathrm{Val}(C)} P(A\mid B,c)\,P(c\mid B).
+\end{equation}
+\end{theorem}
+\begin{proof}
+By the law of total probability:
+$P(A\mid B)=\sum_c P(A,c\mid B)=\sum_c P(A\mid B,c)\,P(c\mid B)$.\qed
+\end{proof}
+
+When $C$ is treated as a random variable with distribution $P(C\mid B)$,
+the parametric conditional $Y=P(A=a\mid B=b,C)$ is itself a random
+variable with:
+\[
+\mathbb{E}[Y]=P(A=a\mid B=b)\quad\text{and}\quad
+\mathrm{Var}[Y]=\mathbb{E}_{C\mid B}\bigl[(P(A\mid B,C))^2\bigr]-(P(A\mid B))^2.
+\]
+The variance quantifies \emph{epistemic uncertainty}: how much our
+conclusion about $A$ would change if we observed $C$.
+
+\subsection{Algorithmic Implementation}
+
+\begin{algorithmbox}
+\begin{algorithm}[H]
+\caption{Variable Elimination for $P(A\mid B)$}
+\label{alg:ve}
+\begin{algorithmic}[1]
+\State \textbf{Input:} Bayesian network, query variable $A$, evidence $B=b$
+\State \textbf{Output:} $P(A\mid B=b)$
+\State Initialize factors $\Phi=\{\phi_1,\ldots,\phi_k\}$ from CPTs
+\State Incorporate evidence: $\Phi\leftarrow\{F\cdot\mathbb{I}[B=b]:F\in\Phi\}$
+\State Determine elimination order for $C$ variables
+\For{each $X_i\in C$ in elimination order}
+    \State $\Phi_i\leftarrow\{F\in\Phi:X_i\in\mathrm{Scope}(F)\}$
+    \State $\psi\leftarrow\prod_{F\in\Phi_i}F$
+    \State $\tau\leftarrow\sum_{X_i}\psi$
+    \State $\Phi\leftarrow(\Phi\setminus\Phi_i)\cup\{\tau\}$
+\EndFor
+\State $P(A,B)\leftarrow\prod_{F\in\Phi}F$
+\State \Return $P(A,B)/\sum_A P(A,B)$
+\end{algorithmic}
+\end{algorithm}
+\end{algorithmbox}
+
+\begin{algorithmbox}
+\begin{algorithm}[H]
+\caption{Direct Formula --- Parametric Version}
+\begin{algorithmic}[1]
+\State \textbf{Input:} Network, query $A$, evidence $B=b$, kept vars
+       $C_{\mathrm{keep}}\subseteq C$
+\State \textbf{Output:} $P(A\mid B=b,C_{\mathrm{keep}})$ as a function
+\State $C_{\mathrm{elim}}\leftarrow C\setminus C_{\mathrm{keep}}$
+\For{each configuration $c\in\mathrm{Val}(C_{\mathrm{keep}})$}
+    \State $P(A,B,c)\leftarrow\sum_{C_{\mathrm{elim}}} P(A,B,c,C_{\mathrm{elim}})$
+    \State $P(B,c)\leftarrow\sum_A P(A,B,c)$
+    \State $P(A\mid B,c)\leftarrow P(A,B,c)/P(B,c)$
+\EndFor
+\State \Return $\{P(A\mid B,c):c\in\mathrm{Val}(C_{\mathrm{keep}})\}$
+\end{algorithmic}
+\end{algorithm}
+\end{algorithmbox}
+
+\subsection{Detailed Examples}
+
+\paragraph{Example 1: Alarm Network.}
+\begin{itemize}
+    \item $A$ (query): Burglary.
+    \item $B$ (evidence): $\{J=t,M=t\}$.
+    \item $C$ (hidden): $\{E,A_{\mathrm{larm}}\}$.
+\end{itemize}
+
+\textit{Paradigm 1.}
+$P(\text{Burglary}=t\mid J=t,M=t)\approx 0.284$.
+
+\textit{Paradigm 2.} Parametric in $\{E,A_{\mathrm{larm}}\}$:
+\begin{center}
+\begin{tabular}{lcc}
+\hline
+\textbf{Configuration} & $P(B=t)$ & $P(B=f)$ \\\hline
+$E=t,A=t$   & 0.176 & 0.824 \\
+$E=t,A=f$   & 0.001 & 0.999 \\
+$E=f,A=t$   & 0.374 & 0.626 \\
+$E=f,A=f$   & 0.001 & 0.999 \\\hline
+\end{tabular}
+\end{center}
+
+The range $[0.001,0.374]$ reveals that whether the alarm actually rang
+($A=t$) matters far more than earthquake status. The marginal $0.284$ is
+the weighted average of these values. The standard deviation $\sigma\approx0.137$
+suggests that observing the alarm state would significantly sharpen the
+diagnosis.
+
+\paragraph{Example 2: Medical Diagnosis (Cold Network).}
+With no hidden variables, both paradigms agree:
+$P(\text{Cold}=t\mid F=t,S=t)\approx0.67$.
+If sneezing is treated as parametric rather than observed:
+\begin{center}
+\begin{tabular}{lcc}
+\hline
+$S$ & $P(\text{Cold}=t)$ & $P(\text{Cold}=f)$\\\hline
+True  & 0.67 & 0.33\\
+False & 0.44 & 0.56\\\hline
+\end{tabular}
+\end{center}
+The gap (0.67 vs 0.44) quantifies the value of testing for sneezing.
+
+\paragraph{Example 3: Student Performance Network.}
+\begin{itemize}
+    \item $A$ (query): Intelligence.
+    \item $B$ (evidence): $\{S=\text{high},L=\text{strong}\}$.
+    \item $C$ (hidden): $\{D,G\}$ (difficulty, grade).
+\end{itemize}
+
+\textit{Paradigm 1.} $P(I=\text{high}\mid S=\text{high},L=\text{strong})=0.58$.
+
+\textit{Paradigm 2, keeping Grade parametric.}
+\begin{center}
+\begin{tabular}{lcc}
+\hline
+\textbf{Grade} & $P(I=\text{high})$ & $P(I=\text{low})$\\\hline
+A & 0.72 & 0.28 \\
+B & 0.51 & 0.49 \\
+C & 0.21 & 0.79 \\\hline
+\end{tabular}
+\end{center}
+Variance $=0.043$, $\sigma=0.21$: the unobserved grade drives most of the
+uncertainty in the intelligence inference.
+
+\subsection{When to Use Each Paradigm}
+
+\begin{center}
+\small
+\begin{tabular}{p{2.5cm}p{5cm}p{5cm}}
+\hline
+\textbf{Aspect} & \textbf{Paradigm 1: Marginal} & \textbf{Paradigm 2: Parametric}\\\hline
+Output type & Single distribution over $A$ & Function $\mathrm{Val}(C)\to[0,1]$\\
+Use case & Decision-making, classification & Sensitivity, what-if, VOI\\
+Comp.\ cost & $O(d^{w^*})$, treewidth & $O(d^{|C|}{\cdot}d^{w^*})$\\
+Uncertainty type & Implicit & Epistemic, explicit\\
+Common in & Applied ML/AI & Causal inference, model debugging\\\hline
+\end{tabular}
+\end{center}
+
+Use \textbf{Paradigm 1} as the default for routine decisions. Use
+\textbf{Paradigm 2} when:
+\begin{itemize}
+    \item \textbf{Sensitivity analysis}: assessing how the conclusion changes
+          with unmeasured factors.
+    \item \textbf{Value of information}: high $\mathrm{Var}[P(A\mid B,C)]$
+          implies observing $C$ would substantially reduce uncertainty.
+    \item \textbf{Explainability}: showing stakeholders how a decision depends
+          on unobserved variables.
+    \item \textbf{Model debugging}: identifying hidden variables to which
+          the model is over-sensitive.
+\end{itemize}
+Keep $|C_{\mathrm{keep}}|\leq3$ for computational tractability.
+
+\subsection{Connection to Causal Inference}
+
+In causal inference \cite{pearl2009}, the parametric approach is closely
+related to sensitivity analysis for unmeasured confounding.
+
+\begin{definition}[Confounding]
+$C$ is a confounder for the causal effect of $X$ on $Y$ if $C$ causally
+affects both $X$ and $Y$ and is not on the causal path from $X$ to $Y$.
+\end{definition}
+
+\begin{theorem}[Bounds Under Unmeasured Confounding]
+Without knowledge of $C$:
+\begin{equation}
+\min_c P(Y\mid X=x,C=c)
+\;\leq\;P(Y\mid\mathrm{do}(X=x))
+\;\leq\;\max_c P(Y\mid X=x,C=c).
+\end{equation}
+\end{theorem}
+
+\textit{Example: Smoking and Lung Cancer.}
+$X=$ Smoking, $Y=$ Cancer, $C=$ Genetic predisposition (unmeasured).
+
+Paradigm 1: $P(\text{Cancer}\mid\text{Smoking}=t)=0.15$.
+
+Paradigm 2:
+\[
+P(\text{Cancer}\mid\text{Smoking}=t,\text{Genetics}=\text{high})=0.32,\quad
+P(\text{Cancer}\mid\text{Smoking}=t,\text{Genetics}=\text{low})=0.08.
+\]
+The range $[0.08,0.32]$ shows strong sensitivity to unmeasured genetics,
+motivating genetic testing or a randomised experiment.
+
+\subsection{Computational Considerations}
+
+\begin{proposition}[Complexity]
+Let $d$ be the maximum domain size and $w^*$ the treewidth.
+\begin{itemize}
+\item \textbf{Paradigm 1}: Time and space $O(d^{w^*})$; output size $O(d)$.
+\item \textbf{Paradigm 2}: Time $O(d^{|C|}{\cdot}d^{w^*})$; output size
+      $O(d^{|C|+1})$.
+\end{itemize}
+\end{proposition}
+
+Practical mitigation strategies: (i) keep only a small $C_{\mathrm{keep}}$;
+(ii) represent $P(A\mid B,C)$ symbolically as a polynomial in $C$; (iii)
+use Monte Carlo approximation with samples $c_i\sim P(C\mid B)$.
+
+\medskip
+Section~\ref{sec:factorisation} now shows that the factorisation structure
+underlying all these inference methods is not merely a convenient algorithm
+but a universal property of any multivariate probability distribution.
+% ============================================================
+\section{Factorisation of Joint CDF Distributions and Densities}
+\label{sec:factorisation}
+% ============================================================
+
+In this section a general, universal structure of multivariate random models
+is identified. The main idea is captured in the following telescoping product:
+\begin{align}
+F(x_1,\ldots,x_n;\theta)
+&= F_1(x_1;\theta)
+   \frac{F_2(x_1,x_2;\theta)}{F_1(x_1;\theta)}
+   \cdots
+   \frac{F_n(x_1,\ldots,x_n;\theta)}{F_{n-1}(x_1,\ldots,x_{n-1};\theta)}
+   \nonumber\\
+&= \prod_{k=1}^n F_k(x_k \| x_1,\ldots,x_{k-1};\theta)
+\label{eq:factorization}
+\end{align}
+where denominators are assumed non-null and the notation
+$F_k(x_k\|x_1,\ldots,x_{k-1};\theta)$ denotes the conditional CDF of $X_k$
+given $X_1=x_1,\ldots,X_{k-1}=x_{k-1}$. This identity reveals the universal
+Bayesian network structure of multivariate distributions.
+
+The density version of this decomposition is:
+\begin{equation}
+f(\mathbf{x};\theta) = \prod_{i=1}^n f_i(x_i\mid x_1,\ldots,x_{i-1};\theta),
+\label{eq:densityfactorization}
+\end{equation}
+which reduces to the product of marginals for independent variables:
+\begin{equation}
+f(\mathbf{x};\theta) = \prod_{i=1}^n f_i(x_i;\theta).
+\label{eq:independentfactorization}
+\end{equation}
+
+The conditional density factors can be expressed via copulas using
+equations~\eqref{eq:conditional_BNa}--\eqref{eq:conditional_BN1a}:
+\begin{equation}\label{eq:conditional_BNa}
+f_{k\mid 1,\ldots,k-1}(x_k\mid x_{1},\ldots,x_{k-1})
+= c\bigl(F_k(x_k)\mid F_1(x_1),\ldots,F_{k-1}(x_{k-1})\bigr)\cdot f_k(x_k),
+\end{equation}
+\begin{equation}\label{eq:conditional_BN1a}
+c(u_k\mid u_{1},\ldots,u_{k-1})
+:=\frac{c(u_1,\ldots,u_k)}{c(u_{1},\ldots,u_{k-1})}.
+\end{equation}
+
+\paragraph{Rosenblatt transformation.}
+If $\mathbf{X}$ has distribution function $F_{\mathbf{X}}(\mathbf{x};\theta)$
+and one defines \cite{Rosenblatt1952,ArnoldCS:06}:
+\begin{align}\label{Rosenb8}
+U_1 &= F_1(X_1;\theta),\quad
+U_2 = F_2(X_2\mid X_1;\theta),\quad\ldots\quad
+U_m = F_m(X_m\mid X_1,\ldots,X_{m-1};\theta),
+\end{align}
+then $U_1,\ldots,U_m$ are \emph{independent} $\mathrm{Uniform}(0,1)$ random
+variables. Consequently, the joint distribution admits the following
+\textbf{universal factorisation}:
+\begin{equation}
+\boxed{
+F(\mathbf{x};\theta)
+= \prod_{k=1}^n F_k(x_k\|x_1,\ldots,x_{k-1};\theta)
+= C\!\left(F_1(x_1;\theta),\ldots,F_n(x_n\|x_1,\ldots,x_{n-1};\theta)\right)
+}
+\label{eq:universalfactorization}
+\end{equation}
+where $C(u_1,\ldots,u_n)=\prod_{i=1}^n u_i$ is the \emph{independence copula}
+applied to the conditional transformations $U_i=F_i(X_i\mid X_1,\ldots,X_{i-1};\theta)$.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.7\textwidth]{RedBayesianaCover2.png}
+\caption{General functional network structure based on
+         equation~\eqref{eq:universalfactorization}.
+         Each neuron computes a conditional CDF activation; the $n(n-1)/2$
+         links encode which predecessors are relevant.}
+\label{fig:universalnetwork}
+\end{figure}
+
+The relevance of equation~\eqref{eq:universalfactorization} and the network
+in Figure~\ref{fig:universalnetwork} is that it shows the Bayesian network
+structure universal to all multivariate distributions: $n$ activation
+functions (one per neuron/variable), each connected to at most its predecessor
+variables, giving at most $n(n-1)/2$ links. Learning the network structure
+means identifying which links actually exist; learning the parametric structure
+means estimating the parameter values of the activation functions.
+
+\subsection*{Connection to the generalised Sklar theorem (Chapter~\ref{ch:gensclak})}
+The factorisation \eqref{eq:universalfactorization} is not merely a theoretical curiosity; it is the foundation of the \emph{group-based generalisation of Sklar's theorem} developed in Chapter~\ref{ch:gensclak}. Classical Sklar's theorem separates univariate marginals from the dependence structure. The Rosenblatt transformation used in (\ref{Rosenb8})–(\ref{eq:universalfactorization}) generalizes this separation to groups of variables: for any partition of the variables into groups, there exists a unique \emph{group copula} \(C_G\) such that
+\[
+F_X(\mathbf{x}) = C_G\bigl(T_{G_1}(\mathbf{x}_{G_1}),\dots,T_{G_k}(\mathbf{x}_{G_k})\bigr),
+\]
+where each \(T_{G_i}\) is a group-wise Rosenblatt transformation. This result shows that Bayesian networks are strictly more powerful than classical copulas: they extend the separation property from univariate to multivariate marginals of arbitrary size. The reader is referred to Chapter~\ref{ch:gensclak} for the full mathematical treatment and algorithmic implications.
+
+Since copulas efficiently switch between CDF and PDF while providing marginals
+of any dimension, and conditional densities are ratios of marginals, this
+copula representation via Bayesian networks is highly relevant for artificial
+intelligence, where prediction problems reduce to conditional probabilities of
+outputs given inputs. Because the transformed variables $U_i$ are independent,
+they can be learned independently, and learning the joint CDF reduces to
+learning each variable's conditional distribution separately.
+
+This result applies to any set of absolutely continuous variables and extends
+to discrete variables, making it a universal principle.
+
+% ============================================================
+\section{Example: Vehicle Safety Analysis on Curves}\label{sec:vehiclesafety}
+% ============================================================
+
+This section applies the Bayesian network framework to the probabilistic assessment of vehicle safety in road curves. The Figure \ref{fig:vehicle_forces} has been extracted from \cite{GrandeAndrade2015, Mora2017, grande2017highway, CASTILLO2017546}. Three critical failure modes are
+considered: outward sliding, inward sliding, and rollover.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.7\textwidth]{BNCurveSafety_con_fondo.png}
+    \caption{Force diagram for a vehicle on a banked curve, showing normal
+             forces $N_1,N_2$, friction forces $R_1,R_2$, weight $mg$,
+             centrifugal force $F$, banking angle $p$, track width $b$,
+             and centre-of-gravity height $h$.}
+    \label{fig:vehicle_forces}
+\end{figure}
+
+\subsection{Rollover condition}
+Rollover occurs when the inner wheel loses contact ($N_2=0$). Taking moments
+about the outer wheel contact point:
+\begin{equation}
+mg\frac{b}{2}\cos p + mg\sin p\cdot h = \frac{mv^2}{r}\,h\cos p.
+\label{eq:rollover_moment_balance}
+\end{equation}
+Dividing by $m\cos p$ and solving for $v^2/r$:
+\begin{equation}
+\frac{v^2}{r} \leq \frac{gb}{2h} + g\tan p.
+\label{eq:rollover_velocity}
+\end{equation}
+
+\subsection{Sliding conditions}
+
+\subsubsection*{Outward Sliding}
+From force equilibrium perpendicular and parallel to the road surface:
+\begin{equation}
+\frac{v^2}{r}\bigl[1-f_t\tan p\bigr] \leq g(f_t+\tan p).
+\label{eq:outward_exact}
+\end{equation}
+For $f_t\tan p\ll1$ this simplifies to:
+\begin{equation}
+\frac{v^2}{r} \leq g(f_t+\tan p).
+\label{eq:outward_sliding}
+\end{equation}
+
+\subsubsection*{Inward Sliding}
+\begin{equation}
+\frac{v^2}{r} \geq \frac{g(\tan p - f_t)}{1+f_t\tan p},
+\label{eq:inward_exact}
+\end{equation}
+which is relevant only when $\tan p > f_t$.
+
+\subsection{Summary of safety conditions}
+The vehicle safely negotiates the curve if:
+\begin{enumerate}
+\item No outward sliding: $v^2/r \leq g(f_t+\tan p)$.
+\item No inward sliding: $v^2/r \geq g(\tan p - f_t)$.
+\item No rollover: $v^2/r \leq g\!\left(\tfrac{b}{2h}+\tan p\right)$.
+\end{enumerate}
+
+\subsection{Bayesian network implementation}
+
+\begin{table}[H]
+\centering
+\caption{Key variables in the Bayesian network for curve safety analysis.}
+\label{tab:bayesian_variables}
+\begin{tabular}{llp{7cm}}
+\hline
+\textbf{Symbol} & \textbf{Variable} & \textbf{Values}\\\hline
+$V_t$ & Vehicle type & Heavy vehicle, Car, Motorbike\\
+$S$   & Speed & Continuous (km/h)\\
+$Vis$ & Visibility quality & Good, Medium, Bad\\
+$D$   & Driver attention & Distracted, Attentive, Alert\\
+$Dr_T$& Driver type & Professional, Experienced, Standard, Bad\\
+$S_d$ & Driver speed decision & Correct, Error I, Error II\\
+$I$   & Incident & None, Minor, Medium, Severe\\
+$W$   & Weather & Fair, Medium, Bad, Very bad\\\hline
+\end{tabular}
+\end{table}
+
+Critical velocities:
+\begin{align}
+v_{\mathrm{crit,out}}  &= \sqrt{rg(f_t+\tan p)}, \label{eq:vcrit_out}\\
+v_{\mathrm{crit,in}}   &= \begin{cases}\sqrt{rg(\tan p - f_t)} & \tan p > f_t\\\infty & \text{otherwise}\end{cases}, \label{eq:vcrit_in}\\
+v_{\mathrm{crit,roll}} &= \sqrt{rg\!\left(\tfrac{b}{2h}+\tan p\right)}. \label{eq:vcrit_roll}
+\end{align}
+
+Speed excess and failure probability (logistic model):
+\begin{equation}
+\Delta v = \max(0,v_{\mathrm{actual}}-v_{\mathrm{critical}}), \qquad
+P_{\mathrm{fail}}(\Delta v) = \frac{1}{1+e^{-k(\Delta v-\theta)}}.
+\label{eq:failure_probability}
+\end{equation}
+Parameters: outward sliding $k=0.15,\theta=20$ km/h; inward sliding
+$k=0.10,\theta=15$ km/h; rollover $k=0.20,\theta=10$ km/h.
+
+\subsubsection*{Model Limitations and Theoretical Considerations}
+The global failure probability via inclusion--exclusion is:
+\begin{equation}
+P(A\cup B\cup C)=P(A)+P(B)+P(C)-P(A\cap B)-P(A\cap C)-P(B\cap C)+P(A\cap B\cap C).
+\label{eq:global_probability}
+\end{equation}
+Under the independence assumption, intersections factorise as products.
+In practice this assumption may be violated because terrain conditions,
+speed, and tyre characteristics affect all three failure modes simultaneously.
+When failure modes are positively correlated, the inclusion--exclusion formula
+gives an \textbf{upper bound} on the true failure probability. Alternative
+approaches for correlated failures include conditional probability
+decomposition, Monte Carlo simulation, or copula methods:
+\begin{equation}
+F(P_1,P_2,P_3)=C(F_1(P_1),F_2(P_2),F_3(P_3)).
+\end{equation}
+
+\subsubsection*{Incident Severity Classification}
+\begin{table}[H]
+\centering
+\caption{Dynamic severity classification based on speed excess.}
+\label{tab:severity_classification}
+\begin{tabular}{ll}\hline
+\textbf{Classification} & \textbf{Condition}\\\hline
+No incident    & $\Delta v < 0.10\,v_{\mathrm{crit}}$\\
+Minor incident & $0.10\,v_{\mathrm{crit}}\leq\Delta v < 0.25\,v_{\mathrm{crit}}$\\
+Medium incident& $0.25\,v_{\mathrm{crit}}\leq\Delta v < 0.40\,v_{\mathrm{crit}}$\\
+Severe incident& $\Delta v \geq 0.40\,v_{\mathrm{crit}}$\\\hline
+\end{tabular}
+\end{table}
+Incident severity (mean and standard deviation):
+\begin{align}
+\mathrm{Sev}_{\mathrm{mean}}   &= \Delta v\cdot f_{V_t},\label{eq:sev_mean}\\
+\mathrm{Sev}_{\mathrm{stdDev}} &= \Delta v\cdot f_{V_t}\cdot c_v,\label{eq:sev_std}
+\end{align}
+where $f_{V_t}$ is the vehicle-type factor (heavy vehicle: 1.3; car: 1.0;
+motorbike: 0.7) and $c_v=0.15$ is the coefficient of variation.
+
+\subsection{Practical observations}
+Figure \ref{fig:curvebuena}, extracted from \cite{GrandeAndrade2015, Mora2017, grande2017highway, CASTILLO2017546}, illustrates how the conditional probability of different types of incidents can be written in terms of the different conditioning variables: weather $W$, vehicle type $V_t$, driver's attention $D$, and speed $S$.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.95\textwidth]{Icurvebuena.pdf}
+\caption{Illustrative example of the conditional distribution of a curve incident implemented in the Bayesian network.}
+\label{fig:curvebuena}
+\end{figure}
+
+In typical road curves, the most restrictive condition is outward sliding.
+For tall vehicles (large $h$, small $b$) such as SUVs or trucks, rollover can
+become the critical condition. The banking angle $p$ stabilises the vehicle by
+adding a component of weight toward the curve centre, increasing both outward
+sliding and rollover limits; excessive banking, however, can cause inward
+sliding at low speeds when friction is reduced by adverse weather. The exact
+expressions~\eqref{eq:outward_exact} and~\eqref{eq:inward_exact} should be
+used when high precision is required and $\tan p$ is not small.
+
+The Bayesian network approach allows probabilistic safety assessment by
+integrating driver characteristics, vehicle type, weather conditions, and
+geometric curve parameters into a single coherent model---a richer analysis
+than deterministic threshold-based approaches alone.
+
+% ============================================================
+\section{Implications and Applications}\label{sec:implications}
+% ============================================================
+
+The universal factorisation~\eqref{eq:universalfactorization} and the
+inference methods discussed in this chapter have wide-ranging consequences:
+
+\begin{itemize}
+\item \textbf{Universality.} The decomposition holds for any absolutely
+      continuous or discrete distribution, regardless of variable ordering.
+      Every joint distribution is, in a precise sense, a Bayesian network.
+
+\item \textbf{Conditional independence.} The transformed variables $U_i$ are
+      independent, enabling modular inference: each conditional CDF can be
+      estimated and updated independently.
+
+\item \textbf{Bayesian network structure.} The factorisation aligns exactly
+      with Bayesian network structure: each node $X_k$ depends only on its
+      predecessors $X_1,\ldots,X_{k-1}$, with links that can be absent when
+      conditional independence holds.
+
+\item \textbf{Machine learning.} Learning the joint distribution reduces to
+      estimating conditional distributions, one by one and separately. This
+      simplifies high-dimensional modelling and makes training scalable.
+
+\item \textbf{Inference algorithms.} Variable Elimination, Belief
+      Propagation, and the Junction Tree algorithm are all special cases of
+      the general strategy of distributing sums over products, made possible
+      by the factorisation structure. Their correctness is a direct
+      consequence of the conditional independence encoded in the DAG.
+
+\item \textbf{Uncertainty quantification.} Retaining hidden variables
+      parametrically (Paradigm~2) exposes epistemic uncertainty as the
+      variance of the conditional probability over hidden configurations,
+      enabling sensitivity analysis, value-of-information calculations, and
+      causal bounds.
+
+\item \textbf{Copula theory.} The universal factorisation connects Bayesian
+      networks to copula theory: the independence copula applied to
+      conditional CDFs reproduces the full joint, making copula-based
+      dependence modelling a natural extension of Bayesian network inference.
+\end{itemize}
+
+% ============================================================
+\section{Looking Ahead}\label{sec:conclusion}
+% ============================================================
+
+This chapter has developed the theory and practice of Bayesian networks from
+first principles. Starting from the Markov condition and the three
+d-separation patterns (Figure~\ref{fig:dsep}), we derived the fundamental
+chain-rule factorisation that underlies all subsequent developments. Three
+worked examples---a minimal cold-diagnosis network, the classic alarm network,
+and a COVID-19 vs influenza classifier---made the formalism concrete.
+
+The chapter then presented three exact inference algorithms with full numerical
+traces. Variable Elimination applies distributivity to eliminate hidden
+variables one by one. Belief Propagation organises the same computation as
+message passing on tree-structured networks. The Junction Tree algorithm
+extends BP to general (loopy) networks by converting them to a clique tree,
+enabling efficient computation of all marginals after a single calibration
+sweep.
+
+Section~\ref{sec:paradigms} highlighted a fundamental modelling choice that
+is often overlooked: whether to marginalise hidden variables (yielding a
+single posterior estimate) or to retain them parametrically (yielding a
+distribution of estimates that makes epistemic uncertainty explicit). The
+latter is essential for sensitivity analysis, value-of-information studies,
+and causal bounds on unmeasured confounders.
+
+Finally, Section~\ref{sec:factorisation} revealed that the Bayesian network
+factorisation is not merely a modelling convenience but a universal property
+of all multivariate distributions: via the Rosenblatt transformation, any
+joint CDF can be written as the independence copula applied to sequential
+conditional CDFs. This insight bridges Bayesian networks, copula theory, and
+neural-network architectures, and shows that learning the joint distribution
+of any set of variables reduces to learning a sequence of conditional
+distributions independently.
+
+The concepts developed here---conditional independence, factorised inference,
+and the connection to copulas---recur throughout the remaining chapters of
+this book. Dynamic Bayesian Networks (Chapter~\ref{ch:newfunctionalnetworks}) extend the
+DAG structure to temporal sequences. Learning Bayesian networks from data
+asks which links should be present and what
+parameters they should have. And approximate inference methods
+(Chapter~\ref{ch:ComputationalMethodPosterior}) scale the exact algorithms developed here to
+models where exact computation is intractable.
+
+\begin{center}
+\fbox{\parbox{0.9\textwidth}{
+\textbf{Key Insight.} The output of Bayesian inference need not be a single
+probability. When hidden variables are retained parametrically, the output is
+itself a random variable---a probability distribution over probability
+distributions. This richer representation makes epistemic uncertainty explicit
+and actionable, turning Bayesian networks into a tool not just for prediction
+but for reasoning about what we do not yet know.
+}}
+\end{center}
+
+
+\section{Why Functional Equations are at the Core of Bayesian Networks}
+
+A fundamental property of Bayesian networks, often overlooked, is that the factorisation
+\[
+P(X_1,\dots,X_n)=\prod_{i=1}^{n}P(X_i\mid\mathrm{Pa}(X_i)),
+\]
+is valid for \emph{every} ordering of the variables that is consistent with the partial order induced by the directed acyclic graph (DAG). This remarkable flexibility has profound mathematical consequences. The simultaneous validity of the factorisation for all admissible orderings imposes a highly structured system of functional equations that must be satisfied by the entire family of conditional distributions, with the marginal and joint distributions arising naturally as particular cases. Far from being a mere technical consequence, these equations embody the internal consistency of the probabilistic model, ensuring that all admissible factorisations represent exactly the same joint distribution.
+
+From this perspective, a Bayesian network reveals a much richer mathematical structure than is usually emphasised. Rather than viewing it simply as a convenient factorisation of a joint distribution, one may regard it as an equivalence class of factorisations, all connected through a highly constrained system of functional equations. Studying this system opens the possibility of uncovering structural invariants, hidden symmetries, uniqueness properties, and other theoretical results that remain invisible when attention is restricted to a single factorisation.
+
+This viewpoint suggests that Bayesian networks are not merely powerful computational tools for probabilistic inference, learning, and prediction, but also fascinating mathematical objects whose underlying functional-equation structure remains largely unexplored. We hope that this perspective will encourage readers to look beyond their algorithmic and computational aspects and to investigate the rich mathematical landscape that emerges from considering all admissible factorisations simultaneously. Such an approach not only deepens our understanding of Bayesian networks themselves, but also illustrates how functional equations naturally arise as one of the unifying mathematical principles underlying modern probabilistic modelling.
+
+Such an approach not only deepens our understanding of Bayesian networks themselves, but also reinforces one of the central messages of this book: that functional equations constitute a fundamental mathematical language for describing and understanding the structure of complex scientific models.
+
+Bayesian networks therefore illustrate a general principle that extends far beyond probabilistic modelling: whenever a scientific model admits multiple equivalent representations, the consistency among them is governed by systems of functional equations.
+
+\section{Clossing}
+
+After this chapter, we have a practical, learnable structure that can represent any joint distribution. Moreover, the conditional factors can be expressed via copulas, linking Bayesian networks with the copula theory of Chapters~\ref{ch:copulas} and~\ref{ch:ArchimedeanCopulas}. However, we have treated parameters as fixed constants. The next chapter (Chapter~\ref{ch:bayesian_models}) extends this by treating parameters themselves as random variables, introducing Bayesian methods that unify parameters and data in a single probabilistic framework. 

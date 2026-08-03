@@ -1,0 +1,687 @@
+\startcontents[chapter]
+\chapter{The fatigue problem and probabilistic foundations}
+\label{ch:fatigue_foundations}
+\minitocboxed
+
+\section*{Contents of This Part}
+
+This part of the book lays the mathematical and probabilistic foundations for modeling multivariate sstems, using the problem of material fatigue as a guiding thread. The objective is twofold: on the one hand, to present a rigorous framework for obtaining the family of S–N curves and their generalizations to multiple variables; on the other, to develop the algebraic and probabilistic tools that allow quantifying uncertainty and the dependence structure among the variables involved. Throughout these chapters, it will be shown that the multilinear structure is not an arbitrary choice, but an inevitable consequence of probabilistic and invariance principles.
+
+Chapter~\ref{ch:fatigue_foundations} introduces the fatigue problem and justifies its essentially random nature. It explains that, due to material heterogeneity and testing conditions, the relationship between the number of cycles to failure and stress levels exhibits considerable scatter, which forces us to abandon deterministic models. Next, the concept of virtual trajectories or S–N curves is introduced, along with the property of geometric consistency that will be the cornerstone of the entire theory: the equality of the expressions of the conditional distribution functions. This property states that the probability of failing before a certain number of cycles under a given stress must coincide with the probability that the failure stress is below a certain value for a given life. This leads to a functional equation for two dimensions and a system of functional equations for three dimensions, which, when solved, lead to bilinear and trilinear models, respectively. The different types of fatigue tests and the wide variety of existing parametrizations are discussed, showing how dimensional analysis, via Buckingham's $\Pi$ theorem, allows reducing the number of variables and unifying apparently distinct models. A careful distinction is made between laboratory models, where the load descriptors are controlled by the experimenter, and service or design models, where these descriptors are random and their distribution reflects actual operating conditions. This distinction will recur throughout the work. Finally, it discusses how to simulate synthetic data once the model structures have been learned.
+
+Chapter~\ref{ch:trajectory_models} addresses the solution of the system of functional equations arising from the equality of conditional distribution expressions and the location–scale hypothesis. Starting with the two-dimensional case, it is shown that the only possible form for the common argument of the distributions is a bilinear function, which geometrically translates into S–N curves that are rectangular hyperbolas with asymptotes representing physical limits, such as the endurance limit. The Castillo–Galambos solution for the particular case of the Weibull distribution is also presented, providing three complete families of models. The analysis is then extended to three dimensions, where the structure becomes trilinear and the sections for a fixed variable are again confocal hyperbolas. Finally, the general multilinear theorem for any number of variables is stated: the function $G$ that defines the family of trajectories must be a multilinear polynomial with $2^n$ coefficients. In the context of three variables, the family of S–N curves becomes a family of surfaces (rectangular hyperboloids); for $n$ variables, the geometry generalizes to a family of hypersurfaces or multilinear \emph{varieties}, whose algebraic structure is completely determined by the interaction coefficients.
+
+Chapter~\ref{ch:dependence_structure} delves into the analysis of the dependence structure underlying the multilinear function. The vertex representation is introduced, which shows that the trajectory function $G$ is uniquely determined by its values at the $2^n$ vertices of the unit hypercube; the Möbius inversion formula allows recovering the coefficients from those values. Next, the \emph{dependence capacity} is defined as a set function that assigns to each coalition of variables a measure of its joint contribution, establishing a bridge with cooperative game theory and fuzzy measures. The central concept of the chapter is the \emph{interaction spectrum}, which decomposes dependence into main effects, pairwise interactions, triple interactions, etc. This hierarchical decomposition is highly useful in artificial intelligence and machine learning: it allows detecting which subsets of variables are truly relevant, reducing model complexity by eliminating negligible higher-order interactions, and providing interpretable explanations of predictions. The chapter concludes by comparing the multilinear spectrum with Sobol indices, highlighting the advantages of the exact finite decomposition, its independence from the input distribution, and its direct connection with copula geometry, showing that compatible copulas take the form $C=K(G^*)$ and deriving the conditions they must satisfy.
+
+Chapter~\ref{ch:weibull-hyperbola} presents the trivariate Weibull–Hyperbola model, which combines the deterministic multilinear structure with a three-parameter Weibull probability assignment. The choice of the Weibull distribution is justified by extreme value theory and the weakest-link principle. A hierarchy of nested models (M0 to M7) is developed, allowing the selection of the most appropriate interaction structure using information criteria (AIC/BIC). Two complementary estimation methods are presented: ordinary least squares for rapid initialization, and maximum likelihood for rigorous inference that properly handles censored data (run‑outs). A particularly novel aspect is the generation of synthetic data, which allows model validation and sensitivity analysis. The complete fitting algorithm is also included, with a grid search for the reference parameters $(\sigma_{M0}, N_0)$ and a final joint refinement. Interactive visualization using the opacity technique allows hiding irrelevant data points, revealing the internal structure of the model: the trunks (reference parameters), the branches (interaction coefficients), the leaves (percentile curves), and the fruits (reliability predictions). The chapter also includes the representation of the model as a copula, showing its connection with the general dependence framework.
+
+Chapter~\ref{ch:castillo-canteli} presents the Castillo–Canteli method, a general tool for constructing families of joint distributions from a single conditional specification. The idea is simple yet powerful: if a response variable $i$ is fixed, any joint density satisfying that the conditional distribution of $\Pi_i$ given the others is $F(G)$ can be constructed as the product of that conditional density and a completely arbitrary marginal density for the remaining variables. This construction reveals the \emph{modularity} of the approach: the dependence structure (encoded in $G$ and $F$) is separated from the marginal distributions of the covariates, which can be arbitrary. This allows distinguishing between laboratory models, where the covariates are fixed by the experimenter and their distribution is artificial, and service models, where the distribution of the covariates is what really matters for reliability. Thanks to the separation property, the dependence structure learned in the laboratory can be reused in service simply by replacing the marginal of the covariates. The chapter also establishes the connection with copulas, showing that the method provides a direct sampling algorithm, and presents a recursive (hierarchical) extension to build complex models step by step with univariate marginals, thus connecting with the world of Bayesian networks.
+
+Finally, Chapter~\ref{ch:copula-models} explores a complementary alternative to the previous models: copula-based modeling. Copulas allow completely separating the marginal behavior from the dependence structure, offering very valuable flexibility in fatigue problems. The chapter focuses on the Frank copula, an Archimedean copula that can model both positive and negative dependence, is radially symmetric, and lacks tail dependence, which often aligns with the physical behavior of fatigue data. A systematic four-step methodology is presented: (1) transformation to the unit square using normalized ranks (pseudo-observations); (2) estimation of the Frank copula parameter $\theta$, either by maximum likelihood or via Kendall's $\tau$; (3) simulation of synthetic data in the copula domain using the conditional quantile; and (4) retransformation to the original physical space using the marginal quantile functions. The methodology is applied to four case studies: two simulated datasets (hyperbolic and Beta-based) and two real datasets (Holmen and Maennig). In all cases, the Frank copula adequately captures the dependence structure, and the generated synthetic data faithfully reproduce the observed scatter, providing percentile curves directly usable for probabilistic design. The chapter concludes by discussing the connection with the Castillo–Canteli method and the multilinear models, highlighting the similarities, differences, and complementarity between the two approaches.
+
+
+Having described the contents of the different chapters of this part of the book, we begin with the first one.
+
+\section{Description of the fatigue problem}
+
+Fatigue is defined as the failure of a material due to cyclic loads with stress values much lower than those producing static failure (the one obtained by applying a single increasing stress until fracture). The fact that failure occurs under stress states much lower than the static load makes the phenomenon unpredictable and therefore difficult to anticipate in design.
+
+Consider, for example, a cylindrical specimen subjected to repeated variable stresses until it breaks, recording the number of cycles to failure $N$. Figure~\ref{fig:ModeloFatiga} shows two of the most common procedures in fatigue testing. In the upper and left parts, five images appear showing the process of stress alternation, minimum $\sigma_m$ and maximum $\sigma_M$, of the cycles, in five different types of tests. In the upper part, the maximum stress remains constant and the minimum stress is varied; in the left part, the minimum stress remains constant and the maximum stress is varied. This shows that, in principle, it is assumed that both stresses play relevant roles in the fatigue problem. Note that one could consider that only the stress range $\Delta\sigma = \sigma_M - \sigma_m$ is relevant, and ignore the idea that both stresses are necessary. In that case, the 5 types of tests could be used to estimate the parameters of the chosen model, but it should be verified or justified that they lead to similar results.
+
+The reader should realise that, with this approach, in the first case three initial variables are considered: $N$, $\sigma_M$ and $\sigma_m$, while in the second only two: $N$ and $\Delta\sigma$.
+
+
+\subsection{Geometric interpretation: virtual fatigue trajectories}
+\label{sec:geometric-interpretation}
+
+\begin{figure}[htpb]
+    \centering
+    \includegraphics[width=0.72\textwidth]{ModeloFatigaEng.png}
+    \caption{Virtual fatigue trajectories and illustration of the equality of the functions giving the conditional distribution functions.}
+    \label{fig:ModeloFatiga}
+\end{figure}
+
+Figure~\ref{fig:ModeloFatiga} schematically illustrates the probabilistic interpretation underlying the proposed models. It shows, in red, a typical set of families of virtual fatigue trajectories, relating the number of cycles to failure, $N$, to the applied stress level, $S$ (or stress range), for different specimens.
+
+These curves are decreasing in $N$—higher stress implies shorter life—and exhibit an upward concave shape. This curvature reflects the non‑linear accumulation of fatigue damage, as well as the tendency towards two characteristic asymptotes: the cycle limit $N_0$ and the endurance limit $\sigma_0$.
+
+The presence of these asymptotes suggests that an adequate mathematical model should include them explicitly.
+
+Since fatigue tests are destructive, each specimen provides a single experimental failure point; however, conceptually it can be assumed that each specimen possesses a complete underlying trajectory that defines the pairs (stress, cycles) leading to its failure. Due to material heterogeneity, these trajectories are not identical, so the problem is not deterministic but essentially random; hence we use the term stochastic. As a consequence, the trajectories exhibit scatter and may intersect. Nevertheless, the percentile trajectories and the probabilistic models generate non‑intersecting families. For reliability purposes, both representations are equivalent, since the relevant information does not reside in the individual trajectories, but in the probabilities associated with regions of the fatigue space.
+
+Although the mathematical results developed below are completely general and valid beyond fatigue, throughout this chapter we use fatigue as the canonical physical interpretation that guides the development of the models.
+
+We aim to choose a model that allows us to compute the failure probabilities associated with these sets of variables.
+
+In this chapter we will analyse two models, which will include the following variables:
+
+\textbf{Model 1} Initial variables: $N$, $\Delta\sigma_M$, $N_0$ and $\Delta\sigma_0$.
+
+\textbf{Model 2} Initial variables: $N$, $\sigma_M$, $\sigma_m$, $N_0$ and $\sigma_0$,
+
+which after Buckingham’s Pi Theorem would become:
+
+\textbf{Model 1} Dimensionless variables: $\pi_1 = N/N_0$, $\pi_2 = \Delta\sigma_M/\Delta\sigma_0$.
+
+\textbf{Model 2} Dimensionless variables: $\pi_1 = N/N_0$, $\pi_2 = \sigma_M/\sigma_0$, $\pi_3 = \sigma_m/\sigma_0$.
+
+Note that in both models the Pi theorem reduces the number of variables by two, with the consequent reduction in complexity.
+
+\subsection{The two‑dimensional model}
+According to our way of working, developed in previous chapters, models should not be chosen arbitrarily or for convenience, but should reflect properties that must be satisfied. Therefore, we now proceed to indicate which property is used in our proposal.
+
+In the lower left part of Figure~\ref{fig:ModeloFatiga} we see a rectangle delimited by stress and cycle values, whose upper right vertex has coordinates that we denote $(N_1, \Delta\sigma_1)$. All virtual curves (trajectories) that enter that rectangle through its upper side (i.e., that fail at a stress $\Delta\sigma_1$ before or upon reaching $N_1$ cycles) must leave through its right side (fail at a number of cycles $N_1$ for a stress less than or equal to $\Delta\sigma_1$). This equality expresses that the probability of failing before cycle $n$ under stress $s$ is the same as the probability that the failure stress is less than $s$ for a life $n$.
+
+In our model, this geometric property leads to the equality of the probabilities associated with the indicated conditional cdfs:
+\begin{equation}
+F_{\pi_1|\pi_2}(\pi_1|\pi_2) = F_{\pi_2|\pi_1}(\pi_2|\pi_1),
+\label{eq:conditional_intro}
+\end{equation}
+where $F_{\pi_1|\pi_2}(\pi_1|\pi_2)$ is the cumulative distribution function (cdf) of life conditioned on stress, and $F_{\pi_2|\pi_1}(\pi_2|\pi_1)$ is the cdf of stress conditioned on life.
+
+To build a stochastic fatigue model, it is necessary to know both the family of S–N curves (i.e., the equation that defines them) and the assignment of probabilities to each curve. Therefore, we seek the most general model that satisfies the system of functional equations:
+\begin{equation}
+F_{\pi_1|\pi_2}(\pi_1|\pi_2) = F_{\pi_2|\pi_1}(\pi_2|\pi_1) = F\bigl(G(\pi_1,\pi_2)\bigr),
+\label{eq:modelo_general}
+\end{equation}
+where the unknowns are the functions $F(\cdot)$, a cdf belonging to a location‑scale family, and $G(\pi_1,\pi_2)=k$, where $k$ is a constant, which defines the parametric family of S–N curves.
+
+\noindent \textbf{Justification of the hypothesis implying a location‑scale family}
+
+The location‑scale hypothesis is necessary for the model to be invariant under changes of units of measurement, since if it were not satisfied, the family of distributions would change when stresses are expressed in MPa instead of psi, or life in cycles instead of thousands of cycles.
+
+\subsection{Solution of the system of functional equations in the two‑dimensional case}
+Before solving the functional equation (\ref{eq:modelo_general}), it is worth noting that in this equation two functions appear, $F()$ and $G(\pi_1,\pi_2)$, whose roles are independent and complementary for defining the stochastic model of S–N curves.
+
+The function $G(\pi_1,\pi_2)$ defines the family of S–N curves and the function $F()$ assigns probabilities to that family. Therefore, it must be understood that $G(\pi_1,\pi_2)$ is the deterministic part of the model and $F()$ the random component. Having clarified this, we can now proceed to solve the functional equation (\ref{eq:modelo_general}).
+
+For the equality of the two expressions of the conditional cdfs and invariance to hold, the function $G$ must satisfy the system of functional equations (\ref{eq:modelo_general}), which, as will be seen later, leads to the system:
+\begin{equation}
+G(\pi_1,\pi_2) = a(\pi_1)\pi_2 + b(\pi_1) = c(\pi_2)\pi_1 + d(\pi_2), \qquad \forall \pi_1,\pi_2
+\label{eq:funcional}
+\end{equation}
+and to the general solution
+\begin{equation}
+G(\pi_1,\pi_2) = C_0 + C_1\pi_1 + C_2\pi_2 + C_{12}\,\pi_1\pi_2,
+\label{eq:bilineal}
+\end{equation}
+which is a bilinear function with $C_0,C_1,C_2,C_{12}$ real constants. This structure implies that the curves are straight lines (if $C_{12}=0$) or hyperbolas (if $C_{12}\neq0$). Physically, the asymptotes of these curves define the cycle limit $N_0$ and the endurance limit $\sigma_0$, below which fatigue failure does not occur. These parameters can be considered as new model variables, since they characterise relevant material properties. Therefore, the resulting two‑dimensional model is (\ref{eq:bilineal}).
+
+\subsection{Extension: Three‑dimensional model}
+
+For three dimensionless variables $(\Pi_1,\Pi_2,\Pi_3)$ with $\Pi_1$ a life descriptor and $\Pi_2,\Pi_3$ load descriptors, the equality of the expressions of the conditional cdfs extends to
+\begin{equation}
+F_{\Pi_1|\Pi_2,\Pi_3}(\pi_1|\pi_2,\pi_3)
+=
+F_{\Pi_2|\Pi_1,\Pi_3}(\pi_2|\pi_1,\pi_3)
+=
+F_{\Pi_3|\Pi_1,\Pi_2}(\pi_3|\pi_1,\pi_2)
+=
+F\bigl(G(\pi_1,\pi_2,\pi_3)\bigr).
+\label{eq:equalcdfs3D}
+\end{equation}
+
+This equality represents, as in two dimensions, alternative descriptions of the same probability associated with the same family of virtual fatigue surfaces. In Chapter~\ref{ch:dependence_structure} it will be shown that, under the location‑scale hypothesis, the common argument $G$ must be a multilinear function, thus generalising the bilinear and trilinear structures that will be derived in the following sections.
+
+As we will see in the next chapter, the solution of the corresponding functional equation is the trilinear model:
+\begin{equation}\label{eq:2Dfatiguemodel}
+G(\pi_1,\pi_2,\pi_3) = C_0 + C_1\pi_1 + C_2\pi_2 + C_3\pi_3
++ C_{12}\pi_1\pi_2 + C_{13}\pi_1\pi_3 + C_{23}\pi_2\pi_3
++ C_{123}\pi_1\pi_2\pi_3.
+\end{equation}
+
+The proposed hypotheses (equality of conditional cdf probabilities and location‑scale) therefore determine the unique family of surfaces satisfying these properties, allowing us to discard other families that do not satisfy them. This framework constitutes the basis of the probabilistic fatigue modelling developed in the following sections.
+
+\section{Fatigue as a stochastic phenomenon}
+\label{sec:fatiga_estocastica}
+
+Fatigue failure occurs when materials are subjected to cyclic loads with stress levels well below the static strength limit, causing progressive damage and eventual fracture after a certain number of cycles. The relationship between the stress range $\Delta\sigma$ and the number of cycles to failure $N$ is traditionally described by S–N curves, which exhibit considerable scatter due to material variability, manufacturing tolerances, and environmental factors.
+
+\subsection{Sources of variability}
+
+The scatter observed in fatigue tests has multiple origins:
+
+\begin{itemize}
+    \item \textbf{Material heterogeneity}: local variations in microstructure, inclusions, surface defects, and residual stresses.
+    \item \textbf{Manufacturing processes}: differences in surface finish, heat treatment, and dimensional tolerances.
+    \item \textbf{Environmental conditions}: temperature, humidity, corrosion, and other factors affecting crack initiation and propagation.
+    \item \textbf{Measurement uncertainties}: errors in stress measurement, cycle counting, and failure detection.
+\end{itemize}
+
+This variability makes fatigue an essentially probabilistic problem. Deterministic models that provide a single S–N curve for a given material cannot capture the observed scatter, motivating the development of models that quantify uncertainty and provide predictions in terms of probabilities.
+
+\subsection{Need for probabilistic models}
+
+In engineering applications, reliability‑based design requires knowing not only the expected mean life, but also the complete distribution of fatigue life and, in particular, the lower percentiles that guarantee a specified survival (e.g., $95\%$ or $99\%$). Moreover, risk assessment and inspection planning require quantifying the probability of failure before a given number of cycles.
+
+Therefore, probabilistic fatigue modelling is not an academic luxury, but a practical necessity to:
+\begin{itemize}
+    \item Establish design S–N curves with confidence levels.
+    \item Combine material uncertainty with the variability of service loads.
+    \item Update reliability estimates from inspection data.
+    \item Optimise design by balancing cost and safety.
+\end{itemize}
+
+\section{Variables involved and dimensional analysis}
+\label{sec:variables-dimensional}
+
+One of the main conceptual difficulties in probabilistic fatigue modelling is that different authors use different stress parametrisations to describe the same physical phenomenon. Some two-dimensional formulations use $(N,\Delta\sigma)$, $(N,\sigma_M)$ or $(N,R)$, where $N$ is the fatigue life, $\sigma_M$ and $\sigma_m$ are the maximum and minimum stresses, respectively, $\Delta\sigma=\sigma_M-\sigma_m$ is the stress range, and $R=\sigma_m/\sigma_M$ denotes the stress ratio. More general three-dimensional models employ combinations such as $(N,\sigma_M,\sigma_m)$, $(N,R,\sigma_M)$ or $(N,\Delta\sigma,R)$.
+
+These formulations are frequently presented as different fatigue models. However, from a structural probabilistic point of view, they correspond simply to different coordinate representations of the same physical problem.
+
+\section{Buckingham’s $\Pi$ Theorem and dimensionless variables}
+
+Buckingham’s $\Pi$ theorem guarantees that fatigue problems can be expressed in terms of dimensionless variables. This allows reducing the number of variables and facilitates comparison between different experiments and applications.
+
+Throughout this chapter we denote these variables by capital letters $(\Pi_1,\Pi_2,\ldots,\Pi_n)$, and lowercase letters for particular values, where:
+\begin{itemize}
+    \item $\Pi_1$ denotes a fatigue life descriptor,
+    \item $\Pi_2,\ldots,\Pi_n$ denote load descriptors.
+\end{itemize}
+
+Different fatigue formulations correspond to different selections of these descriptors. For example,
+\[
+(\Pi_1,\Pi_2)=\left(\log\left(\frac{N}{N_0}\right),\frac{\Delta\sigma}{\sigma_0}\right),
+\]
+where $N_0$ and $\sigma_0$ are the cycle limit and the endurance limit, respectively, correspond to the classical S–N representation, while
+\[
+(\Pi_1,\Pi_2,\Pi_3)=\left(\log\left(\frac{N}{N_0}\right),\frac{\sigma_M}{\sigma_0},\frac{\sigma_m}{\sigma_0}\right)
+\]
+provides a three‑variable representation capable of incorporating mean stress effects.
+
+Note that some relevant parameters, such as $N_0$ or $\sigma_0$, are also included to generate ratios of dimensionless variables. In the three‑dimensional fatigue case, a particularly useful parametrisation is:
+\[
+\pi_1 = R,\qquad \pi_2 = \frac{\sigma_M}{\sigma_{M0}} - 1,\qquad \pi_3 = \log\left(\frac{N}{N_0}\right),
+\]
+where $\sigma_{M0}$ is the endurance limit and $N_0$ is the reference number of cycles.
+
+\subsection{Representative parametrisations}
+
+The important point is that the probabilistic structure we develop in this chapter is invariant with respect to the particular choice of fatigue descriptors. The theory is therefore not tied to a specific stress parametrisation. This distinction between physical interpretation and probabilistic structure will play a central role throughout the chapter.
+
+Table~\ref{tab:2Dmodels} shows some representative two‑dimensional parametrisations, while Table~\ref{tab:3Dmodels} collects common three‑dimensional parametrisations.
+
+\begin{table}[htpb]
+\centering
+\caption{Representative two‑dimensional fatigue models.}
+\label{tab:2Dmodels}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{lll}
+\hline
+Model & Variables $\Pi$ & Interpretation \\
+\hline
+Classical S–N & $(\log(N/N_0),\Delta\sigma/\sigma_0)$ & Stress range \\
+Maximum stress & $(\log(N/N_0),\sigma_M/\sigma_0)$ & Peak stress \\
+Stress ratio & $(\log(N/N_0),R)$ & Asymmetry \\
+Minimum stress & $(\log(N/N_0),\sigma_m/\sigma_0)$ & Minimum stress \\
+Frequency & $(\log(N/N_0),f/f_0)$ & Frequency effects \\
+Temperature & $(\log(N/N_0),T/T_0)$ & Thermal effects \\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{table}[htpb]
+\centering
+\caption{Representative three‑variable fatigue parametrisations.}
+\label{tab:3Dmodels}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{lll}
+\hline
+Variables $\Pi$ & Interpretation & Application \\
+\hline
+$(\log(N/N_0),\sigma_M/\sigma_0,\sigma_m/\sigma_0)$ & Max. and min. stresses & Mean stress effects \\
+$(\log(N/N_0),\Delta\sigma/\sigma_0,R)$ & Range and stress ratio & Asymmetric loading \\
+$(\log(N/N_0),\sigma_a/\sigma_0,\sigma_m/\sigma_0)$ & Alternating and mean & Goodman type \\
+$(\log(N/N_0),\Delta\sigma/\sigma_0,f)$ & Range and frequency & High cycle \\
+$(\log(N/N_0),\Delta\sigma/\sigma_0,T)$ & Range and temperature & Thermo‑mechanical \\
+$(\log(N/N_0),\sigma_{eq}/\sigma_0,R)$ & Equivalent stress and ratio & Multiaxial \\
+\hline
+\end{tabular}
+\end{table}
+
+
+\subsection{The role of conditional distributions as a consistency condition}
+
+Consider the two‑dimensional case with variables $(\Pi_1,\Pi_2)$. The fraction of trajectories entering a rectangular region through its upper boundary must equal the fraction leaving through its lateral boundary, as illustrated in the figure. This observation naturally leads to the condition
+\begin{equation}
+F_{\Pi_1|\Pi_2}(\pi_1|\pi_2) = F_{\Pi_2|\Pi_1}(\pi_2|\pi_1), \quad \forall (\pi_1,\pi_2) \in \mathcal{R},
+\label{eq:equalcdfs}
+\end{equation}
+where $\mathcal{R}$ is its domain of definition.
+
+It is important to clarify the meaning of equation~\eqref{eq:equalcdfs}. The equation should not be interpreted as two independently defined conditional cumulative distribution functions turning out to be equal. Rather, both expressions coincide and represent alternative descriptions of the same probability associated with the same family of virtual fatigue trajectories.
+
+Indeed, for a given point $(\pi_1,\pi_2)$, the fraction of trajectories crossing the corresponding rectangular region can be evaluated from either of the two coordinate directions. The two conditional expressions therefore quantify the same probabilistic content and must produce the same numerical value. The equality thus reflects a structural property of the underlying trajectory representation rather than a symmetry between the physical roles of the variables.
+
+Consequently, the condition of equation~\eqref{eq:equalcdfs} should be viewed as a consistency requirement arising from the geometric and probabilistic interpretation of the fatigue process, not as an arbitrary restriction imposed on unrelated conditional distributions.
+
+
+\section{Systems of Functional Equations for Modelling}
+\label{sec:equality-conditional}
+
+The equality of expression of both conditional cumulative distribution functions introduced above constitutes the key structural hypothesis underlying the models developed in this chapter. Its importance is twofold:
+
+First, it imposes a strong restriction on the admissible probabilistic dependence structures. As will be shown below, this restriction forces the arguments of the conditional distributions to adopt multilinear forms.
+
+Second, the hypothesis is independent of the particular fatigue parametrisation employed. Consequently, seemingly different fatigue formulations can share exactly the same underlying probabilistic structure even when expressed in terms of different load descriptors.
+
+\subsection{Fundamental probabilistic hypotheses}
+
+We now introduce the probabilistic hypotheses that lead to the proposed models.
+
+\begin{enumerate}
+    \item {\bf Hypothesis 1.} The first hypothesis is the existence of conditional cumulative distribution functions satisfying
+    \begin{equation}
+    F_{\Pi_1|\Pi_2}(\pi_1|\pi_2) = F_{\Pi_2|\Pi_1}(\pi_2|\pi_1) = F\!\left(G(\pi_1,\pi_2)\right), \quad \forall (\pi_1,\pi_2) \in \mathcal{R},
+    \label{eq:generalconditional}
+    \end{equation}
+    where $\mathcal{R}$ is its feasible region and for some suitable function $G$. This means that the two conditional families of cdfs can be written as $F\!\left(G(\pi_1,\pi_2)\right)$, i.e., they share this common representation.
+
+    \item {\bf Hypothesis 2.} The second hypothesis is that the family of distributions $F(\cdot)$ belongs to a location‑scale family (invariance under affine transformations).
+
+    This hypothesis is extremely natural from both physical and statistical viewpoints. A probabilistic model should not depend on the units used to measure the variables. If a family of distributions changes when stresses are expressed in MPa instead of psi, or when fatigue life is expressed in cycles instead of thousands of cycles, the model lacks physical consistency.
+
+    Location‑scale families therefore constitute the weakest reasonable class that preserves invariance under affine transformations.
+
+    \item {\bf Hypothesis 3 (optional).} Finally, particular applications may select specific generators such as the Weibull family, motivated by weakest‑link arguments and extreme value theory. However, the structural derivations developed below do not depend on that particular choice.
+\end{enumerate}
+
+It is worth clarifying that the stochastic model consists of two parts: the first corresponds to the family of trajectories, $G(\cdot)$, and the second to the assignment of probabilities, $F(\cdot)$, to these trajectories. We could say that the first is more about deterministic learning and the second adds the main component of randomness.
+
+\subsection{Theorems that solve them: Resulting Models}
+
+The following lemma shows the characterisation of the arguments appearing in the location and scale transformations of location‑scale families.
+
+\begin{lemma}
+\label{lem:bilinear}
+The most general solution of the functional equation
+\begin{equation}
+a(x)y+b(x)=d(y)x+e(y), \qquad \forall x,y,
+\label{eq:functionalequation}
+\end{equation}
+where $a(x)$ and $d(y)$ represent scale transformations and $b(x)$ and $e(y)$ location transformations, is
+\begin{equation}
+a(x)=C_{12}x+C_2,\quad b(x)=C_1x+C_0,\quad d(y)=C_{12}y+C_1,\quad e(y)=C_2y+C_0,
+\end{equation}
+with $C_0, C_1, C_2, C_{12}$ real constants. Consequently, both sides reduce to the bilinear expression
+\begin{equation}
+\boxed{a(x)y+b(x)=d(y)x+e(y) = C_0 + C_1x + C_2y + C_{12}xy.}
+\label{eq:bilinearform}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Subtracting the two sides gives $a(x)y+b(x)-d(y)x-e(y)=0$. This belongs to the class of sum‑of‑products functional equations. Applying the corresponding theorem yields affine representations for all functions involved, leading to the bilinear form.
+\end{proof}
+
+We are now ready to derive the general two‑dimensional fatigue model.
+
+\begin{theorem}
+\label{thm:2Dmodel}
+Suppose $(\Pi_1,\Pi_2)$ is a continuous random variable such that the conditional cdfs exist and satisfy
+\begin{equation}
+F_{\Pi_1|\Pi_2}(\pi_1|\pi_2)
+=
+F_{\Pi_2|\Pi_1}(\pi_2|\pi_1)
+=
+F\!\left(G(\pi_1,\pi_2)\right), \quad \forall (\pi_1,\pi_2) \in \mathcal{R},
+\label{eq:conditionalmodel}
+\end{equation}
+where $F$ is an invertible cdf associated with a location‑scale family, i.e., it satisfies the condition $F(a(x)y+b(x)) = F(d(y)x+ e(y))$ and $\mathcal{R}$ is its feasible region. Then the only possible form of the common argument is
+\begin{equation}
+G(\pi_1,\pi_2)
+=
+C_0+C_1\pi_1+C_2\pi_2+C_{12}\pi_1\pi_2,
+\label{eq:generalbilinear}
+\end{equation}
+where $C_0,C_1,C_2,C_{12}$ are real constants.
+\end{theorem}
+
+\begin{proof}
+Since $F$ is invertible and generates a location‑scale family, the equality of the conditional cdfs implies
+\[
+a(x)y+b(x)=d(y)x+e(y).
+\]
+
+Applying Lemma~\ref{lem:bilinear} directly yields the bilinear form.
+\end{proof}
+
+Equation~\eqref{eq:generalbilinear} constitutes the basic structural result of the two‑dimensional theory.
+
+The result must be interpreted carefully. The theorem does not state that all fatigue models are identical. Rather, it states that once the equality of the conditional cdf expressions and the location‑scale hypotheses are imposed, the admissible dependence structures become necessarily bilinear.
+
+Thus, the bilinear form is not an arbitrary modelling choice but a mathematical consequence of the probabilistic hypotheses.
+
+The above theorem therefore provides a unified probabilistic framework for a large family of fatigue models.
+
+\subsection{Physical interpretation: bilinear structure and asymptotes}
+
+The bilinear term $C_{12}\pi_1\pi_2$ plays a central role in the proposed models. From a mathematical viewpoint, this term necessarily appears as a consequence of the equality of expression of the conditional cumulative distribution functions combined with the location‑scale hypothesis. From a physical viewpoint, the bilinear interaction term represents the coupling between fatigue life and load descriptors.
+
+For the classical choice $(\Pi_1,\Pi_2)=(\log(N/N_0),\Delta\sigma/\sigma_0)$, setting $C_{12}=0$ gives linear S–N curves (no endurance limit), while $C_{12}\neq0$ gives hyperbolic curves with a horizontal asymptote representing the endurance limit.
+
+
+
+
+
+In classical deterministic S–N models, the variables are often assumed to be related by simple linear or logarithmic expressions. However, experimental observations reveal more complex interactions, especially when several load descriptors are involved simultaneously. The bilinear structure provides the simplest non‑trivial representation capable of capturing such interactions while remaining mathematically tractable.
+
+
+
+\section{Interactive visualisation and full model learning}
+\label{sec:interactive-learning}
+This section aims to clarify the great differences between learning a model to make some predictions and learning the complete relationships among its variables.
+
+At this point, readers should have identified the Model based on (\ref{eq:2Dfatiguemodel}) as a structural model from which any variable can be predicted as a function of the rest. In other words, this formula goes beyond a typical regression model, for example.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.95\textwidth]{GraphsAllPairs.pdf}
+    \caption{\label{fig:GraphsAllPairs}This figure shows an example of fatigue data, displaying different two‑dimensional conditional plots of the variables associated with a sample. The opacity used for the different data points, whose values are close to some selected value of the third variable (the one not included in the axes), which is selected with the help of a slider, appears with high opacity, allowing an interactive visualisation of those points. Data points close to it appear with maximum opacity, which decreases as the distance to it increases. The opacity is adjusted in real time according to the selected value of the third variable, which can also be selected with another slider.} \href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/GraphsAllPairs.html}{\textcolor{blue}{\underline{Click to open the web page}}}.
+\href{https://raw.githubusercontent.com/EnriqueCastilloRon/mi-libro-interactivo/main/manuales/GraphsAllPairsPYManual.pdf}
+    {\textcolor{blue}{Click here to see the manual.}}\href{https://youtu.be/AD-Xq77a2nc}{▶ Watch video}
+\end{figure}
+
+To clarify the ideas, an example of fatigue data is shown in Figure \ref{fig:GraphsAllPairs}, where the reader can visualise some of the different conditional plots depending on the selected triplet of variables. In addition to inviting the reader to reflect and understand the limitations of two‑dimensional plots for understanding three‑dimensional relationships, the invitation is extended to use the following application and play with it. It is a step forward to experience the usefulness of the opacity technique that allows measuring variables through the intensity of opacity when a new axis is not available.
+
+Note that apart from the variables $N$, $\sigma_M$, $R$ and $\sigma_m$, one can work with any other variable.
+
+Furthermore, if the joint cdf of the three basic variables is given, and this is what the model does, any probability, statistic, regression line or surface is already given, i.e., it can be computed.
+
+\subsection{Numerical example with simulated data}
+\label{sec:numerical-example}
+
+In this section we show a random fatigue example in which simulated data has been used based on a model previously estimated, see \cite{CASTILLO2022106596}. The main reason for this decision is that no optimally tested data are available to fit this type of models, in which no repeated levels of stresses must be tested, but all different ones. Note that we aim to cover all ranges and that we need different levels of $\sigma_M$ and $R$.
+
+Figure~\ref{fig:fatiguedata} shows the original and the simulated data for $n = 1000$.
+
+\begin{figure}[htpb]
+\centering
+\includegraphics[width=0.45\textwidth]{alldata100_con_fondo.png}
+\includegraphics[width=0.45\textwidth]{alldata_con_fondo.png}
+\caption{Original fatigue data for $n = 71$ and simulated fatigue data for $n = 1000$, showing the hyperbolic trends.}
+\label{fig:fatiguedata}
+\end{figure}
+% mark
+The method previously described was used for estimating the model parameters, using the simulated sample and a subsample of size $n = 100$ for reference.
+
+Table~\ref{tab:fatigueparams} shows the parameter estimates, where one can see that the differences in the values of the interactions involving variables $\sigma_M$ and $\sigma_m$ are small, but not those involving $\log(N)$, because the sample size affects location and scale parameters due to the logarithmic transformation.
+
+\begin{table}[htpb]
+\centering
+\caption{Comparison of the model estimates for samples of sizes $n = 1000$ and $n = 100$.}
+\label{tab:fatigueparams}
+\begin{tabular}{lcc}
+\toprule
+Parameter & $n = 1000$ & $n = 100$ \\
+\midrule
+$C_0$ & 139.04 & 236.45 \\
+$C_1$ & 14.93 & 3.49 \\
+$C_2$ & 0.731 & 0.666 \\
+$C_3$ & $-125.86$ & $-16.27$ \\
+$C_{12}$ & $-0.277$ & $-0.275$ \\
+$C_{13}$ & $-94.25$ & $-93.47$ \\
+$C_{23}$ & $-3.042$ & $-3.292$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Since the original data corresponds to particular stress levels, which do not correspond to those in the following figures, to estimate the cdf of $N$ given $\sigma_M$ and $R$, we have selected as data those having $R$ values $\pm 10\%$ the conditioned ones.
+
+Figure \ref{fig:percentiles} shows, on the left all data as background and in red color the band data for the case $R=0$. The fact that all data points fit well to the percentile curves is a warranty of the quality of the fit. On the right, the cdf of the residuals are plotted indicating the values associated with the selected seven percentiles for the plot. See the interactive version at \href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/Fatigue3DModel.html}{\textcolor{blue}{\underline{Click to open application}}} and \href{https://raw.githubusercontent.com/EnriqueCastilloRon/mi-libro-interactivo/main/manuales/Fatigue3DModel_UserManual.pdf}{\textcolor{blue}{\underline{manual}}}.
+
+
+\begin{figure}[htpb]
+\centering
+\includegraphics[width=0.35\textwidth]{Percentiles0a_con_fondo.png}  \includegraphics[width=0.38\textwidth]{Residuals0_con_fondo.png}
+\caption{Percentile curves for $R= 0$, where the selected data band, in red color, is shown to include the corresponding data and the corresponding residual cdf with the $0, 0.05, 0.25, 0.50$, $0.75, 0.95, 0.99$ percentiles.}
+\label{fig:percentiles}
+\end{figure}
+
+\begin{figure}[htpb]
+\centering
+\includegraphics[width=0.40\textwidth]{Percentiles-0_5_con_fondo.png} \hspace{6mm}
+\includegraphics[width=0.40\textwidth]{Percentiles-0_25_con_fondo.png} \\[1ex]
+\includegraphics[width=0.40\textwidth]{Percentiles0_con_fondo.png}\hspace{6mm}
+\includegraphics[width=0.40\textwidth]{Percentiles0_5_con_fondo.png}\\
+\includegraphics[width=0.40\textwidth]{UPercentiles-0_5_con_fondo.png} \hspace{6mm}
+\includegraphics[width=0.40\textwidth]{UPercentiles-0_25_con_fondo.png}\\
+\includegraphics[width=0.40\textwidth]{UPercentiles-0_0_con_fondo.png}\hspace{6mm}
+\includegraphics[width=0.40\textwidth]{UPercentiles0_5_con_fondo.png}
+\caption{\label{fig:percentilesmulti}Percentile curves for different values of $R = -0.5, -0.25, 0, 0.5$.
+Outliers are plotted in blue color and a doubled size, in the original and the [0,1] scales. The four above plots correspond to the initial scales and the four lowest ones to the associated copulas.}
+\end{figure}
+
+Figure~\ref{fig:percentilesmulti} shows the resulting percentile curves for the conditional distributions of $N$ given $\sigma_M$ and $R$, where four outliers, shown in blue color, were detected and removed.
+
+Table~\ref{tab:qualitymetrics} shows the quality metrics of the parameter estimation, which are very good and especially surprising the very large coefficient of determination $R^2 = 0.993$. Some outliers have been identified and removed.
+
+\begin{table}[htpb]
+\centering
+\caption{Comparison of Model Quality Metrics for $n = 1000$ and $n = 100$.}
+\label{tab:qualitymetrics}
+\begin{tabular}{lcc}
+\toprule
+Metric & $n = 1000$ & $n = 100$ \\
+\midrule
+Number of observations & 996 & 99 \\
+Standard deviation of residuals & 61.02 & 57.92 \\
+Variance of residuals & 3723.8 & 3355.2 \\
+MSE (Mean Squared Error) & 3720.1 & 3321.3 \\
+RMSE (Root Mean Squared Error) & 60.99 & 57.63 \\
+MAE (Mean Absolute Error) & 47.87 & 44.26 \\
+$R^2$ (Coefficient of Determination) & 0.993 & 0.993 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\section{Laboratory versus service distinction. Estimation and use of the model}
+\label{sec:lab-vs-service}
+
+At this point it is important to carefully distinguish between laboratory fatigue models and service fatigue models.
+
+In laboratory experiments, load descriptors are controlled by the experimenter. Under these conditions, the relevant quantity is the conditional distribution
+\[
+F_{\Pi_1|\Pi_2}(\pi_1|\pi_2),
+\]
+which describes the distribution of fatigue life for prescribed loading conditions.
+
+The situation is fundamentally different under real operating conditions. In service applications, the load descriptors are themselves random variables associated with uncertain operating environments, stochastic loads, and variable usage conditions. Consequently, the design problem requires the construction of joint probabilistic models involving both fatigue life and load descriptors.
+
+The service distribution of fatigue life is therefore obtained by marginalisation:
+\begin{equation}
+F_{\Pi_1}^{\mathrm{serv}}(\pi_1)
+=
+\int
+F_{\Pi_1|\Pi_2}(\pi_1|\pi_2)
+\,f_{\Pi_2}^{\mathrm{serv}}(\pi_2)
+\,d\pi_2.
+\label{eq:service}
+\end{equation}
+
+Table~\ref{tab:labservice} summarises the conceptual differences between both approaches.
+
+\begin{table}[htpb]
+\centering
+\caption{Conceptual distinction between probabilistic laboratory and service models.}
+\label{tab:labservice}
+\renewcommand{\arraystretch}{1.45}
+\begin{tabular}{lll}
+\hline
+Aspect & Laboratory model & Service model \\
+\hline
+Load descriptors & Controlled & Random \\
+Probabilistic object & Conditional distribution & Joint distribution \\
+Typical form & $F_{\Pi_1|\Pi_2,\ldots,\Pi_n}$ & $F_{\Pi_1,\ldots,\Pi_n}$ \\
+Main uncertainty & Fatigue life scatter & Operational variability \\
+Dependence structure & Conditional & Operational + structural \\
+Engineering objective & Material characterisation & Reliability prediction \\
+Role of copulas & Usually implicit & Fundamental \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Service life quantities of interest}
+
+Once the service life density has been computed, all standard reliability measures are obtained.
+
+\paragraph{Expected service life.}
+\begin{equation}
+\mathrm{E}^{\mathrm{serv}}[N]
+= \int_0^\infty n\,f_N^{\mathrm{serv}}(n)\,dn.
+\label{eq:mean}
+\end{equation}
+
+\paragraph{Design life at the $p$‑th percentile (safe life).}
+\begin{equation}
+N_p = \bigl(F_N^{\mathrm{serv}}\bigr)^{-1}(p),
+\label{eq:quantile}
+\end{equation}
+i.e., the number of cycles exceeded by a fraction $1-p$ of the population. Standard design values are $p=0.05$ ($95\%$ survival) or $p=0.01$ ($99\%$ survival).
+
+\paragraph{Probability of failure before $N^*$ service cycles.}
+\begin{equation}
+P_f = F_N^{\mathrm{serv}}(N^*) = \int_0^{N^*} f_N^{\mathrm{serv}}(n)\,dn.
+\label{eq:pf}
+\end{equation}
+
+\subsection{Synthetic data}
+\label{sec:synthetic-data}
+Before extending the probabilistic framework to three or more dimensions, it is instructive to examine how the two‑dimensional model developed above can be used to generate synthetic fatigue data. Synthetic data play a twofold role in modern fatigue analysis:
+
+\begin{enumerate}
+    \item \textbf{Laboratory stage:} they allow the experimenter to explore the model behaviour under controlled conditions, validate estimation procedures, and design optimal test plans when real experiments are costly or time‑consuming.
+    \item \textbf{Design (service) stage:} they provide a means to propagate uncertainty from the load environment through the fatigue model, producing realistic datasets that mimic field conditions. This is particularly valuable when only limited field measurements are available, or when the joint distribution of load descriptors must be inferred indirectly.
+\end{enumerate}
+
+The generation of synthetic data follows directly from the two fundamental ingredients of the model:
+\begin{itemize}
+    \item the conditional distribution of fatigue life given the load descriptors, summarised by the percentile equation \eqref{eq:percentiles};
+    \item the probability density (or mass) function of the load descriptors, denoted by \(f_{\Pi_2}^{\text{(lab)}}\) or \(f_{\Pi_2}^{\text{(serv)}}\) depending on the context.
+\end{itemize}
+
+\subsubsection{Generating a synthetic sample}
+
+Suppose we work with two dimensionless variables \((\Pi_1,\Pi_2)\), where \(\Pi_1\) is a life descriptor (e.g., \(\log(N/N_0)\)) and \(\Pi_2\) a load descriptor (e.g., \(\Delta\sigma/\sigma_0\), \(R\) or \(\sigma_M/\sigma_0\)). From the general Weibull formulation, the percentile curves of \(\Pi_1\) given \(\Pi_2=\pi_2\) are
+\begin{equation}
+p = F_{\Pi_1|\Pi_2}(\pi_1|\pi_2)=1-\exp\left[-\left(\frac{C_0+C_1\pi_1+C_2\pi_2+C_{12}\pi_1\pi_2-\lambda}{\delta}\right)^{\beta}\right],
+\end{equation}
+which are invertible and where $p$ is the associated percentile value. Consequently, for any fixed \(\pi_2\) we can generate a random realisation of \(\Pi_1\) via the inverse probability integral transform:
+\[
+\pi_1 = \frac{1}{C_{12}\pi_2+C_1}\left(\lambda+\delta\left[-\ln(1-U)\right]^{1/\beta} - C_2\pi_2 - C_0\right),\qquad U\sim\mathcal{U}(0,1),
+\]
+provided the denominator is non‑zero (a condition that holds in the domain where the model is defined).
+
+To obtain a complete bivariate synthetic sample \(\{(\pi_{1,i},\pi_{2,i})\}_{i=1}^{m}\) we proceed as follows:
+
+\begin{enumerate}
+    \item Choose the stage of operation (laboratory or service). This determines the distribution of the load descriptor \(\Pi_2\).
+    \begin{itemize}
+        \item \textbf{Laboratory stage:} \(\Pi_2\) is often treated as fixed (deterministic) at prescribed levels. Synthetic data are then generated by conditioning on those levels.
+        \item \textbf{Service stage:} \(\Pi_2\) is random with a density \(f_{\Pi_2}^{\text{(serv)}}(\pi_2)\) (see Table 1.5 for examples such as Rayleigh, lognormal, Weibull, or a discrete stress history).
+    \end{itemize}
+    \item For each \(i=1,\dots,m\):
+    \begin{enumerate}
+        \item If service stage: draw \(\pi_{2,i}\) from \(f_{\Pi_2}^{\text{(serv)}}(\pi_2)\); if laboratory stage: set \(\pi_{2,i}\) equal to a pre‑selected value or draw from a design distribution (e.g., uniform over a stress range of interest).
+        \item Draw \(U_i\sim\mathcal{U}(0,1)\) independently.
+        \item Compute \(\pi_{1,i}\) using the inverse formula above, with the appropriate model parameters \(C_0,C_1,C_2,C_{12},\lambda,\delta,\beta\).
+    \end{enumerate}
+    \item The resulting pairs \((\pi_{1,i},\pi_{2,i})\) constitute a synthetic dataset that respects the probabilistic structure of the fatigue model.
+\end{enumerate}
+
+\subsubsection{Use of synthetic data in practice}
+
+\begin{itemize}
+    \item \textbf{Model validation:} Synthetic data generated from a fitted model can be compared with the original experimental data via quantile‑quantile plots, copula diagnostics, or by checking whether the empirical conditional distributions satisfy the bilinear property (1.8). Discrepancies indicate possible model misspecification.
+
+    \item \textbf{Laboratory experiment design:} Many different test plans (e.g., varying the number of specimens, stress levels, runout assignment) can be simulated and the resulting estimation variance or bias evaluated. This allows the experimenter to choose a cost‑effective plan without running a single real test.
+
+    \item \textbf{Reliability assessment under service loads:} Once the service distribution \(f_{\Pi_2}^{\text{(serv)}}(\pi_2)\) has been specified (from measurements or standards), a large synthetic sample \(\{(\pi_{1,i},\pi_{2,i})\}\) is generated. The service marginal life distribution is then approximated by the empirical distribution of \(\{\pi_{1,i}\}\). From this sample one can directly estimate
+    \[
+    \widehat{F}_{\Pi_1}^{\text{(serv)}}(x)=\frac{1}{m}\sum_{i=1}^{m}\mathbf{1}_{\{\pi_{1,i}\le x\}},
+    \]
+    the expected service life \(\widehat{E}[\Pi_1]\), the design life at the \(p\)‑th percentile, or the probability of failure before a target life \(N^*\) – without performing the analytical integration (1.16). This is especially attractive when the load distribution is non‑standard (e.g., a mixture or a discrete‑continuous combination) or when the fatigue model includes runouts.
+
+    \item \textbf{Bayesian extensions:} If the model parameters themselves have prior distributions (e.g., reflecting uncertainty in fatigue strength), synthetic data can be drawn from the posterior predictive distribution. This yields ‘perfect samples’ that incorporate both aleatory (random life) and epistemic (parameter) uncertainty – a key feature advocated in the preface of this book.
+\end{itemize}
+
+\subsection{Standard models for the stress history}
+
+Depending on the application, several standard distributions are used to model the service stress history. Table~\ref{tab:stressModels} shows some representative examples.
+
+\begin{table}[htpb]
+\centering
+\caption{Standard models for the stress history and corresponding induced fatigue life densities.}
+\label{tab:stressModels}
+\renewcommand{\arraystretch}{1.9}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|c|c|}
+\hline
+\boldmath$f_S(s)$ & \boldmath$f_N(n)$ \\
+\hline
+\multicolumn{2}{|c|}{\textbf{Uniform distribution (laboratory reference)}} \\
+\hline
+$\displaystyle f_S(s)= \frac{1}{L}, \qquad s\in(c,c+L)$ &
+$\displaystyle f_N(n)= \frac{1}{L} \int_0^L t\,f\!\left((n-b)t\right)dt$ \\
+\hline
+\multicolumn{2}{|c|}{\textbf{Rayleigh distribution (offshore wave loading)}} \\
+\hline
+$\displaystyle f_S(s)= \frac{s-c}{\sigma^2} \exp\!\left(-\frac{(s-c)^2}{2\sigma^2}\right), \qquad s>c$ &
+$\displaystyle f_N(n)= \frac{1}{a\sigma^2} \int_0^\infty t^2 f\!\left((n-b)t\right) \exp\!\left(-\frac{t^2}{2\sigma^2}\right)dt$ \\
+\hline
+\multicolumn{2}{|c|}{\textbf{Lognormal distribution (wind or traffic loading)}} \\
+\hline
+$\displaystyle f_S(s)= \frac{1}{(s-c)\sigma\sqrt{2\pi}} \exp\!\left(-\frac{(\log(s-c)-\mu)^2}{2\sigma^2}\right), \qquad s>c$ &
+$\displaystyle f_N(n)= \frac{1}{\sigma\sqrt{2\pi}} \int_0^\infty \frac{1}{\sqrt{t}} f\!\left((n-b)t\right) \exp\!\left(-\frac{(\log t-\mu)^2}{2\sigma^2}\right)dt$ \\
+\hline
+\multicolumn{2}{|c|}{\textbf{Weibull distribution (wind loading for turbines)}} \\
+\hline
+$\displaystyle f_S(s)= \frac{\beta_S}{\eta} \left(\frac{s-c}{\eta}\right)^{\beta_S-1} \exp\!\left(-\left(\frac{s-c}{\eta}\right)^{\beta_S}\right), \qquad s>c$ &
+$\displaystyle f_N(n)= \frac{\beta_S}{\eta^{\beta_S}} \int_0^\infty t^{\beta_S} f\!\left((n-b)t\right) \exp\!\left(-\left(\frac{t}{\eta}\right)^{\beta_S}\right)dt$ \\
+\hline
+\multicolumn{2}{|c|}{\textbf{Discrete stress history (rainflow cycle counting)}} \\
+\hline
+$\displaystyle f_S(s)= \sum_{k=1}^K p_k\,\delta(s-s_k), \qquad \sum_{k=1}^K p_k =1$ &
+$\displaystyle f_N(n)= \sum_{k=1}^K p_k(s_k-c)\, f\!\left((n-b)(s_k-c)\right)$ \\
+\hline
+\end{tabular}
+}
+\end{table}
+
+
+\section{Motivation of the probabilistic models and preview of the following chapters}
+\label{sec:motivation-probabilistic}
+
+The developments in this chapter have led us to the following key conclusions:
+
+\begin{enumerate}
+    \item The equality of expressions for the conditional cdfs imposes multilinear dependence structures.
+    \item Under the location‑scale hypothesis, the structure is necessarily bilinear in two dimensions and trilinear in three dimensions.
+    \item The structure is independent of the particular fatigue parametrisation.
+    \item Laboratory and service models are fundamentally different, although they share the same conditional structure.
+\end{enumerate}
+
+The basic structural result — the bilinear/trilinear form — provides the deterministic framework for the family of trajectories. However, as noted, the complete probabilistic model requires two ingredients:
+\begin{enumerate}
+    \item The family of trajectories (the multilinear function $G$).
+    \item The assignment of probabilities to the trajectories (the function $F$).
+\end{enumerate}
+
+Chapter~\ref{ch:dependence_structure} develops the general theory of multilinear dependence for any number of variables, introduces the concept of interaction spectrum, and compares these ideas with Sobol indices. Chapter~\ref{ch:weibull-hyperbola} presents the complete trivariate Weibull–Hyperbola model, with its estimation and practical application. Chapter~\ref{ch:castillo-canteli} provides a general method for constructing families of joint distributions from a single specified conditional. Finally, Chapter~\ref{ch:copula-models} explores copula‑based models, which offer a flexible and modular alternative for dependence modelling.
+
+The mathematical results developed in this chapter are valid beyond fatigue applications. The theory is applicable to any system in which relationships exist among several variables and one wishes to model their stochastic dependence, as will be illustrated in the following chapters.
+
+\section*{Chapter conclusions}
+
+In this chapter we have established the foundations of probabilistic fatigue modelling:
+
+\begin{itemize}
+    \item We have justified the need for a probabilistic approach due to the inherent variability of fatigue phenomena.
+    \item We have introduced dimensional analysis and dimensionless variables as tools to reduce complexity and unify different parametrisations.
+    \item We have presented the geometric interpretation of virtual fatigue trajectories and the equality of the expressions of the conditional distribution functions as a consistency condition.
+    \item We have derived, via functional equations, the bilinear structure for the two‑dimensional case and anticipated the extension to three dimensions and the general case.
+    \item We have clearly distinguished between laboratory (conditional) and service (joint) models, highlighting how the dependence structure is learned in the laboratory and combined with service marginals.
+\end{itemize}
+
+This chapter lays the foundations for the development of the general theory of multilinear dependence presented in Chapter~\ref{ch:dependence_structure} and for the complete stochastic models of the following chapters. 

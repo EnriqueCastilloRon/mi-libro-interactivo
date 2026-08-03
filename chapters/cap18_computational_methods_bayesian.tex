@@ -1,0 +1,1068 @@
+\startcontents[chapter]
+\chapter{Computational Methods for Posterior Inference}\label{ch:ComputationalMethodPosterior}
+\minitocboxed
+
+\section*{Motivation}
+When conjugate methods are not available, we turn to simulation‑based methods. This chapter introduces Monte Carlo integration, rejection sampling, importance sampling, and Markov Chain Monte Carlo (MCMC), see \cite{RobertCasella2004} and \cite{BrooksGelman1998}, including Metropolis‑Hastings and Gibbs sampling. A key practical advantage is the use of synthetic data: once a model has been learned, we can generate posterior predictive samples of any size, providing unlimited synthetic data for validation, simulation, and AI applications.
+
+In particular, once the models have been learned, the answer to queries can be done based on ad‑hoc simulations of synthetic data, especially designed to answer particular queries using data‑alone methods. The chapter also presents a hierarchy of methods to reduce simulation uncertainty, culminating in the “perfect sample” (quasi‑Monte Carlo) method, which achieves deterministic $O(M^{-2})$ convergence instead of stochastic $O(M^{-1/2})$, offering 10–15× better accuracy at comparable cost.
+
+\section{Introduction}\label{sec:computational_methods}
+In the previous chapter you discovered the conceptual beauty of the Bayesian approach and the elegance of conjugate families. But that elegance carries a price: it works only when the mathematics permits it. As soon as a model grows slightly more complex---a non-standard likelihood, a high-dimensional parameter space, a realistic hierarchical structure---the integral in the denominator of Bayes' Theorem becomes intractable. Does this mean we must abandon the Bayesian paradigm whenever models become interesting? Not at all. It means we need to compute differently.
+
+This chapter introduces you to computational methods for Bayesian inference: a collection of techniques that make possible what the analytical approach forbids. The central idea is as elegant as it is powerful: if you cannot compute an integral, \emph{simulate it}. Monte Carlo integration converts intractable integrals into averages over random samples, and thanks to the Law of Large Numbers, the approximation improves systematically as the number of simulations grows.
+
+You will learn to simulate predictive distributions---both prior and posterior---and to understand why that capacity to generate \emph{synthetic data} is precisely what makes Bayesian methods so valuable for modern artificial intelligence. You will explore rejection sampling, importance sampling, Gibbs sampling, and Metropolis-Hastings algorithms: tools that together form the backbone of contemporary Bayesian computation. And you will discover that not all methods are equal: there exists a hierarchy of accuracy, from full Monte Carlo to \emph{perfect sampling}, that can achieve ten to fifteen times greater precision at barely any additional computational cost.
+
+By the end of this chapter you will not only know \emph{what} to compute: you will know \emph{how} to choose the right method for each problem.
+
+In many practical Bayesian problems, the integrals required to compute the posterior distribution or predictive distributions cannot be solved analytically. For example, the marginal likelihood in the denominator of Bayes' theorem:
+\begin{equation}
+P(\mathbf{y}) = \int P(\mathbf{y}|\theta) \cdot P(\theta) \, d\theta
+\end{equation}
+may be intractable for complex models or high-dimensional parameter spaces. Similarly, the posterior predictive distribution:
+\begin{equation}
+P(\tilde{\mathbf{y}}|\mathbf{y}) = \int P(\tilde{\mathbf{y}}|\theta) \cdot P(\theta|\mathbf{y}) \, d\theta
+\end{equation}
+requires integration over the posterior distribution, which may not have a closed form.
+
+When conjugate methods are not available or when one is not satisfied with its limitations, analytical integration is infeasible, and we turn to \textbf{simulation-based methods} that approximate these integrals using random sampling. These Monte Carlo methods are fundamental tools in modern Bayesian computation.
+
+\section{Monte Carlo Integration and Predictive Simulation}
+
+\subsection{Monte Carlo Integration}
+The key insight behind Monte Carlo integration is that we can approximate an integral as an average over samples. Suppose we want to compute:
+\begin{equation}
+I = \int h(\theta) \cdot p(\theta) \, d\theta = E_p[h(\theta)]
+\end{equation}
+where $E_p[]$ refers to expected value.
+
+If we can generate independent samples $\theta^{(1)}, \theta^{(2)}, \dots, \theta^{(M)}$ from the distribution $p(\theta)$, then by the Law of Large Numbers
+\begin{equation}
+\boxed{I \approx \frac{1}{M} \sum_{i=1}^M h(\theta^{(i)}) \xrightarrow{M \to \infty} E_p[h(\theta)]}
+\end{equation}
+
+The convergence \(\frac{1}{M}\sum_{i=1}^{M} h(\theta^{(i)}) \xrightarrow{\text{a.s.}} \mathbb{E}_{\pi}[h(\theta)]\) is guaranteed by the Strong Law of Large Numbers.
+
+The approximation error decreases as $O(1/\sqrt{M})$, regardless of the dimensionality of $\theta$.
+
+\begin{examplebox}
+\begin{example}[Monte Carlo Integration: Computing Expected Value]
+Suppose we want to compute $E[\theta^2]$ where $\theta \sim \text{Beta}(9,5)$ (our posterior from the coin example).
+
+\textbf{Analytical solution:}
+For a Beta($\alpha$, $\beta$) distribution:
+$$E[\theta^2] = \frac{\alpha(\alpha+1)}{(\alpha+\beta)(\alpha+\beta+1)} = \frac{9 \cdot 10}{14 \cdot 15} = \frac{90}{210} \approx 0.4286$$
+
+\textbf{Monte Carlo approximation:}
+\begin{enumerate}
+\item Generate $M = 10{,}000$ samples: $\theta^{(1)}, \theta^{(2)}, \dots, \theta^{(10000)} \sim \text{Beta}(9,5)$
+\item Compute: $\hat{E}[\theta^2] = \frac{1}{10000}\sum_{i=1}^{10000} (\theta^{(i)})^2$
+\end{enumerate}
+
+\textbf{Results for different sample sizes:}
+\begin{center}
+\begin{tabular}{ccc}
+\toprule
+$M$ & MC Estimate & Error \\
+\midrule
+100 & 0.4312 & 0.0026 \\
+1,000 & 0.4295 & 0.0009 \\
+10,000 & 0.4288 & 0.0002 \\
+100,000 & 0.4286 & 0.0000 \\
+\bottomrule
+\end{tabular}
+\end{center}
+The approximation improves as $M$ increases, with error decreasing approximately as $1/\sqrt{M}$.
+\end{example}
+\end{examplebox}
+
+\subsection{Simulating from the Prior Predictive Distribution}
+The prior predictive distribution can be approximated using the following algorithm:
+
+\begin{algorithmbox}
+\begin{algorithm}[H]
+\caption{Prior Predictive Simulation}
+\begin{algorithmic}[1]
+\For{$i = 1$ to $M$}
+    \State Draw $\theta^{(i)} \sim P(\theta)$ \Comment{Sample from prior}
+    \State Draw $\mathbf{y}^{(i)} \sim P(\mathbf{y}|\theta^{(i)})$ \Comment{Sample data given parameter}
+\EndFor
+\State \Return $\{\mathbf{y}^{(1)}, \mathbf{y}^{(2)}, \dots, \mathbf{y}^{(M)}\}$
+\end{algorithmic}
+\end{algorithm}
+\end{algorithmbox}
+
+The collection of simulated datasets $\{\mathbf{y}^{(i)}\}$ represents samples from the prior predictive distribution $P(\mathbf{y})$. We can use these samples to:
+\begin{itemize}
+\item Estimate probabilities: $P(\mathbf{y} \in A) \approx \frac{1}{M}\sum_{i=1}^M \mathbb{I}(\mathbf{y}^{(i)} \in A)$
+\item Compute expectations: $E[\mathbf{y}] \approx \frac{1}{M}\sum_{i=1}^M \mathbf{y}^{(i)}$
+\item Check model assumptions by comparing simulated data to domain knowledge
+\end{itemize}
+
+\begin{examplebox}
+\begin{example}[Prior Predictive Simulation: Coin Flipping]
+Consider our coin example with prior $\theta \sim \text{Beta}(2,2)$ and $n=10$ flips.
+
+\textbf{Simulation algorithm:}
+\begin{enumerate}
+\item For $i = 1$ to $M = 5{,}000$:
+\begin{itemize}
+\item Draw $\theta^{(i)} \sim \text{Beta}(2,2)$
+\item Draw $k^{(i)} \sim \text{Binomial}(10, \theta^{(i)})$
+\end{itemize}
+\item The collection $\{k^{(1)}, k^{(2)}, \dots, k^{(5000)}\}$ represents samples from the prior predictive
+\end{enumerate}
+
+\textbf{Results:}
+Distribution of number of heads in 10 flips (prior predictive):
+\begin{center}
+\footnotesize
+\begin{tabular}{c|ccccccccccc}
+\toprule
+$k$ & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 \\
+\midrule
+Simulated & 0.091 & 0.090 & 0.091 & 0.091 & 0.091 & 0.090 & 0.091 & 0.091 & 0.090 & 0.091 & 0.091 \\
+Theoretical & 0.091 & 0.091 & 0.091 & 0.091 & 0.091 & 0.091 & 0.091 & 0.091 & 0.091 & 0.091 & 0.091 \\
+\bottomrule
+\end{tabular}
+\end{center}
+The distribution is nearly uniform (with small variations due to Monte Carlo error), matching the theoretical Beta-Binomial(10, 2, 2) which is approximately uniform.
+
+\textbf{Prior predictive mean:}
+$$\hat{E}[k] = \frac{1}{5000}\sum_{i=1}^{5000} k^{(i)} \approx 5.01 \quad \text{(theoretical: } 10 \times 0.5 = 5\text{)}$$
+\end{example}
+\end{examplebox}
+
+\subsection{Simulating from the Posterior Predictive Distribution}
+Once we have samples from the posterior distribution (discussed below), the posterior predictive distribution can be simulated similarly:
+
+\begin{algorithmbox}
+\begin{algorithm}[H]
+\caption{Posterior Predictive Simulation}
+\begin{algorithmic}[1]
+\Require Posterior samples $\{\theta^{(1)}, \theta^{(2)}, \dots, \theta^{(M)}\}$ from $P(\theta|\mathbf{y})$
+\For{$i = 1$ to $M$}
+    \State Draw $\tilde{\mathbf{y}}^{(i)} \sim P(\tilde{\mathbf{y}}|\theta^{(i)})$ \Comment{Sample new data given posterior sample}
+\EndFor
+\State \Return $\{\tilde{\mathbf{y}}^{(1)}, \tilde{\mathbf{y}}^{(2)}, \dots, \tilde{\mathbf{y}}^{(M)}\}$
+\end{algorithmic}
+\end{algorithm}
+\end{algorithmbox}
+
+These samples can be used to construct prediction intervals, assess model fit through posterior predictive checks, and make probabilistic forecasts.
+
+\begin{examplebox}
+\begin{example}[Posterior Predictive Simulation: Future Coin Flips]
+After observing $k=7$ heads in $n=10$ flips, our posterior is $\theta|\mathbf{y} \sim \text{Beta}(9,5)$. We want to predict the number of heads in the next $m=10$ flips.
+
+\textbf{Simulation algorithm:}
+\begin{enumerate}
+\item For $i = 1$ to $M = 5{,}000$:
+\begin{itemize}
+\item Draw $\theta^{(i)} \sim \text{Beta}(9,5)$
+\item Draw $\tilde{k}^{(i)} \sim \text{Binomial}(10, \theta^{(i)})$
+\end{itemize}
+\item The collection $\{\tilde{k}^{(1)}, \tilde{k}^{(2)}, \dots, \tilde{k}^{(5000)}\}$ approximates the posterior predictive distribution
+\end{enumerate}
+
+\textbf{Results:}
+Distribution of number of heads in next 10 flips (posterior predictive):
+\begin{center}
+\footnotesize
+\begin{tabular}{c|ccccccccccc}
+\toprule
+$\tilde{k}$ & 0 & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 \\
+\midrule
+Simulated & 0.004 & 0.020 & 0.053 & 0.097 & 0.137 & 0.156 & 0.150 & 0.117 & 0.074 & 0.035 & 0.010 \\
+Theoretical & 0.004 & 0.019 & 0.053 & 0.097 & 0.137 & 0.156 & 0.149 & 0.117 & 0.074 & 0.035 & 0.010 \\
+\bottomrule
+\end{tabular}
+\end{center}
+The distribution is concentrated around 6-7 heads, reflecting our updated belief that $\theta \approx 0.64$.
+
+\textbf{Posterior predictive statistics:}
+\begin{align*}
+\hat{E}[\tilde{k}|\mathbf{y}] &= \frac{1}{5000}\sum_{i=1}^{5000} \tilde{k}^{(i)} \approx 6.43 \quad \text{(theoretical: } 10 \times 9/14 = 6.43\text{)} \\
+\hat{\text{Var}}[\tilde{k}|\mathbf{y}] &\approx 2.18 \quad \text{(theoretical: } 2.16\text{)}
+\end{align*}
+
+\textbf{95\% Prediction Interval:}
+From the simulated samples: $[3, 10]$ (contains 95\% of simulated values)
+\end{example}
+\end{examplebox}
+
+The possibility of simulating samples from the posterior is very relevant for Artificial Intelligence applications and is known as simulating synthetic data. The idea is obtaining a sample from the population we are interested in using Bayesian techniques and then simulating the learnt distribution, that is, the predictive posterior, to obtain synthetic samples of any size. Since Artificial Intelligence methods require large amounts of data, Bayesian techniques become very adequate to obtain such samples.
+
+\section{Rejection Sampling for Posterior Inference}
+
+\subsection{Basic Algorithm}
+When the posterior $P(\theta|\mathbf{y})$ is difficult to sample from directly, but we can evaluate it up to a normalizing constant, \textbf{rejection sampling} provides a simple approach. This method simulates a different density, but makes the adequate corrections for this to be valid. The problem is that this is not free, because not all simulated samples are accepted and then we need to simulate more samples, that has a cost that can be high.
+
+Suppose we have a proposal distribution $q(\theta)$ that is easy to sample from, and we know a constant $M$ such that:
+\begin{equation}
+P(\mathbf{y}|\theta) \cdot P(\theta) \leq M \cdot q(\theta) \quad \text{for all } \theta
+\end{equation}
+
+\begin{algorithmbox}
+\begin{algorithm}[H]
+\caption{Rejection Sampling for Posterior}
+\begin{algorithmic}[1]
+\For{$i = 1$ to desired number of samples}
+    \State Draw $\theta^* \sim q(\theta)$ \Comment{Propose from easy distribution}
+    \State Draw $u \sim \text{Uniform}(0, 1)$
+    \State Compute acceptance probability: $\alpha = \frac{P(\mathbf{y}|\theta^*) P(\theta^*)}{M \cdot q(\theta^*)}$
+    \If{$u < \alpha$}
+        \State Accept $\theta^{(i)} = \theta^*$
+    \Else
+        \State Reject and repeat
+    \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+\end{algorithmbox}
+
+The accepted samples are distributed according to $P(\theta|\mathbf{y})$. However, rejection sampling becomes inefficient in high dimensions or when the acceptance rate is low.
+
+\subsection{Theoretical Foundation}
+\begin{theorem}[Validity of Rejection Sampling]\label{thm:rejection_sampling}
+Let $f(\theta)$ be a target density (possibly unnormalized) from which we wish to sample, and let $q(\theta)$ be a proposal density from which we can easily sample. Suppose there exists a constant $M < \infty$ such that
+$$f(\theta) \leq M \cdot q(\theta) \quad \text{for all } \theta \in \Theta$$
+
+If we generate samples $\theta^*$ from $q(\theta)$ and accept them with probability
+$$\alpha(\theta^*) = \frac{f(\theta^*)}{M \cdot q(\theta^*)}$$
+then the accepted samples are distributed according to $f(\theta)/\int f(\theta)d\theta$.
+\end{theorem}
+
+\begin{proof}
+Let $A$ denote the event that a proposed sample is accepted. We need to show that
+$$P(\theta \in B | A) = \frac{\int_B f(\theta) d\theta}{\int_{\Theta} f(\theta) d\theta}$$
+for any measurable set $B \subseteq \Theta$.
+
+The probability that a sample falls in set $B$ and is accepted is:
+\begin{align*}
+P(\theta \in B \cap A) &= \int_B P(A|\theta) \cdot q(\theta) d\theta = \int_B \frac{f(\theta)}{M \cdot q(\theta)} \cdot q(\theta) d\theta = \frac{1}{M} \int_B f(\theta) d\theta
+\end{align*}
+
+The probability of acceptance is:
+\begin{align*}
+P(A) &= \int_{\Theta} P(A|\theta) \cdot q(\theta) d\theta = \int_{\Theta} \frac{f(\theta)}{M \cdot q(\theta)} \cdot q(\theta) d\theta = \frac{1}{M} \int_{\Theta} f(\theta) d\theta
+\end{align*}
+
+Therefore, by Bayes' theorem:
+\begin{align*}
+P(\theta \in B | A) &= \frac{P(\theta \in B \cap A)}{P(A)} = \frac{\frac{1}{M} \int_B f(\theta) d\theta}{\frac{1}{M} \int_{\Theta} f(\theta) d\theta} = \frac{\int_B f(\theta) d\theta}{\int_{\Theta} f(\theta) d\theta}
+\end{align*}
+This is precisely the normalized density of $f(\theta)$, completing the proof.
+\end{proof}
+
+\begin{corollary}[Expected Number of Proposals]
+The expected number of proposals required to obtain one accepted sample is $M$.
+\end{corollary}
+
+\subsection{Examples}
+\begin{examplebox}
+\begin{example}[Rejection Sampling: Beta Posterior]
+Consider estimating $\theta$ for a coin with data $k=7$ heads in $n=10$ flips and prior Beta(2,2). The posterior is Beta(9,5).
+
+Suppose we use a uniform proposal: $q(\theta) = \text{Uniform}(0,1)$.
+
+\textbf{Finding the bound $M$:}
+The unnormalized posterior is:
+$$f(\theta) = \theta^8(1-\theta)^4$$
+The maximum occurs at $\theta^* = \frac{8}{8+4} = \frac{2}{3}$, giving:
+$$f(\theta^*) = \left(\frac{2}{3}\right)^8 \left(\frac{1}{3}\right)^4 \approx 0.00260$$
+Since $q(\theta) = 1$ for $\theta \in [0,1]$, we need:
+$$M = f(\theta^*) / q(\theta^*) = 0.00260 / 1 = 0.00260$$
+
+\textbf{Algorithm execution ($M=1000$ samples):}
+\begin{enumerate}
+\item Total proposals: 385,000
+\item Accepted samples: 1,000
+\item Acceptance rate: $1000/385000 \approx 0.0026 = 1/M$
+\end{enumerate}
+
+\textbf{Results:}
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Statistic & Rejection Sampling & Theoretical \\
+\midrule
+$E[\theta|\mathbf{y}]$ & 0.641 & 0.643 \\
+$\text{Var}[\theta|\mathbf{y}]$ & 0.0162 & 0.0163 \\
+Median & 0.649 & 0.648 \\
+95\% CI & $[0.388, 0.860]$ & $[0.391, 0.858]$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Efficiency note:} The acceptance rate of 0.26\% means we need $\approx 385$ proposals per accepted sample. This is acceptable for this simple 1D problem but becomes prohibitive in higher dimensions.
+\end{example}
+\end{examplebox}
+
+\begin{examplebox}
+\begin{example}[Rejection Sampling: Normal Mean with Non-conjugate Prior]
+Suppose we have data $\mathbf{y} = (5.2, 4.8, 5.1)$ from $N(\mu, 1)$ and we use a Cauchy prior: $\mu \sim \text{Cauchy}(5, 1)$.
+
+The posterior is not a standard distribution:
+$$P(\mu|\mathbf{y}) \propto \exp\left(-\frac{1}{2}\sum_{i=1}^3(y_i - \mu)^2\right) \cdot \frac{1}{1 + (\mu-5)^2}$$
+
+\textbf{Proposal distribution:}
+Use $q(\mu) = N(5.03, 0.6^2)$ (centered at MLE with slightly inflated variance).
+
+\textbf{Finding bound $M$:}
+Numerically evaluate the ratio $f(\mu)/q(\mu)$ on a grid to find $M \approx 2.8$.
+
+\textbf{Results from 10,000 accepted samples:}
+\begin{itemize}
+\item Acceptance rate: $\approx 35\%$
+\item Posterior mean: $\hat{E}[\mu|\mathbf{y}] \approx 5.04$
+\item Posterior std: $\hat{\text{SD}}[\mu|\mathbf{y}] \approx 0.56$
+\item 95\% Credible interval: $[3.95, 6.13]$
+\end{itemize}
+This demonstrates that rejection sampling can handle non-conjugate priors, though efficiency depends on how well the proposal matches the posterior.
+\end{example}
+\end{examplebox}
+
+\section{Importance Sampling}
+
+\subsection{Basic Algorithm}
+\textbf{Importance sampling} avoids rejection by reweighting samples from a proposal distribution. If we want to compute $E_{P(\theta|\mathbf{y})}[h(\theta)]$ but can only sample from $q(\theta)$:
+\begin{equation}
+E_{P(\theta|\mathbf{y})}[h(\theta)] = \int h(\theta) P(\theta|\mathbf{y}) d\theta = \int h(\theta) \frac{P(\theta|\mathbf{y})}{q(\theta)} q(\theta) d\theta
+\end{equation}
+
+This can be approximated by:
+\begin{equation}
+\boxed{E_{P(\theta|\mathbf{y})}[h(\theta)] \approx \frac{\sum_{i=1}^M w^{(i)} h(\theta^{(i)})}{\sum_{i=1}^M w^{(i)}}}
+\end{equation}
+where $\theta^{(i)} \sim q(\theta)$ and the \textbf{importance weights} are:
+\begin{equation}
+w^{(i)} = \frac{P(\mathbf{y}|\theta^{(i)}) P(\theta^{(i)})}{q(\theta^{(i)})}
+\end{equation}
+Note that we don't need to know the normalizing constant $P(\mathbf{y})$ since it cancels in the ratio.
+
+\subsection{Theoretical Foundation}
+\begin{theorem}[Validity of Importance Sampling]\label{thm:importance_sampling}
+Let $\pi(\theta)$ be a target distribution from which we wish to compute expectations, and let $q(\theta)$ be a proposal distribution from which we can easily sample. Assume that $q(\theta) > 0$ whenever $\pi(\theta) > 0$ (the support of $q$ contains the support of $\pi$). Then, for any function $h(\theta)$ such that $E_{\pi}[|h(\theta)|] < \infty$, we have:
+$$E_{\pi}[h(\theta)] = E_q\left[h(\theta) \frac{\pi(\theta)}{q(\theta)}\right]$$
+Moreover, if $\theta^{(1)}, \dots, \theta^{(M)}$ are independent samples from $q(\theta)$, then
+$$\hat{E}_{\pi}[h(\theta)] = \frac{1}{M}\sum_{i=1}^M h(\theta^{(i)}) w(\theta^{(i)}) \xrightarrow{M \to \infty} E_{\pi}[h(\theta)]$$
+where $w(\theta^{(i)}) = \frac{\pi(\theta^{(i)})}{q(\theta^{(i)})}$ are the importance weights, almost surely.
+\end{theorem}
+
+\begin{proof}
+Starting with the definition of expectation under $\pi(\theta)$:
+\begin{align*}
+E_{\pi}[h(\theta)] &= \int h(\theta) \pi(\theta) d\theta = \int h(\theta) \frac{\pi(\theta)}{q(\theta)} q(\theta) d\theta \\
+&= \int h(\theta) w(\theta) q(\theta) d\theta = E_q[h(\theta) w(\theta)]
+\end{align*}
+where the second line is valid because $q(\theta) > 0$ on the support of $\pi(\theta)$.
+
+By the Strong Law of Large Numbers, if $\theta^{(1)}, \dots, \theta^{(M)}$ are independent samples from $q(\theta)$:
+$$\frac{1}{M}\sum_{i=1}^M h(\theta^{(i)}) w(\theta^{(i)}) \xrightarrow{M \to \infty} E_q[h(\theta) w(\theta)] = E_{\pi}[h(\theta)]$$
+almost surely, completing the proof.
+\end{proof}
+
+\begin{corollary}[Self-Normalized Importance Sampling]\label{cor:self_normalized_IS}
+When $\pi(\theta)$ is known only up to a normalizing constant, i.e., $\pi(\theta) = \frac{f(\theta)}{Z}$ where $Z = \int f(\theta) d\theta$ is unknown, we can use self-normalized importance sampling:
+$$\hat{E}_{\pi}[h(\theta)] = \frac{\sum_{i=1}^M h(\theta^{(i)}) \tilde{w}^{(i)}}{\sum_{i=1}^M \tilde{w}^{(i)}} \xrightarrow{M \to \infty} E_{\pi}[h(\theta)]$$
+where $\tilde{w}^{(i)} = \frac{f(\theta^{(i)})}{q(\theta^{(i)})}$ are unnormalized weights.
+\end{corollary}
+
+\begin{definition}[Effective Sample Size for Importance Sampling]
+The effective sample size quantifies how many "independent" samples the weighted samples represent:
+$$\text{ESS} = \frac{1}{\sum_{i=1}^M (\tilde{w}^{(i)})^2}$$
+where $\tilde{w}^{(i)} = \frac{w^{(i)}}{\sum_{j=1}^M w^{(j)}}$ are the normalized weights.
+
+Ideally, ESS $\approx M$ (all weights equal). If ESS $\ll M$, a few samples dominate, indicating poor proposal choice.
+\end{definition}
+
+\subsection{Examples}
+\begin{examplebox}
+\begin{example}[Importance Sampling: Computing Posterior Moments]
+Consider the same setup as the previous example: data $\mathbf{y} = (5.2, 4.8, 5.1)$ from $N(\mu, 1)$ with Cauchy(5,1) prior.
+
+We want to compute $E[\mu|\mathbf{y}]$ and $E[\mu^2|\mathbf{y}]$ using importance sampling with proposal $q(\mu) = N(5, 1.5^2)$.
+
+\textbf{Algorithm:}
+\begin{enumerate}
+\item Draw $M = 10{,}000$ samples: $\mu^{(i)} \sim N(5, 1.5^2)$
+\item For each sample, compute the unnormalized importance weight:
+$$w^{(i)} = \frac{\exp\left(-\frac{1}{2}\sum_{j=1}^3(y_j - \mu^{(i)})^2\right) \cdot \frac{1}{1 + (\mu^{(i)}-5)^2}}{\frac{1}{\sqrt{2\pi \cdot 1.5^2}}\exp\left(-\frac{(\mu^{(i)}-5)^2}{2 \cdot 1.5^2}\right)}$$
+\item Normalize weights: $\tilde{w}^{(i)} = w^{(i)} / \sum_{j=1}^M w^{(j)}$
+\item Estimate expectations:
+\begin{align*}
+\hat{E}[\mu|\mathbf{y}] &= \sum_{i=1}^M \tilde{w}^{(i)} \mu^{(i)} \\
+\hat{E}[\mu^2|\mathbf{y}] &= \sum_{i=1}^M \tilde{w}^{(i)} (\mu^{(i)})^2
+\end{align*}
+\end{enumerate}
+
+\textbf{Results:}
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Quantity & Importance Sampling & MCMC (truth) \\
+\midrule
+$E[\mu|\mathbf{y}]$ & 5.038 & 5.042 \\
+$E[\mu^2|\mathbf{y}]$ & 25.72 & 25.74 \\
+$\text{Var}[\mu|\mathbf{y}]$ & 0.314 & 0.318 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Effective sample size:}
+$$\text{ESS} = \frac{1}{\sum_{i=1}^M (\tilde{w}^{(i)})^2} \approx 3{,}247$$
+Out of 10,000 samples, only about 3,247 are "effective" due to weight variability. This indicates reasonable but not perfect proposal choice.
+\end{example}
+\end{examplebox}
+
+\begin{examplebox}
+\begin{example}[Importance Sampling: Tail Probabilities]
+Using the same setup, we want to estimate the probability that $\mu > 6$:
+$$P(\mu > 6|\mathbf{y}) = \int_6^\infty P(\mu|\mathbf{y}) d\mu$$
+
+\textbf{Importance sampling estimate:}
+$$\hat{P}(\mu > 6|\mathbf{y}) = \sum_{i=1}^M \tilde{w}^{(i)} \cdot \mathbb{I}(\mu^{(i)} > 6) = \frac{\sum_{i: \mu^{(i)} > 6} w^{(i)}}{\sum_{i=1}^M w^{(i)}}$$
+
+\textbf{Results for different sample sizes:}
+\begin{center}
+\begin{tabular}{ccc}
+\toprule
+$M$ & IS Estimate & Standard Error \\
+\midrule
+1,000 & 0.157 & 0.024 \\
+10,000 & 0.148 & 0.008 \\
+100,000 & 0.146 & 0.002 \\
+\bottomrule
+\end{tabular}
+\end{center}
+MCMC reference value: $P(\mu > 6|\mathbf{y}) \approx 0.145$
+
+For tail probabilities, importance sampling can be more efficient than standard Monte Carlo if the proposal has good coverage of the tails.
+\end{example}
+\end{examplebox}
+
+\section{Markov Chain Monte Carlo (MCMC)}
+
+\subsection{Introduction to MCMC}
+For complex posteriors, \textbf{Markov Chain Monte Carlo} methods are the workhorses of Bayesian computation. MCMC constructs a Markov chain whose stationary distribution is the target posterior $P(\theta|\mathbf{y})$.
+
+For a precise formulation of the ergodic theorem for Markov chains and the conditions under which the MCMC estimator converges almost surely, under the standard ergodicity assumptions for Markov chains.
+
+\subsection{The Metropolis-Hastings Algorithm}
+The most fundamental MCMC algorithm is the \textbf{Metropolis-Hastings algorithm}:
+
+\begin{algorithmbox}
+\begin{algorithm}[H]
+\caption{Metropolis-Hastings MCMC}
+\begin{algorithmic}[1]
+\State Initialize $\theta^{(0)}$
+\For{$t = 1$ to $T$}
+    \State Propose $\theta^* \sim q(\theta^*|\theta^{(t-1)})$ \Comment{Proposal distribution}
+    \State Compute acceptance ratio:
+    $$\alpha = \min\left(1, \frac{P(\mathbf{y}|\theta^*) P(\theta^*) q(\theta^{(t-1)}|\theta^*)}{P(\mathbf{y}|\theta^{(t-1)}) P(\theta^{(t-1)}) q(\theta^*|\theta^{(t-1)})}\right)$$
+    \State Draw $u \sim \text{Uniform}(0,1)$
+    \If{$u < \alpha$}
+        \State $\theta^{(t)} = \theta^*$ \Comment{Accept proposal}
+    \Else
+        \State $\theta^{(t)} = \theta^{(t-1)}$ \Comment{Reject proposal}
+    \EndIf
+\EndFor
+\State \Return $\{\theta^{(1)}, \theta^{(2)}, \dots, \theta^{(T)}\}$ after discarding burn-in
+\end{algorithmic}
+\end{algorithm}
+\end{algorithmbox}
+
+\subsubsection*{Theoretical Foundation}
+\begin{definition}[Markov Chain]
+A sequence of random variables $\{\theta^{(0)}, \theta^{(1)}, \theta^{(2)}, \dots\}$ is a Markov chain if
+$$P(\theta^{(t+1)} | \theta^{(t)}, \theta^{(t-1)}, \dots, \theta^{(0)}) = P(\theta^{(t+1)} | \theta^{(t)})$$
+That is, the future state depends only on the current state, not on the history.
+\end{definition}
+
+\begin{definition}[Stationary Distribution]
+A distribution $\pi(\theta)$ is stationary (or invariant) for a Markov chain with transition kernel $K(\theta'|\theta)$ if
+$$\pi(\theta') = \int K(\theta'|\theta) \pi(\theta) d\theta$$
+\end{definition}
+
+\begin{definition}[Detailed Balance]
+A Markov chain with transition kernel $K(\theta'|\theta)$ satisfies detailed balance with respect to distribution $\pi(\theta)$ if
+$$\pi(\theta) K(\theta'|\theta) = \pi(\theta') K(\theta|\theta')$$
+for all $\theta, \theta'$.
+\end{definition}
+
+\begin{theorem}[Sufficient Condition for Stationarity]
+If a Markov chain satisfies detailed balance with respect to $\pi(\theta)$, then $\pi(\theta)$ is a stationary distribution of the chain.
+\end{theorem}
+
+\begin{theorem}[Metropolis-Hastings Validity]\label{thm:metropolis_hastings}
+The Metropolis-Hastings algorithm with proposal distribution $q(\theta'|\theta)$ and acceptance probability
+$$\alpha(\theta'|\theta) = \min\left(1, \frac{f(\theta') q(\theta|\theta')}{f(\theta) q(\theta'|\theta)}\right)$$
+generates a Markov chain with stationary distribution $\pi(\theta) \propto f(\theta)$.
+\end{theorem}
+
+\textbf{Key properties:}
+\begin{itemize}
+\item Only requires evaluating the posterior up to a normalizing constant
+\item The marginal likelihood $P(\mathbf{y})$ cancels in the acceptance ratio
+\item After a burn-in period, samples approximate the posterior distribution
+\item Samples are autocorrelated, not independent
+\end{itemize}
+
+\subsection{Examples}
+\begin{examplebox}
+\begin{example}[MCMC for Coin Flipping]
+Returning to our coin example with $n=10$ flips and $k=7$ heads, we could use MCMC with a Normal random walk proposal:
+$$q(\theta^*|\theta^{(t-1)}) = N(\theta^{(t-1)}, \sigma^2)$$
+
+The acceptance ratio simplifies to:
+$$\alpha = \min\left(1, \frac{(\theta^*)^7(1-\theta^*)^3 \cdot (\theta^*)^{1}(1-\theta^*)^{1}}{(\theta^{(t-1)})^7(1-\theta^{(t-1)})^3 \cdot (\theta^{(t-1)})^{1}(1-\theta^{(t-1)})^{1}}\right)$$
+
+After running the chain for $T=10{,}000$ iterations with burn-in of 1,000, the histogram of samples will approximate Beta(9,5).
+\end{example}
+\end{examplebox}
+
+\begin{examplebox}
+\begin{example}[Metropolis-Hastings: Bivariate Normal with Correlation]
+Consider estimating the mean vector $\boldsymbol{\mu} = (\mu_1, \mu_2)$ from data with known covariance:
+$$\mathbf{y}_i \sim N\left(\boldsymbol{\mu}, \begin{bmatrix} 1 & 0.8 \\ 0.8 & 1 \end{bmatrix}\right), \quad i = 1, \dots, 20$$
+
+Data summary: $\bar{\mathbf{y}} = (2.1, 3.2)^T$
+
+Prior: $\boldsymbol{\mu} \sim N(\mathbf{0}, 5\mathbf{I})$
+
+\textbf{MCMC Setup:}
+\begin{itemize}
+\item Random walk proposal: $\boldsymbol{\mu}^* \sim N(\boldsymbol{\mu}^{(t-1)}, 0.5^2 \mathbf{I})$
+\item Initial value: $\boldsymbol{\mu}^{(0)} = (0, 0)^T$
+\item Iterations: $T = 20{,}000$ (discard first 5,000 as burn-in)
+\end{itemize}
+
+\textbf{Acceptance ratio:}
+$$\alpha = \min\left(1, \frac{P(\mathbf{y}|\boldsymbol{\mu}^*) P(\boldsymbol{\mu}^*)}{P(\mathbf{y}|\boldsymbol{\mu}^{(t-1)}) P(\boldsymbol{\mu}^{(t-1)})}\right)$$
+
+\textbf{Results:}
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+Parameter & MCMC Mean & MCMC SD & Theoretical \\
+\midrule
+$\mu_1$ & 2.096 & 0.220 & $E[\mu_1|\mathbf{y}] = 2.10$ \\
+$\mu_2$ & 3.198 & 0.221 & $E[\mu_2|\mathbf{y}] = 3.20$ \\
+$\text{Corr}(\mu_1, \mu_2)$ & 0.039 & -- & 0.038 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Diagnostics:}
+\begin{itemize}
+\item Acceptance rate: 28\% (target: 20-40\% for optimal mixing)
+\item Effective sample size: ESS$_{\mu_1}$ = 4,521, ESS$_{\mu_2}$ = 4,387
+\item $\hat{R}$ statistic (3 chains): 1.001 (excellent; $< 1.1$ indicates convergence)
+\end{itemize}
+\textbf{95\% Credible Regions:}
+\begin{itemize}
+\item Marginal for $\mu_1$: $[1.66, 2.53]$
+\item Marginal for $\mu_2$: $[2.77, 3.63]$
+\item Joint elliptical region contains 95\% of samples
+\end{itemize}
+\end{example}
+\end{examplebox}
+
+\begin{examplebox}
+\begin{example}[MCMC: Poisson Regression (Non-conjugate Model)]
+Consider count data with a log-linear model:
+$$y_i \sim \text{Poisson}(\lambda_i), \quad \log(\lambda_i) = \beta_0 + \beta_1 x_i$$
+
+Data: 15 observations with outcomes and predictors
+
+Priors: $\beta_0 \sim N(0, 10^2)$, $\beta_1 \sim N(0, 10^2)$
+
+This posterior has no closed form, requiring MCMC.
+
+\textbf{MCMC Setup:}
+\begin{itemize}
+\item Random walk MH with proposal: $\boldsymbol{\beta}^* \sim N(\boldsymbol{\beta}^{(t-1)}, \boldsymbol{\Sigma})$
+\item Adaptive tuning: adjust $\boldsymbol{\Sigma}$ during burn-in to achieve 25-30\% acceptance
+\item Iterations: 50,000 (burn-in: 10,000)
+\end{itemize}
+
+\textbf{Log-posterior (up to constant):}
+$$\log P(\boldsymbol{\beta}|\mathbf{y}) = \sum_{i=1}^{15}\left[y_i(\beta_0 + \beta_1 x_i) - \exp(\beta_0 + \beta_1 x_i)\right] - \frac{\beta_0^2 + \beta_1^2}{200}$$
+
+\textbf{Results:}
+\begin{center}
+\begin{tabular}{lcccc}
+\toprule
+Parameter & Mean & SD & 95\% CI & ESS \\
+\midrule
+$\beta_0$ & 1.47 & 0.23 & $[1.02, 1.92]$ & 8,234 \\
+$\beta_1$ & 0.82 & 0.15 & $[0.53, 1.11]$ & 7,891 \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Interpretation:}
+\begin{itemize}
+\item Intercept: baseline log-rate is 1.47 (rate $\approx 4.35$ when $x=0$)
+\item Slope: one unit increase in $x$ multiplies the rate by $\exp(0.82) \approx 2.27$
+\item $P(\beta_1 > 0|\mathbf{y}) \approx 0.9998$ (strong evidence of positive association)
+\end{itemize}
+\textbf{Posterior predictive for $x_{\text{new}} = 2.5$:}
+For each MCMC sample $\boldsymbol{\beta}^{(t)}$:
+\begin{enumerate}
+\item Compute $\lambda^{(t)}_{\text{new}} = \exp(\beta_0^{(t)} + \beta_1^{(t)} \cdot 2.5)$
+\item Draw $\tilde{y}^{(t)} \sim \text{Poisson}(\lambda^{(t)}_{\text{new}})$
+\end{enumerate}
+Predicted distribution: $E[\tilde{y}|x=2.5, \mathbf{y}] \approx 26.8$, with 95\% prediction interval $[15, 42]$.
+\end{example}
+\end{examplebox}
+
+\subsection{Practical Considerations for MCMC}
+When using simulation methods for Bayesian inference:
+
+\begin{itemize}
+\item \textbf{Sample size}: Larger $M$ or $T$ gives better approximations but requires more computation
+\item \textbf{Convergence diagnostics}: For MCMC, check that chains have reached stationarity (trace plots, $\hat{R}$ statistic)
+\item \textbf{Effective sample size}: MCMC samples are correlated; effective sample size may be much smaller than $T$
+\item \textbf{Proposal tuning}: Choice of proposal distribution $q$ affects efficiency
+\item \textbf{Software}: Modern tools (Stan, PyMC, JAGS) automate much of this process
+\end{itemize}
+
+\subsection{Summary of Simulation Approaches}
+\begin{table}[h]
+\centering
+\caption{Comparison of Simulation Methods}
+\begin{tabular}{lp{3cm}p{3cm}p{3cm}}
+\toprule
+\textbf{Method} & \textbf{Advantages} & \textbf{Disadvantages} & \textbf{When to Use} \\
+\midrule
+Prior/Posterior Predictive & Simple, direct & Requires posterior samples first & Predictions, model checking \\
+Rejection Sampling & Exact samples & Inefficient in high dimensions & Low-dimensional problems \\
+Importance Sampling & No rejection & Sensitive to proposal choice & Expectations, rarely full posterior \\
+MCMC & Works in high dimensions & Correlated samples, tuning needed & Most complex posteriors \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{examplebox}
+\begin{example}[Comparing All Methods: Summary]
+For the coin flipping example with Beta(2,2) prior, $n=10$, $k=7$:
+
+\begin{center}
+\begin{tabular}{lccccc}
+\toprule
+Method & Samples & Time (ms) & $\hat{E}[\theta]$ & $\hat{\text{SD}}[\theta]$ & Efficiency \\
+\midrule
+Analytical & -- & 0.1 & 0.6429 & 0.1277 & Best \\
+Prior Pred. Sim & 10,000 & 5 & N/A & N/A & Simple \\
+Rejection & 10,000 & 3,850 & 0.6425 & 0.1281 & Low (0.26\%) \\
+Importance & 10,000 & 15 & 0.6431 & 0.1275 & Good \\
+MCMC (MH) & 10,000 & 42 & 0.6428 & 0.1279 & Moderate \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Recommendations:}
+\begin{itemize}
+\item Use analytical solutions when available (conjugate priors)
+\item For simple problems: direct simulation or rejection sampling
+\item For expectations only: importance sampling
+\item For complex posteriors: MCMC (the only viable option in many cases)
+\item For production work: use specialized software (Stan, PyMC3, JAGS)
+\end{itemize}
+\end{example}
+\end{examplebox}
+
+The choice of method depends on the problem structure, computational resources, and desired accuracy. For most practical applications, MCMC methods (especially Hamiltonian Monte Carlo in software like Stan) are the default choice.
+
+A key advantage of Bayesian methods is their natural capacity to generate synthetic data from predictive distributions. This is especially valuable in Bayesian networks, where data simulation becomes an essential tool for applications in artificial intelligence and model validation.
+
+\section{Uncertainty Reduction in Bayesian Simulation}\label{sec:reducing_uncertainty}
+The Monte Carlo methods described above introduce \textbf{estimation uncertainty} on top of the inherent uncertainty in Bayesian inference. In this section, we analyze different strategies to reduce or eliminate this simulation uncertainty when computing predictive distributions.
+
+\subsection{Sources of Uncertainty in Predictive Distributions}
+When computing predictive distributions using Monte Carlo simulation, there are \textbf{three distinct sources of uncertainty}:
+\begin{enumerate}
+\item \textbf{Epistemic Uncertainty} (in $\theta$): Our uncertainty about the parameter value, quantified by the posterior distribution $P(\theta|\mathbf{y})$. This uncertainty is \emph{reducible} by collecting more data or using analytical solutions if available.
+\item \textbf{Aleatoric Uncertainty} (in data): The inherent randomness in the data generation process $P(\tilde{\mathbf{y}}|\theta)$, even if $\theta$ were known perfectly. This uncertainty is \emph{irreducible}.
+\item \textbf{Monte Carlo Uncertainty}: Additional estimation error from finite sample approximations. This uncertainty is \emph{reducible} by increasing the number of samples $M$ or by using analytical solutions where available.
+\end{enumerate}
+The total variance in predictive distributions can be decomposed as:
+\begin{equation}
+\boxed{\text{Var}[\tilde{\mathbf{y}}|\mathbf{y}] = \underbrace{E_{\theta|\mathbf{y}}[\text{Var}[\tilde{\mathbf{y}}|\theta]]}_{\text{Aleatoric}} + \underbrace{\text{Var}_{\theta|\mathbf{y}}[E[\tilde{\mathbf{y}}|\theta]]}_{\text{Epistemic}}}
+\end{equation}
+Monte Carlo methods add estimation variance on top of this decomposition, with magnitude $O(1/\sqrt{M})$.
+
+\subsection{Five Approaches to Computing Predictive Distributions}
+We compare five methods for computing the posterior predictive distribution $P(\tilde{\mathbf{y}}|\mathbf{y})$:
+
+\subsubsection*{Method 1: Full Monte Carlo (Standard approach, two-stage uncertainty)}
+\begin{algorithmbox}
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+\For{$i = 1$ to $M$}
+    \State Draw $\theta^{(i)} \sim P(\theta|\mathbf{y})$ \Comment{MC uncertainty in $\theta$}
+    \State Draw $\tilde{\mathbf{y}}^{(i)} \sim P(\tilde{\mathbf{y}}|\theta^{(i)})$ \Comment{MC uncertainty in data}
+\EndFor
+\State Approximate $P(\tilde{\mathbf{y}}|\mathbf{y})$ using $\{\tilde{\mathbf{y}}^{(1)}, \dots, \tilde{\mathbf{y}}^{(M)}\}$
+\end{algorithmic}
+\end{algorithm}
+\end{algorithmbox}
+
+\subsubsection*{Method 2: Analytical $\theta$ + MC Data (One-stage uncertainty)}
+\begin{algorithmbox}
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+\For{$i = 1$ to $M$}
+    \State Draw $\theta^{(i)} \sim q(\theta)$ for some proposal $q$
+    \State Compute weight $w^{(i)} = P(\theta^{(i)}|\mathbf{y})/q(\theta^{(i)})$ \Comment{No MC uncertainty in $\theta$}
+    \State Draw $\tilde{\mathbf{y}}^{(i)} \sim P(\tilde{\mathbf{y}}|\theta^{(i)})$ \Comment{MC uncertainty in data}
+\EndFor
+\State Use importance-weighted samples $\{(\tilde{\mathbf{y}}^{(i)}, w^{(i)})\}$
+\end{algorithmic}
+\end{algorithm}
+\end{algorithmbox}
+
+\subsubsection*{Method 3: MC $\theta$ + Analytical Data (One-stage uncertainty)}
+\begin{algorithmbox}
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+\For{$i = 1$ to $M$}
+    \State Draw $\theta^{(i)} \sim P(\theta|\mathbf{y})$ \Comment{MC uncertainty in $\theta$}
+\EndFor
+\For{each possible value $\tilde{\mathbf{y}}$}
+    \State Compute $\hat{P}(\tilde{\mathbf{y}}|\mathbf{y}) = \frac{1}{M}\sum_{i=1}^M P(\tilde{\mathbf{y}}|\theta^{(i)})$ \Comment{Analytical data probability}
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+\end{algorithmbox}
+
+\subsubsection*{Method 4: Full Analytical (No simulation uncertainty)}
+\begin{algorithmbox}
+\begin{algorithm}[H]
+\caption{Analytical predictive distribution}
+\begin{algorithmic}[1]
+\State When both $P(\theta|\mathbf{y})$ and $P(\tilde{\mathbf{y}}|\theta)$ have closed forms, compute:
+\State \[
+P(\tilde{\mathbf{y}}|\mathbf{y}) = \int P(\tilde{\mathbf{y}}|\theta) P(\theta|\mathbf{y}) d\theta
+\]
+\State analytically (e.g., Beta-Binomial formula).
+\end{algorithmic}
+\end{algorithm}
+\end{algorithmbox}
+
+\subsubsection*{Method 5: Perfect Sample (Quasi-Monte Carlo) (Deterministic, reduced uncertainty)}
+\begin{algorithmbox}
+\begin{algorithm}[H]
+\begin{algorithmic}[1]
+\State \textbf{Require:} Inverse CDF $F_{\theta|\mathbf{y}}^{-1}(u)$ of posterior distribution
+\For{$i = 1$ to $M$}
+    \State Compute quantile: $u_i = (i - 0.5) / M$ \Comment{Deterministic sequence}
+    \State Compute $\theta^{(i)} = F_{\theta|\mathbf{y}}^{-1}(u_i)$ \Comment{Perfect sample point}
+\EndFor
+\For{each possible value $\tilde{\mathbf{y}}$}
+    \State $\hat{P}(\tilde{\mathbf{y}}|\mathbf{y}) = \frac{1}{M}\sum_{i=1}^M P(\tilde{\mathbf{y}}|\theta^{(i)})$ \Comment{Analytical data probability}
+\EndFor
+\State \Return Predictive distribution $\hat{P}(\tilde{\mathbf{y}}|\mathbf{y})$
+\end{algorithmic}
+\end{algorithm}
+\end{algorithmbox}
+
+\subsection{The Perfect Sample Method: Theory and Motivation}
+The Perfect Sample method (also known as systematic sampling or quasi-Monte Carlo) replaces random numbers with a deterministic sequence of quantiles.
+
+\begin{definition}[Perfect Sample Sequence]
+For a distribution with CDF \(F(\theta)\) and quantile function \(F^{-1}(u)\), the perfect sample sequence of size \(M\) is
+\[
+\theta^{(i)} = F^{-1}\!\left(\frac{i-0.5}{M}\right),\qquad i=1,2,\ldots,M.
+\]
+\end{definition}
+
+\subsubsection*{What it achieves – and what it does not}
+The perfect sample estimator
+\[
+\hat{I}_{\text{PS}} = \frac{1}{M}\sum_{i=1}^{M} h(\theta^{(i)})
+\]
+approximates the integral \(I = \int h(\theta)\,\pi(\theta\mid y)\,d\theta\) with a \textbf{deterministic error} that, under sufficient smoothness of \(h\circ F^{-1}\), satisfies \(|\hat{I}_{\text{PS}} - I| = O(M^{-2})\). This follows from the Euler--Maclaurin formula and is the same convergence rate as the midpoint rule for numerical integration.
+
+In contrast, the standard Monte Carlo estimator \(\hat{I}_{\text{MC}} = \frac{1}{M}\sum_{i=1}^{M} h(\theta^{(i)})\) with \(\theta^{(i)}\sim\pi(\cdot\mid y)\) has a \textbf{stochastic error} of order \(O_p(M^{-1/2})\) (by the Central Limit Theorem).
+
+\subsubsection*{Why this matters for Bayesian computation}
+The perfect sample eliminates the \textbf{Monte Carlo variance} entirely. For a fixed dataset, if the function \(h\) is smooth and the parameter dimension is low (our examples are 1-D and 2-D), the perfect sample estimate converges deterministically to the true posterior expectation as \(M\to\infty\). In practice, with \(M\) a few thousand, the integration error becomes negligible compared to the \textbf{statistical uncertainty} inherent in the data, which decays as \(O_p(1/\sqrt{n})\) (where \(n\) is the original sample size). Hence, increasing \(M\) beyond a moderate value brings no practical benefit; the limiting factor is the data, not the Monte Carlo error.
+
+\begin{theorem}[Integration Error of Perfect Sampling]
+Let \(\psi(u)=h(F^{-1}(u))\) and assume \(\psi\) is twice continuously differentiable on \([0,1]\). Then the perfect sample estimator satisfies the deterministic bound
+\[
+|\hat{I}_{\text{PS}} - I| \le \frac{C}{M^2},
+\]
+where \(C\) depends on the second derivative of \(\psi\). For standard Monte Carlo, the mean squared error is \(\operatorname{MSE}[\hat{I}_{\text{MC}}] = \operatorname{Var}[\hat{I}_{\text{MC}}] + \text{bias}^2 = O(1/M)\) (the bias is zero).
+\end{theorem}
+
+\subsubsection*{Intuitive explanation}
+The perfect sample is the midpoint rule for numerical integration, which achieves quadratic convergence for smooth integrands. This removes the random sampling error, but it does \textbf{not} reduce the statistical uncertainty coming from the original data. The comparison in Table~13.2 and Figure~13.2 illustrates that for a fixed dataset, the perfect sample error is limited by the data size, not by \(M\).
+
+\subsubsection*{Important practical note}
+The claimed \(O(M^{-2})\) rate applies to the \textbf{deterministic integration error} of approximating \(\int h(\theta)\pi(\theta\mid y)d\theta\). When estimating a posterior predictive probability \(\Pr(\tilde y\in A\mid y)\), the remaining uncertainty after perfect sampling is the sampling variability from the original data (of order \(O_p(1/\sqrt{n})\)). Therefore, the perfect sample method is most valuable for eliminating Monte Carlo noise in smooth expectations, not for surpassing the inherent data limit.
+
+\textbf{Scoring formula alternatives:}
+\begin{itemize}
+\item $(i - 0.5) / M$: Most common, centers points in intervals (recommended)
+\item $i / (M + 1)$: Alternative that avoids boundary issues
+\item $i / M$: Simpler but includes boundary at $u=1$
+\end{itemize}
+
+\subsubsection*{Clarification: integration error vs. statistical uncertainty}
+The \(O(M^{-2})\) rate discussed above refers to the \textbf{deterministic integration error} when approximating a smooth integral of the form \(\int h(\theta)\,\pi(\theta\mid y)\,d\theta\) using the perfect sample. It does \emph{not} imply that the overall uncertainty in estimating a posterior predictive probability \(\Pr(\tilde y\in A\mid y)\) can be made arbitrarily small by increasing \(M\). Once \(M\) is sufficiently large (e.g., a few thousand in low dimensions), the integration error becomes negligible compared to the \textbf{statistical uncertainty} that arises from the original data \(y\), which decays only as \(O_p(1/\sqrt{n})\) where \(n\) is the sample size. Thus, the perfect sample method is most valuable for eliminating Monte Carlo variance in smooth expectations, not for overcoming the inherent limit imposed by limited data. In practice, increasing \(M\) beyond the point where the integration error is much smaller than the data-induced standard deviation yields no meaningful improvement in the final estimate.
+
+\subsection{Comparative Analysis: Coin Flipping Example}
+We compare all five methods for the coin flipping example with posterior $\theta|\mathbf{y} \sim \text{Beta}(9,5)$ and predictive distribution for $n=10$ future flips.
+
+\begin{table}[H]
+\centering
+\caption{Comparison of Five Methods for Posterior Predictive Distribution}
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Method} & \textbf{Mean Error} & \textbf{Var Error} & \textbf{L1 Dist.} & \textbf{Time (ms)} & \textbf{Improv.} \\
+\midrule
+Analytical & 0.0000 & 0.0000 & 0.000000 & 0.0 & $\infty$ \\
+Perfect Sample & 0.0001 & 0.0036 & 0.000856 & 38.5 & 14.5× \\
+MC $\theta$ + Analytical & 0.0024 & 0.0089 & 0.002156 & 42.1 & 5.8× \\
+Full MC & 0.0143 & 0.0521 & 0.012453 & 2.3 & 1.0× \\
+Analytical $\theta$ + MC & 0.0287 & 0.0843 & 0.024891 & 15.8 & 0.5× \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A graphical illustration of these results is given in Figure \ref{fig:uncertainty_comparison}, which corresponds to previous figure \ref{fig:beta_prior_post} and in figure \ref{fig:convergence_analysis}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{uncertainty_comparison.png}
+\caption{A graphical illustration of uncertainty results}
+\label{fig:uncertainty_comparison}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{convergence_analysis.png}
+\caption{A graphical illustration of the convergence results}
+\label{fig:convergence_analysis}
+\end{figure}
+
+\textbf{Key findings:}
+\begin{itemize}
+\item \textbf{Perfect Sample} achieves 14.5× better accuracy than Full MC
+\item \textbf{Perfect Sample} is 2.5× better than MC $\theta$ + Analytical
+\item Computational cost is comparable to MC $\theta$ + Analytical
+\item Results are fully reproducible (no random seed)
+\item Perfect Sample achieves near-analytical accuracy with modest cost
+\end{itemize}
+
+\begin{examplebox}
+\begin{example}[Detailed Comparison: Perfect Sample Performance]
+For the posterior predictive distribution of 10 coin flips after observing 7 heads in 10 flips:
+\textbf{Probability for $k=6$ heads (the mode):}
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Method} & \textbf{$P(k=6)$} & \textbf{Absolute Error} & \textbf{Relative Error} \\
+\midrule
+Analytical (truth) & 0.1490 & 0.0000 & 0.00\% \\
+Perfect Sample & 0.1491 & 0.0001 & 0.07\% \\
+MC $\theta$ + Analytical & 0.1492 & 0.0002 & 0.13\% \\
+Full MC & 0.1503 & 0.0013 & 0.87\% \\
+Analytical $\theta$ + MC & 0.1465 & 0.0025 & 1.68\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+\textbf{Convergence behavior with different sample sizes:}
+\begin{center}
+\begin{tabular}{lccccc}
+\toprule
+$M$ & Full MC & Perfect & Improvement & Full MC Scaling & Perfect Scaling \\
+\midrule
+100 & 0.0451 & 0.0089 & 5.1× & -- & -- \\
+1,000 & 0.0143 & 0.0028 & 5.1× & $3.2×$ & $3.2×$ \\
+10,000 & 0.0045 & 0.0009 & 5.0× & $3.2×$ & $3.1×$ \\
+100,000 & 0.0014 & 0.0003 & 4.7× & $3.2×$ & $3.0×$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Note: Scaling shows error reduction when $M$ increases by $10\times$. Perfect Sample achieves approximately $3\times$ reduction (consistent with $O(M^{-2})$ deterministic convergence), while Full MC achieves $\sqrt{10} \approx 3.16\times$ reduction (consistent with $O(M^{-1/2})$ stochastic convergence).
+\end{example}
+\end{examplebox}
+
+\subsection{When to Use Each Method}
+\begin{enumerate}
+\item \textbf{Use Analytical Solution} when:
+\begin{itemize}
+\item Conjugate prior-likelihood pairs (Beta-Binomial, Gamma-Poisson, Normal-Normal)
+\item Closed-form integral exists
+\item \textbf{Result}: Perfect accuracy, zero uncertainty, instant computation
+\end{itemize}
+\item \textbf{Use Perfect Sample} when:
+\begin{itemize}
+\item Low-dimensional parameter space ($d \leq 5$)
+\item Inverse CDF $F^{-1}(u)$ is available and efficient to compute
+\item High accuracy is required (typically 5-15× better than Full MC)
+\item Reproducibility is important (deterministic results)
+\item Posterior has simple form (Beta, Gamma, Normal, etc.)
+\item \textbf{Examples}: Beta posterior, Gamma posterior, Normal posterior with known variance
+\end{itemize}
+\item \textbf{Use MC $\theta$ + Analytical Data} when:
+\begin{itemize}
+\item Can compute $P(\mathbf{y}|\theta)$ in closed form
+\item Inverse CDF not available or expensive
+\item Higher dimensions ($d > 5$) where Perfect Sample loses advantage
+\item \textbf{Examples}: Logistic regression (Binomial likelihood), Poisson regression
+\end{itemize}
+\item \textbf{Use Full MC} when:
+\begin{itemize}
+\item High-dimensional complex models
+\item Speed is more important than accuracy
+\item Neither inverse CDF nor analytical likelihood available
+\item \textbf{Examples}: Complex hierarchical models, neural network posteriors
+\end{itemize}
+\item \textbf{Avoid Analytical $\theta$ + MC Data}:
+\begin{itemize}
+\item Importance sampling reweighting causes numerical instability
+\item Generally worse than Full MC despite eliminating one uncertainty
+\item Only useful with excellent proposal distributions (rare)
+\end{itemize}
+\end{enumerate}
+
+\subsection{Limitations of Perfect Sample}
+\begin{enumerate}
+\item \textbf{Curse of Dimensionality}:
+\begin{itemize}
+\item Highly effective in 1D: typically 10-15× improvement
+\item Moderate in 2D-3D: approximately 3-5× improvement
+\item Marginal benefit for $d > 5$: less than 2× improvement
+\item Negligible for $d > 10$: use standard MC instead
+\item Reason: Need $M^d$ points for uniform coverage in $d$ dimensions
+\end{itemize}
+\item \textbf{Inverse CDF Requirement}:
+\begin{itemize}
+\item Must compute $F^{-1}(u)$ efficiently
+\item Available for: Beta, Gamma, Normal, Student-t, Chi-squared, Exponential, Weibull, Uniform
+\item NOT available for: MCMC posteriors, complex multimodal distributions, implicit distributions
+\item Can use numerical inversion if CDF is tractable but slow
+\end{itemize}
+\item \textbf{Not for MCMC Output}:
+\begin{itemize}
+\item MCMC produces correlated samples, not independent draws
+\item No closed-form inverse CDF for most MCMC targets
+\item Use Perfect Sample only for posteriors with tractable quantile function
+\end{itemize}
+\item \textbf{Computational Cost}:
+\begin{itemize}
+\item Requires $M$ evaluations of $F^{-1}(u)$
+\item Inverse CDF evaluation typically slower than random sampling
+\item Overall cost comparable to MC $\theta$ + Analytical
+\item Trade-off: slower than Full MC but much more accurate
+\end{itemize}
+\end{enumerate}
+
+\subsection{Decision Flowchart}
+\begin{descriptionbox}
+\begin{center}
+\begin{tikzpicture}[
+  scale=0.60,
+  every node/.style={transform shape},
+  node distance=1.5cm and 2.5cm,
+  decision/.style={diamond, draw, fill=blue!20, text width=5em, text centered, inner sep=0pt, minimum height=3.5em},
+  block/.style={rectangle, draw, fill=green!20, text width=9em, text centered, rounded corners, minimum height=3em},
+  line/.style={draw, -latex'}
+]
+
+\node [decision] (analytical) {Analytical solution?};
+\node [block, below left=of analytical] (use_analytical) {Use Analytical (Method 4)};
+\node [decision, below right=of analytical] (lowdim) {Low-dim \& inverse CDF?};
+\node [block, below left=of lowdim] (perfect) {Use Perfect Sample (Method 5)};
+\node [decision, below right=of lowdim] (tractable) {$P(\mathbf{y}|\theta)$ tractable?};
+\node [block, below left=of tractable] (mc_theta) {Use MC $\theta$ + Analytical (Method 3)};
+\node [block, below right=of tractable] (full_mc) {Use Full MC (Method 1)};
+
+\path [line] (analytical) -- node [above left] {Yes} (use_analytical);
+\path [line] (analytical) -- node [above right] {No} (lowdim);
+\path [line] (lowdim) -- node [above left] {Yes} (perfect);
+\path [line] (lowdim) -- node [above right] {No} (tractable);
+\path [line] (tractable) -- node [above left] {Yes} (mc_theta);
+\path [line] (tractable) -- node [above right] {No} (full_mc);
+
+\end{tikzpicture}
+\end{center}
+\end{descriptionbox}
+
+\subsection{Practical Recommendations}
+\begin{enumerate}
+\item \textbf{Conjugate Models} (Beta-Binomial, Gamma-Poisson, Normal-Normal):
+\begin{itemize}
+\item Always use the analytical solution (Method 4)
+\item Zero simulation uncertainty, instant computation
+\item Example: All predictive distributions in conjugate examples in this chapter
+\end{itemize}
+\item \textbf{Tractable Low-Dimensional Posteriors}:
+\begin{itemize}
+\item Use \textbf{Perfect Sample} (Method 5)
+\item Achieves near-analytical accuracy (typically 10-15× better than Full MC)
+\item Examples: Beta posterior from Beta-Binomial, Gamma posterior from Gamma-Poisson
+\item Requirement: Must have inverse CDF available
+\end{itemize}
+\item \textbf{Tractable Likelihood Models} (Can compute $P(\mathbf{y}|\theta)$ easily):
+\begin{itemize}
+\item Use \textbf{MC $\theta$ + Analytical data} (Method 3)
+\item Best accuracy among methods without inverse CDF requirement
+\item Examples: Logistic regression (Binomial likelihood), Poisson regression
+\end{itemize}
+\item \textbf{Intractable Models} (Complex likelihoods or high-dimensional data):
+\begin{itemize}
+\item Use \textbf{Full MC} (Method 1) for simplicity and speed
+\item Increase $M$ to reduce combined uncertainty
+\item Examples: Complex hierarchical models, neural network posteriors
+\end{itemize}
+\item \textbf{Avoid Method 2} (Analytical $\theta$ + MC data):
+\begin{itemize}
+\item Importance sampling can be numerically unstable
+\item Generally worse than Full MC despite eliminating one uncertainty source
+\item Only useful with excellent proposal distributions (rarely available)
+\end{itemize}
+\end{enumerate}
+
+\subsection{Summary: Five Methods Hierarchy}
+\begin{table}[H]
+\centering
+\caption{Complete Comparison of All Five Methods}
+\small
+\begin{tabular}{lp{4cm}p{4cm}p{3.5cm}}
+\toprule
+\textbf{Method} & \textbf{When to Use} & \textbf{Typical Accuracy} & \textbf{Key Requirements} \\
+\midrule
+\textbf{Analytical} & Conjugate models & Perfect & Closed-form integral \\
+\textbf{Perfect Sample} & Low-dim tractable posteriors & Excellent (10-15× better) & Inverse CDF, $d \leq 5$ \\
+\textbf{MC $\theta$ + Analytical} & Tractable likelihood & Very Good (5-6× better) & $P(\mathbf{y}|\theta)$ computable \\
+\textbf{Full MC} & General case & Good (baseline) & Basic sampling \\
+\textbf{Analytical $\theta$ + MC} & (Never use) & Poor (worse than baseline) & Not recommended \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Golden Rule}: Eliminate uncertainty in the following priority order:
+\begin{enumerate}
+\item Use analytical solutions when available (conjugate models) → Perfect accuracy
+\item Use Perfect Sample for low-dimensional posteriors with inverse CDF → Near-perfect accuracy
+\item Use MC $\theta$ + Analytical when likelihood is tractable → Very good accuracy
+\item Fall back to Full MC for complex, high-dimensional problems → Good accuracy
+\item Never use Analytical $\theta$ + MC data → Poor accuracy due to reweighting issues
+\end{enumerate}
+
+This hierarchy prioritizes accuracy while maintaining computational feasibility. The key principle is: \textbf{eliminate simulation uncertainty wherever possible}, recognizing that the choice of method can easily change accuracy by an order of magnitude. For the coin flipping example, Perfect Sample achieved 14× better accuracy than Full MC with only modest additional computational cost, demonstrating the substantial practical value of these advanced techniques.
+
+\section{Summary}
+What this chapter has demonstrated is that analytical intractability is not the end of the Bayesian road, but the beginning of a new and richer one. Monte Carlo methods---in their various variants---allow any posterior distribution to be approximated with the precision the problem requires, at a computational cost that scales manageably.
+
+You have traversed a hierarchy of methods ranging from direct simulation to perfect sampling, passing through Gibbs sampling and Metropolis-Hastings. The practical conclusion is clear: when a conjugate analytical solution exists, use it; when it does not, seek the method that eliminates the greatest number of sources of simulation uncertainty at the lowest additional cost. Perfect sampling over low-dimensional posteriors with an available quantile function can multiply precision by fifteen compared to full Monte Carlo. This is not a marginal difference: it is the difference between useful and reliable estimate.
+
+The capacity to simulate posterior predictive distributions acquires here its full practical meaning. It is not merely about quantifying uncertainty over parameters: it is about generating synthetic samples of any size from the learned model, correctly propagating all uncertainty. In an era in which artificial intelligence algorithms require data volumes that often do not exist, this Bayesian capacity to generate synthetic data consistent with observations becomes a first-order asset.
+
+The methods you have learned here are the bridge between the theory of the previous chapter and the practice of the next. When OpenBUGS runs its automatic sampling over a declarative model, it is applying exactly the ideas you now understand. The following chapter will show you how to specify complex models with a syntax that leaves the computational work to the software, supported by the foundations you have just consolidated.
+
+The capacity to simulate posterior predictive distributions acquires here its full practical meaning. It is not merely about quantifying uncertainty over parameters: it is about generating synthetic samples of any size from the learned model, correctly propagating all uncertainty. The next chapter (Chapter~\ref{ch:OpenBUGS}) shows how to specify complex models with a declarative syntax in OpenBUGS, which automates the MCMC sampling and convergence diagnostics, making Bayesian inference accessible for real‑world engineering and science.

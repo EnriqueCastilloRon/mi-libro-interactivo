@@ -1,0 +1,329 @@
+\startcontents[chapter]
+\chapter{A Convenient Dimensionless Transformation}
+\label{ch:cdftransformation}
+\minitocboxed
+
+\section*{Motivation}
+To achieve uniformity across variables, this chapter introduces the empirical cumulative distribution function (ECDF) transformation. When applied to every variable, it maps all ranges to the interval $[0,1]$. The immediate benefit is interpretability: the transformed variables become quantiles. A value of $0.02$ means only $2\%$ of the population lies below, while $0.98$ means only $2\%$ lies above — both warrant attention, whereas values in $[0.30,0.70]$ typically require no concern at all.
+
+The ECDF transformation is nonparametric, data‑driven, and order‑preserving. It makes variables dimensionless, allows legitimate application of transcendental functions, and provides a universal interpretability scale. This chapter argues that what matters most is not the absolute value of a measurement but the relative position it occupies within its population — a paradigm change in our approach to units of measure.
+
+\section{Introduction}
+We advance that this chapter reveals one of the most important ideas in this book. In it we suggest and strongly recommend a common variable transformation that is fully interpretable and extremely convenient to reduce the complexity of learning and explaining results. It reveals that what is important are not the values of the variables but the order they occupy in the population or sample being considered. In fact it is difficult to explain why it is not still used systematically in real practice. Thus, the user is invited to discover what all this means.
+
+A fundamental challenge in data analysis arises in real practice when working with dimensional variables — quantities expressed in units such as mg/dl, euros, kilometers per hour, or degrees Celsius. These measurements are inherently difficult to compare, interpret uniformly, or combine meaningfully across different domains. For this reason, a central goal of this chapter is to introduce a principled methodology to transform such variables into their dimensionless, normalized counterparts, mapping their values onto the universal interval [0,1].
+
+This transformation serves three critical purposes: it eliminates the dependency on arbitrary units of measurement, it places all variables on a common scale regardless of their original range or distribution, and — perhaps most importantly — it makes numerical values universally interpretable by any informed reader, even one unfamiliar with the specific domain.
+
+\subsection*{A motivating example: from raw measurements to percentiles}
+Consider a concrete example from clinical medicine. Suppose a physician informs a patient: \textit{"Your cholesterol level is 240 mg/dl."} For most patients — and indeed for most people without a medical background — this number conveys little actionable information. Is 240 mg/dl dangerous? Normal? Borderline? The answer depends on the reference population, the patient's age, sex, and clinical context, none of which are captured by the raw number alone.
+Now suppose instead the physician says: \textit{"Your cholesterol percentile is 0.85."} This single dimensionless number immediately communicates that $85\%$ of the reference population has a lower cholesterol level — a statement that is both precise and intuitively clear, requiring no domain-specific knowledge to interpret.
+This transformation is achieved through the empirical cumulative distribution function (ECDF), illustrated in Figure \ref{fig:empirical_cdf}. Given a dataset $\{x_1, x_2, \ldots, x_n\}$, the ECDF maps any observed value $x$ to its corresponding percentile $F(x)\in [0,1]$, where:
+\[
+F(x) = \frac{1}{n} \sum_{i=1}^{n} \mathbf{1}[x_i \leq x] = \frac{i(x)}{n}
+\]
+where $i(x)$ is the order of the $x$ value in the sorted sample, of size $n$, or considered population.
+
+The result is a variable that is dimensionless, bounded, and carries a direct probabilistic interpretation relative to the empirical population.
+
+However, one can even use other more convenient variants, such as,
+\[
+F(x) = \frac{i(x)}{n+1} \mbox{ or }F(x) = \frac{i(x)-0.5}{n}.
+\]
+
+Both have the virtue of reserving space to future values smaller than the actual minimum, since they are assigned values $\frac{1}{n+1}>0$ or $\frac{0.5}{n}>0$, respectively, and larger than the actual maximum, because they are assigned values $\frac{n}{n+1}<1$ or $\frac{n-0.5}{n}<1$, respectively.
+
+Contrary, the assignment $F(x) = \frac{n}{n}$ to the maximum value closes the door to larger future values.
+
+\begin{figure}[!htpb]
+\begin{center}
+%\includegraphics[width=0.80\textwidth]{TransformationToDimensionalessVars.png}
+\begin{tikzpicture}[
+    scale=0.8,
+    transform shape,
+    font=\sffamily
+]
+
+    % Marco general
+    \draw[
+        darknavy,
+        fill=blue!6,
+        line width=2pt,
+        rounded corners=8pt
+    ]
+    (-5.9,3.8) rectangle (5.9,-8.6);
+
+    % Título
+    \node[
+        font=\bfseries\fontsize{18}{20}\selectfont,
+        text=darknavy,
+        align=center
+    ] at (0,3.05)
+    {UNIVERSAL TRANSFORMATION\\ VIA ECDF};
+
+    % Bloque 1
+    \node[
+        mybox,
+        fill=blue!12,
+        draw=blue!60!black
+    ] (b1) at (0,1.7)
+    {\Large Any variable \hspace{0.2cm}$q$\hspace{0.2cm}(arbitrary scale)};
+
+    \draw[flow] (0,1.15)--(0,0.55);
+
+    % Bloque 2
+    \node[
+        mybox,
+        fill=green!12,
+        draw=green!50!black
+    ] (b2) at (0,-0.1)
+    {\Large ECDF:\quad $F(q)=P(Q\le q)$};
+
+    \draw[flow] (0,-0.65)--(0,-1.25);
+
+    % Bloque 3
+    \node[
+        mybox,
+        fill=orange!12,
+        draw=orange!70!black
+    ] (b3) at (0,-1.9)
+    {\Huge $u=F(q)$};
+
+    \draw[flow] (0,-2.45)--(0,-3.05);
+
+    % Bloque 4
+    \node[
+        mybox,
+        fill=purple!12,
+        draw=purple!60!black
+    ] (b4) at (0,-3.7)
+    {\Huge $u\in[0,1]$ \hspace{0.5cm} \Large (universal scale)};
+
+    % Gráfico ECDF
+    \begin{scope}[shift={(-2.8,-7.0)}]
+
+        \draw[line width=1.4pt] (0,0)--(0,2.2);
+        \draw[line width=1.4pt] (0,0)--(3.8,0);
+
+        \draw[dashed,line width=1pt] (0,1.7)--(3.0,1.7);
+        \draw[dashed,line width=1pt] (3.0,0)--(3.0,1.7);
+
+        \draw[
+            darknavy,
+            line width=2.5pt,
+            samples=100,
+            domain=0:3.7,
+            smooth
+        ]
+        plot (\x,{1.75/(1+exp(-3*(\x-1.7)))});
+
+        \node[left] at (0,0) {\Large 0.0};
+        \node[left] at (0,1.7) {\Large 1.0};
+
+        \node[left] at (-0.1,2.05) {$F(q)$};
+        \node[right] at (3.75,-0.08) {$q$};
+
+        \draw[-{Stealth[length=6pt]}] (0,2.0)--(0,2.2);
+        \draw[-{Stealth[length=6pt]}] (3.55,0)--(3.8,0);
+
+    \end{scope}
+
+    % Caja de propiedades
+    \node[
+        draw=red!60!black,
+        fill=red!10,
+        rounded corners=4pt,
+        line width=1.5pt,
+        align=left,
+        text width=3.2cm,
+        inner sep=8pt
+    ] at (3.3,-6.6)
+    {
+        {\bfseries Properties:}
+
+        \vspace{2mm}
+
+        $\checkmark$ Non-parametric\\
+        $\checkmark$ Monotonic\\
+        $\checkmark$ Maps to $[0,1]$\\
+        $\checkmark$ Universal\\
+        $\checkmark$ Invariant to Units
+    };
+
+\end{tikzpicture}
+\end{center}
+\caption{Illustration of the empirical cdf transformation (ECDF)}
+\label{fig:empirical_cdf}
+\end{figure}
+
+
+
+\subsection*{A universal interpretability scale}
+One of the most powerful consequences of this transformation is the emergence of a universal interpretability framework. Once all variables are expressed as quantiles or percentiles, the following scale applies uniformly across every domain — whether the variable represents cholesterol, income, test scores, or sensor readings:
+
+\textbf{Universal interpretability scale:}
+\begin{itemize}
+    \item $[0.0,\ 0.1]$: \textbf{Very low} — may indicate deficit or concern
+    \item $[0.1,\ 0.3]$: \textbf{Low-normal}
+    \item $[0.3,\ 0.7]$: \textbf{Normal range} — typical population behavior
+    \item $[0.7,\ 0.9]$: \textbf{High-normal}
+    \item $[0.9,\ 1.0]$: \textbf{Very high} — may indicate excess or concern
+\end{itemize}
+\vspace{0.3cm}
+This scale is not merely a notational convenience — it represents a genuine epistemological advantage. A clinician, an engineer, and an economist can all read the value $0.92$ and immediately recognize it as an unusually high observation, without requiring any knowledge of the underlying variable's units, distribution, or typical range.
+
+\subsection*{Why this matters: three key benefits}
+The normalization approach advocated throughout this chapter offers three compounding benefits:
+\begin{enumerate}
+    \item \textbf{Comparability across variables and domains.} When all variables share the same $[0,1]$ range, they can be placed side by side, averaged, weighted, and combined in models without one variable dominating simply because of its scale.
+
+\item \textbf{Robustness to outliers and non-Gaussianity.} The ECDF transformation is nonparametric — it makes no assumptions about the underlying distribution. Heavy tails, skewness, and outliers are naturally accommodated, as the transformation maps every observation to its rank rather than to a linear rescaling of its raw value.
+
+\item \textbf{Communicability.} Percentile-based representations close the gap between technical analysis and human understanding. This is especially valuable in high-stakes domains such as medicine, public policy, and finance, where decisions must be made by audiences with varying levels of technical expertise.
+\end{enumerate}
+
+The remainder of this chapter formalizes these ideas, examines the mathematical properties of the ECDF transformation, and explores its implications for modeling, visualization, and decision-making.
+
+\section{The ECDF Transformation}\index{Sectioning!Sections}
+Now we have discovered that among all transformations with images on the interval $[0,1]$, there is one that corresponds to its cdf. This means that given a variable $q$, one can define the new or transformed variable $q'$ as follows:
+\begin{equation}
+q' = F(q)
+\label{eq:cdftransform}
+\end{equation}
+where $F(q)$ is the cumulative distribution function of variable $q$.
+
+In this chapter we deal only with continuous random variables such that its cdf is invertible. The main advantages of this transformation are:
+\begin{enumerate}
+\item \textbf{Empirical Approximability.} The $F(q)$ function can be approximated by the empirical distribution function as soon as a sufficiently large random sample becomes available. Additionally, it can be easily implemented on a computer using interpolation methods, such as splines, for example.
+
+\item \textbf{Symmetric Implementability.} Like $F(q)$, the percentile function $F^{-1}(p)$ can also be approximated from a sufficiently large random sample and implemented via interpolation methods such as splines. Notably, the reference points for both splines — for the cdf and the percentile function — can be identical.
+
+\item \textbf{Bounded Range.} The range of the transformed variable is $[0,1]$, which is highly convenient for multiple reasons, including the avoidance of numerical problems. The infinite, a common source of problems, is not included.
+
+\item \textbf{Uniform Coverage.} The values of $q'$ extend uniformly across the entire range $[0,1]$. In other words, no problems of sparsely covered ranges are encountered.
+
+\item \textbf{Dimensionlessness.} The transformed variable is dimensionless, that is, it has no units of measure associated with it. As a consequence, mathematical transformations such as logarithmic, trigonometric, exponential, and others can be applied to it. This is a property that dimensional variables lack, and applying such transformations to dimensional variables constitutes a significant dimensional modeling error.
+
+\item \textbf{Universal Interpretability.} The physical interpretation of $q'$ is the probability that the random variable will be less than or equal to $q$, which provides valuable information about where the actual value is positioned — specifically, whether it is very high, medium, or very low — and quantifies its random character. Crucially, this interpretation requires neither knowledge of the type of variable being dealt with nor familiarity with the units of the original variable $q$, making it immediately accessible to any reader. This is precisely the universal interpretability scale introduced in Section~1: a value of $0.02$ means only $2\%$ of the population lies below, while $0.98$ means only $2\%$ lies above — both warrant attention, whereas values in $[0.30, 0.70]$ typically require no concern at all.
+
+\item \textbf{Cross-Domain Comparability and Paradigm Change.} When this transformation is applied to all variables simultaneously, their scales align in both range and interpretation without requiring expertise in any specific domain, thereby facilitating work across many areas such as numerical analysis, artificial intelligence, neural networks, and others. This observation invites a deeper reflection: what matters most is not the absolute value of a measurement but the relative position it occupies within its population — a paradigm change in our approach to units of measure.
+
+\item \textbf{Invertibility and Recovery.} The inverse function, $F^{-1}(p)$, is the percentile function that yields the value of $q$ for a given probability $p$. It is easily interpretable in practical terms and allows for the recovery of the original variable $q$.
+
+\item \textbf{Compatibility with Dimensional Analysis.} Since the variables become dimensionless after the ECDF transformation, the Buckingham theorem is not useful for reducing the number of variables at that stage. However, its advantages can still be useful if applied before it.
+\end{enumerate}
+\vspace{0.3cm}
+\noindent The practical relevance of these nine properties can hardly be overstated. Properties~1 and~2
+guarantee that the transformation is fully operational in practice: both the cdf and its inverse
+can be estimated from data and implemented numerically at negligible cost, sharing even the same
+spline reference points. Properties~3 and~4
+ensure that the transformed variables are well-behaved numerically — bounded, non-sparse, and
+free of the scaling pathologies that plague raw measurements. Property~5 is perhaps the most
+consequential from a modeling standpoint: dimensionlessness is a prerequisite for the
+legitimate application of nonlinear functions, and its violation is a silent but serious error
+in many applied models. Property~6 provides the human dimension: a single number in $[0,1]$
+communicates more actionable information than a raw measurement with units, because it locates
+the observation within its population. Property~7 extends this advantage to the
+multi-variable setting, enabling genuine cross-domain comparisons and suggesting a fundamental
+reorientation of how we think about measurement. Property~8 ensures that no information is
+lost: the transformation is invertible, and the original variable can always be recovered
+exactly. Finally, Property~9 connects the framework to the classical theory of dimensional
+analysis, confirming that the ECDF transformation is not at odds with the Buckingham
+theorem but rather operates in a complementary regime.
+\vspace{0.3cm}
+
+To understand these newly transformed variables, one must consider what percentiles represent. Assume that you receive the results of a standard blood analysis in which different elements are included and expressed in various units of measure. It must be recognized that most people are incapable of understanding their meaning---for example, whether the values are high, low, or medium. However, if our quantiles are provided (without dimensions, because they are dimensionless), such as 0.02 or 0.98, then we understand that only 2\% of the population has a value smaller than ours or 2\% larger than ours, respectively. This allows one to be appropriately concerned, with normally no concern at all if the percentiles fall within a range like [0.30, 0.70], for example.
+
+Consider now all variables transformed to percentiles. In such a case, the patient has no difficulty understanding the analysis results with correct numerical interpretation.
+
+At this point, one might ask why these scales have not been adopted as standard scales. Furthermore, this serves as an initial attention call---one that will be repeated later in the paper---regarding the fact that \textbf{what matters most is the relative position occupied within the population}. This observation, while initially surprising at first glance, invites deeper reflection and ultimately suggests a paradigm change in our approach to units of measure. More precisely, what are important are not the particular values of the variables, but the associated orders. That, transformations not altering the order values do not alter neither their actions nor their interactions with other variables. Given the relevance of this result, it would be fully analyzed in the chapter dedicated to copulas.
+
+\section{ECDF as a Universal Alternative to Other Usual Transformations}
+
+In science and engineering, data visualization often relies on specially designed coordinate transformations—commonly referred to as papers—to reveal structure that is otherwise difficult to perceive. Logarithmic and semi-logarithmic papers are routinely used to compress wide dynamic ranges, mitigate sparsity in certain regions, and expose multiplicative or power-law relationships. Probability papers (such as normal, Weibull, Gumbel, or other extreme-value plots) are indispensable for assessing whether data follow a prescribed distribution and for identifying tail behavior or domains of attraction.
+
+The power of these representations lies in their ability to translate statistical properties into simple geometric features. Linearity, curvature, and deviations from expected trends on transformed axes can often be interpreted immediately, providing deep insight with minimal computational effort. This immediacy explains the enduring value of such carefully and ingeniously designed transformations.
+
+The empirical cumulative distribution function (CDF) offers a unifying and, in many respects, superior alternative to these traditional papers. The ECDF is an adaptive, data-driven transformation applied individually to each variable. It maps arbitrary data ranges onto the common, finite interval
+$[0,1]$, thereby normalizing scales and eliminating units. As a result, all transformed variables become dimensionless and directly comparable, regardless of their original magnitudes or physical interpretations.
+
+Moreover, the ECDF converts each univariate marginal distribution into a uniform distribution—the simplest and most neutral reference distribution possible. This transformation not only standardizes ranges but also redistributes observations evenly across the interval, avoiding artificial clustering or sparsity induced by the original scale. Such uniform concentration of data greatly facilitates visual inspection, comparison across variables, and the detection of structure, dependence, and anomalies.
+
+These properties—range normalization, dimensional neutrality, distributional unification, and uniform data concentration—are not merely convenient; they are fundamentally powerful. Together, they make the ECDF a universal, robust, and highly practical transformation for exploratory data analysis, visualization, and modeling. In practical applications, it can subsume the roles traditionally played by log, semi-log, probabilistic, and extreme-value papers, while remaining entirely nonparametric and assumption-free.
+
+
+\section{Summary, Achievements, and Relevance of the Results}
+
+This chapter has introduced and thoroughly analyzed a single, deceptively simple idea:
+replace every dimensional variable with its empirical percentile. The consequences of
+this substitution, however, are neither simple nor limited — they cascade through the
+entire methodology of data analysis, modeling, and scientific communication in ways
+that this section aims to make explicit.
+
+\section{The Deeper Significance: A Paradigm Change}
+
+Beyond the individual results listed above, this chapter argues for a more profound
+reorientation of how measurement is understood. The conventional view holds that
+what is important about a measurement is its absolute value in a given unit system.
+The view advocated here is different: For smooth functions and in low dimensions, the perfect sample method (quasi‑Monte Carlo) can achieve convergence rates close to O(M⁻²), compared to the O(M⁻¹/²) of standard Monte Carlo. In practice, the gain depends on the regularity of the function and the dimension; in our examples (1‑D, 2‑D) we observed improvements between 5 and 15 times.
+
+This is not merely a computational convenience. It reflects a fundamental truth about
+the way in which variables influence each other and the way in which systems respond
+to inputs. As will be shown in the chapter on copulas (Chapter~\ref{ch:copulas}),
+the dependence structure between variables is entirely determined by their joint
+ranks — not by their marginal values. Transformations that preserve order but change
+scale leave all interactions and dependencies intact. The ECDF transformation
+is precisely such a transformation: it is strictly monotonic, and therefore
+order-preserving, by construction.
+
+This insight has a striking practical implication: \emph{the units in which variables
+are measured are irrelevant to their mutual dependencies}. A model built on percentiles
+is not an approximation to a model built on raw measurements — it is, in the sense
+that matters for dependence modeling, \emph{exactly equivalent}. The percentile
+representation is not a simplification; it is a clarification.
+
+\section{Relevance for Applications}
+
+The results of this chapter have immediate and substantial consequences across a wide
+range of application areas:
+
+\noindent\textbf{Medicine and clinical analysis.} Every numerical result of a
+diagnostic test — blood markers, imaging measurements, physiological signals — can be
+expressed as a percentile relative to a reference population. The resulting values are
+immediately interpretable by patients and clinicians alike, without requiring knowledge
+of units, reference intervals, or clinical thresholds. A universal medical dashboard
+becomes conceivable.
+
+\noindent\textbf{Finance and economics.} Asset returns, risk indicators, and economic
+variables expressed in different currencies, timeframes, and scales become directly
+comparable once transformed to percentiles. Portfolio construction, risk aggregation,
+and cross-asset analysis all benefit from a common scale.
+
+\noindent\textbf{Engineering and physical sciences.} Sensor readings from heterogeneous
+instruments, measurements in incompatible unit systems, and variables spanning many
+orders of magnitude can all be brought onto a common footing. Dimensionless models
+built on transformed variables are free from the unit-dependence that otherwise
+constrains physical modeling.
+
+\noindent\textbf{Artificial intelligence and machine learning.} The transformed
+variables satisfy all the prerequisites for being fed into learned models: they are
+bounded, uniformly distributed, dimensionless, and mutually comparable. This is not a
+minor preprocessing convenience — it is a structural guarantee that the input space
+is well-conditioned. Combined with the functional network structure derived in
+Chapter~\ref{ch:Piforms}, this transformation forms the foundation of a principled,
+interpretable, and physically grounded approach to AI modeling.
+
+\noindent\textbf{Scientific communication and reproducibility.} Results expressed in
+percentiles are self-contained: they carry their own reference population implicitly,
+require no unit conversion, and can be compared across studies, institutions, and
+time periods without ambiguity. This makes scientific findings more transparent,
+reproducible, and accessible to non-specialist audiences.
+
+
+\section{A Note on What Comes Next}
+
+The transformation introduced in this chapter is not an end in itself. It is the
+second step in a methodology that unfolds across the remaining chapters of this book.
+Once the Buckingham theorem has been applied in its full generality, and all variables are expressed, using the ECDF as percentiles in $[0,1]$, one has the adequate form of data to use the copula, which is described in Chapter~\ref{ch:copulas} providing a powerful tool for characterizing their joint dependence. The ECDF transformation is, in this sense, the common main foundation on which the entire edifice of this book is built. Using the ECDF transformation for all variables in a set of continuous variables leads to a copula. After this transformation the samples loose all information about their initial marginals. Thus, either the marginals or the initial marginal samples must be learnt if one wants to keep the marginal information contained in the sample marginals. The ECDF has the merit of transforming marginals of the initial sample to uniform random variables. The copulas are families of multivariate cdf functions such that their marginals are uniforms. Consequently copulas inherit this important property from the ECDF transformations they use. However, it must be clarified that copulas keep the information about the dependence structure in the initial sample. \textbf{The ECDF transformation permits separating the learning process of a multivariate cdf function in two steps: learning the marginals (ECDF) and learning the internal dependence among variables (copulas). Together they provide an important tool in its learning process.} The pass from the cdf to its copula and vice versa is given by Sklar theorem, to be discussed in Chapter~\ref{ch:copulas}.
+
+After this transformation, all variables live on the same scale, are dimensionless, and have uniform marginals. The deeper implication is startling: the actual values of variables matter far less than their relative ordering. This insight carries the essential information — represents a fundamental shift in how we think about data and mathematical relationships. The next chapter (Chapter~\ref{ch:Piforms}) exploits this uniformity together with aggregation and order independence to obtain the first general structure of universal functions. 

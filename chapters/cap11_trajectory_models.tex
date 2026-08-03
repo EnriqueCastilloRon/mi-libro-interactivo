@@ -1,0 +1,369 @@
+\startcontents[chapter]
+\chapter{Trajectory models: bilinear and multilinear structures}
+\label{ch:trajectory_models}
+\minitocboxed
+
+\section*{Motivation}
+
+In Chapter~\ref{ch:fatigue_foundations} we established that the equality of the full conditional distributions,
+\[
+F_{\Pi_i|\boldsymbol{\Pi}_{-i}}(\pi_i|\boldsymbol{\pi}_{-i}) = F\bigl(G(\pi_1,\ldots,\pi_n)\bigr),
+\]
+together with the location-scale hypothesis on $F()$, imposes a concrete algebraic structure on the common argument \(G\). The present chapter is devoted to exploring this structure in depth.
+
+We start from the two-dimensional case, where the functional equation leads to bilinearity, and we show its geometric interpretation in terms of hyperbolas and asymptotes. Next, we present the three Castillo–Galambos solutions, which arise by particularising the location-scale family to the three-parameter Weibull distribution. These solutions provide complete fatigue models with explicit percentile curves.
+
+We then extend the analysis to three dimensions, where the structure becomes trilinear, and we show that sections for a fixed variable are again rectangular hyperbolas. Finally, we state the general multilinear theorem for \(n\) variables, which constitutes the central result of the theory, and we show how different fatigue parametrisations fit into this unified framework.
+
+The aim is for the reader to understand that multilinearity is not an arbitrary choice, but a necessary consequence of probabilistic and invariance principles, and therefore provides a solid foundation for constructing stochastic models in any field where relationships between several variables exist.
+
+\section{The functional equation and its bilinear solution}
+\label{sec:functional-equation-2D}
+
+Let us recall the fundamental hypothesis for the two-dimensional case:
+\[
+F_{\Pi_1|\Pi_2}(\pi_1|\pi_2) = F_{\Pi_2|\Pi_1}(\pi_2|\pi_1) = F\!\left(G(\pi_1,\pi_2)\right), \qquad \forall (\pi_1,\pi_2)\in\mathcal{R}.
+\]
+
+The location-scale hypothesis adds a stronger condition: the function \(G\) must be such that when one variable is fixed, the resulting conditional distribution is an affine transformation of the free variable. Specifically, for each fixed \(\pi_2\),
+\[
+F_{\Pi_1|\Pi_2}(\pi_1|\pi_2) = F\bigl(a(\pi_2)\pi_1 + b(\pi_2)\bigr),
+\]
+and for each fixed \(\pi_1\),
+\[
+F_{\Pi_2|\Pi_1}(\pi_2|\pi_1) = F\bigl(d(\pi_1)\pi_2 + e(\pi_1)\bigr).
+\]
+The equality of the conditionals then implies
+\begin{equation}
+a(\pi_2)\pi_1 + b(\pi_2) = d(\pi_1)\pi_2 + e(\pi_1), \qquad \forall \pi_1,\pi_2.
+\label{eq:functional-2D}
+\end{equation}
+which is a functional equation.
+
+Lemma~\ref{lem:bilinear} (Chapter~\ref{ch:fatigue_foundations}) establishes that its most general solution is
+\begin{equation}
+\boxed{
+G(\pi_1,\pi_2) = C_0 + C_1\pi_1 + C_2\pi_2 + C_{12}\pi_1\pi_2,
+}
+\label{eq:bilinear-solution}
+\end{equation}
+where \(C_0,C_1,C_2,C_{12}\in\mathbb{R}\).
+
+This result is the two-dimensional fatigue theorem (Theorem~\ref{thm:2Dmodel} of the previous chapter). We emphasise that bilinearity is not an assumption but a mathematical consequence.
+
+\subsection{Reparametrisation and domain of validity}
+
+The bilinear form admits various reparametrisations. For example, if \(C_{12}\neq0\), we can write
+\[
+G(\pi_1,\pi_2) = C_{12}\left(\pi_1 + \frac{C_2}{C_{12}}\right)\left(\pi_2 + \frac{C_1}{C_{12}}\right) + \left(C_0 - \frac{C_1C_2}{C_{12}}\right).
+\]
+This form is useful for identifying the asymptotes and the centre of the hyperbola.
+
+The domain \(\mathcal{R}\) in which the model is valid is determined by the positivity conditions of the physical variables (e.g., \(N>0\), \(\sigma_M>0\)) and by the restrictions imposed by the distribution \(F\) (e.g., \(G>\lambda\) if \(F\) is Weibull). In practice, \(\mathcal{R}\) is usually a region of the first quadrant or a band around the S–N curve.
+
+\section{Geometric interpretation of bilinearity: hyperbolas and asymptotes}
+\label{sec:geometric-bilinear}
+
+The equation \(G(\pi_1,\pi_2)=0\) defines a curve in the plane \((\pi_1,\pi_2)\). This curve represents the deterministic trajectory (for example, the median S–N curve) when \(F\) is the distribution function corresponding to the 50th percentile. For other percentiles, the curve is given by \(G(\pi_1,\pi_2)=V_p\), where \(V_p\) is the \(p\)-th quantile of \(F\).
+
+\subsection{Canonical form and types of curves}
+
+Assume \(C_{12}\neq0\). Defining
+\[
+u = \pi_1 + \frac{C_2}{C_{12}},\qquad v = \pi_2 + \frac{C_1}{C_{12}},\qquad k = \frac{C_1C_2}{C_{12}^2} - \frac{C_0}{C_{12}},
+\]
+the equation \(G(\pi_1,\pi_2)=0\) becomes
+\begin{equation}
+u\,v = k.
+\label{eq:canonical-hyperbola}
+\end{equation}
+This is the equation of a rectangular (or equilateral) hyperbola with centre at
+\[
+\pi_1^* = -\frac{C_2}{C_{12}},\qquad \pi_2^* = -\frac{C_1}{C_{12}}.
+\]
+The asymptotes are the lines \(u=0\) and \(v=0\), that is,
+\begin{equation}
+\pi_1 = -\frac{C_2}{C_{12}},\qquad \pi_2 = -\frac{C_1}{C_{12}}.
+\label{eq:asymptotes-2D}
+\end{equation}
+
+If \(C_{12}=0\), the equation reduces to
+\[
+C_0 + C_1\pi_1 + C_2\pi_2 = 0,
+\]
+which is a straight line. In the fatigue context, the absence of the interaction term \(C_{12}\pi_1\pi_2\) implies that there is no endurance limit (the S–N curve has no horizontal asymptote).
+
+\subsection{Interpretation in fatigue: endurance limit}
+
+For the classical parametrisation \((\Pi_1,\Pi_2)=(\log(N/N_0),\Delta\sigma/\sigma_0)\), the horizontal asymptote \(\pi_1=\pi_1^*\) corresponds to
+\[
+\log\left(\frac{N}{N_0}\right) = -\frac{C_2}{C_{12}} \quad\Longrightarrow\quad N = N_0 \exp\left(-\frac{C_2}{C_{12}}\right).
+\]
+This finite value of \(N\) for \(\Delta\sigma\to\infty\) is not physically realistic; in reality, the asymptote should be interpreted as the endurance limit on the stress axis. Therefore, in practice one usually sets \(\pi_1\) as the logarithm of life and \(\pi_2\) as the stress, or redefines the variables so that the horizontal asymptote represents the endurance limit. For example, taking \(\pi_1 = \log(N/N_0)\) and \(\pi_2 = \Delta\sigma/\sigma_0 - 1\), the vertical asymptote at \(\pi_2=0\) gives the endurance limit \(\sigma_0\).
+
+This interpretation will be taken up again in more detail in Chapter~\ref{ch:weibull-hyperbola}.
+
+\section{The three Castillo-Galambos solutions for the Weibull model}
+\label{sec:castillo-galambos}
+
+When the function \(F\) is particularised to the three-parameter Weibull distribution,
+\[
+F(x)=1-\exp\left[-\left(\frac{x-\lambda}{\delta}\right)^\beta\right],\qquad x>\lambda,
+\]
+the functional equation is enriched with the shape parameter \(\beta\) and gives rise to three two-dimensional families of solutions, discovered by Castillo and Galambos \cite{Castillo1987}. These solutions are important because they provide complete fatigue models with explicit percentile curves and have been validated on numerous experimental datasets.
+
+\subsection{Formulation of the Weibull functional equation}
+
+Under the hypothesis that both conditionals are Weibull with the same parameters \((\lambda,\delta,\beta)\), the equality of the conditional cdfs translates into the functional equation
+\begin{equation}
+\left[a(x)y+b(x)\right]^{c(x)} = \left[d(y)x+e(y)\right]^{f(y)},\qquad \forall x,y,
+\label{eq:weibull-functional}
+\end{equation}
+where the functions \(a,b,c,d,e,f\) must be determined. The Castillo-Galambos theorem establishes that, up to reparametrisation, the only possible solutions are the three families collected in Table~\ref{tab:solutions111}, where the capital letters are constants.
+
+\begin{table}[h]
+\centering
+\small
+\renewcommand{\arraystretch}{1.6}
+\caption{\label{tab:solutions111}Three families of models from the Weibull functional equation.}
+\vspace{3mm}
+\begin{tabularx}{\textwidth}{|>{\hsize=0.30\hsize}C|>{\hsize=1.10\hsize}C|>{\hsize=0.85\hsize}C|>{\hsize=0.75\hsize}C|}
+\hline
+\textbf{Solution} & \textbf{Conditional cdfs \(F(x|y)=F(y|x)\)} & \textbf{Domain \((x,y)\)} & \textbf{Constant restrictions} \\
+\hline
+\textbf{S1} & \(1 - \exp\!\left[-E\,(Rx+S)^{\,C\log(ay+b)}\right]\) & \(x > -S/R\), \(y > -b/a\) & \(E>0,\ R>0,\ C\neq0,\ a>0,\ b\in\mathbb{R},\ S\in\mathbb{R}\) \\
+\hline
+\textbf{S2} & \(1 - \exp\!\left[-\bigl(C(x-A)(y-B)+D\bigr)^{E}\right]\) & \((x-A)(y-B)+D>0\) & \(C>0,\ E>0,\ D\in\mathbb{R},\ A,B\in\mathbb{R}\) \\
+\hline
+\textbf{S3} & \(1 - \exp\!\left[-E\,(x-A)^{C}(y-B)^{D}\right]\) & \(x>A,\ y>B\) & \(E>0,\ C>0,\ D>0,\ A,B\in\mathbb{R}\) \\
+\hline
+\end{tabularx}
+\end{table}
+
+The auxiliary functions \(a(x),b(x),c(x),d(y),e(y),f(y)\) corresponding to each solution are shown in Table~\ref{tab:solutions2}.
+
+\begin{table}[htpb]
+\centering
+\small
+\renewcommand{\arraystretch}{1.6}
+\caption{\label{tab:solutions2}Functional parameters for the three solutions.}
+\vspace{2mm}
+\begin{tabularx}{\textwidth}{|c|L|L|L|}
+\hline
+\textbf{Function} & \textbf{Solution S1} & \textbf{Solution S2} & \textbf{Solution S3} \\
+\hline
+\(a(x)\) & \(a\) (constant) & \(C\,(x-A)\) & \(K\,(x-A)^{C/D}\) \\
+Conditions & \(a>0\) & \(C>0,\ A\in\mathbb{R}\) & \(K=E^{1/D},\ E>0,\ C>0,\ D>0\) \\
+\hline
+\(b(x)\) & \(b\) (constant) & \(D - C B\,(x-A)\) & \(-K B\,(x-A)^{C/D}\) \\
+Conditions & \(b\in\mathbb{R}\) & \(D\in\mathbb{R},\ B\in\mathbb{R}\) & \(B\in\mathbb{R}\) \\
+\hline
+\(c(x)\) & \(\gamma\,\log(Rx+S)\) & \(E\) (constant) & \(D\) (constant) \\
+Conditions & \(\gamma\neq0,\ R>0,\ S\in\mathbb{R}\) & \(E>0\) & \(D>0\) \\
+\hline
+\(d(y)\) & \(R\) (constant) & \(C\,(y-B)\) & \(L\,(y-B)^{D/C}\) \\
+Conditions & \(R>0\) & \(C>0,\ B\in\mathbb{R}\) & \(L=E^{1/C},\ E>0\) \\
+\hline
+\(e(y)\) & \(S\) (constant) & \(D - C A\,(y-B)\) & \(-L A\,(y-B)^{D/C}\) \\
+Conditions & \(S\in\mathbb{R}\) & \(A\in\mathbb{R}\) & \(A\in\mathbb{R}\) \\
+\hline
+\(f(y)\) & \(\gamma\,\log(ay+b)\) & \(E\) (constant) & \(C\) (constant) \\
+Conditions & \(\gamma\neq0,\ a>0,\ b\in\mathbb{R}\) & \(E>0\) & \(C>0\) \\
+\hline
+\end{tabularx}
+\end{table}
+
+\subsection{Solution S2 and its interpretation in fatigue}
+
+Solution S2 is the most widely used in fatigue applications because it leads to a simple bilinear form. Indeed, taking \(D=0\), \(C=1\), the conditional cdf becomes
+\[
+F_{\Pi_1|\Pi_2}(\pi_1|\pi_2) = 1-\exp\left[-\left((\pi_1-A)(\pi_2-B)\right)^E\right],
+\]
+which is a Weibull with bilinear argument \(((\pi_1-A)(\pi_2-B))^E\). This is exactly the form derived from Lemma~\ref{lem:bilinear} when \(C_0=0\) and the origin of coordinates is chosen appropriately. Table~\ref{tab:solutions2} provides all densities, marginals and conditionals for this solution, where capital letters are again constants.
+
+Solutions S1 and S3 correspond to more general forms, such as Basquin's law (S3) or models with logarithmic dependence (S1). However, for most fatigue data, solution S2 (bilinear) provides an excellent fit and a clear physical interpretation.
+
+\subsection{Percentile curves for solution S2}
+
+For solution S2, the percentile curve \(p\) is given by
+\[
+(\pi_1-A)(\pi_2-B) = \left[-\ln(1-p)\right]^{1/E} = V_p,
+\]
+where we have normalised \(\lambda=0\), \(\delta=1\). This is a rectangular hyperbola with centre at \((A,B)\) and asymptotes \(\pi_1=A\), \(\pi_2=B\). In the fatigue context, \(A\) is usually the endurance limit (on the stress scale) and \(B\) the logarithm of the asymptotic life.
+
+\section{Extension to three dimensions: trilinear model}
+\label{sec:trilinear-3D}
+
+For three variables \((\Pi_1,\Pi_2,\Pi_3)\), the equality of the three full conditionals,
+\[
+F_{\Pi_1|\Pi_2,\Pi_3} = F_{\Pi_2|\Pi_1,\Pi_3} = F_{\Pi_3|\Pi_1,\Pi_2} = F\bigl(G(\pi_1,\pi_2,\pi_3)\bigr),
+\]
+together with the location-scale hypothesis, leads to the trilinear form:
+\begin{equation}
+\boxed{
+G(\pi_1,\pi_2,\pi_3) =
+C_0 + C_1\pi_1 + C_2\pi_2 + C_3\pi_3
++ C_{12}\pi_1\pi_2 + C_{13}\pi_1\pi_3 + C_{23}\pi_2\pi_3
++ C_{123}\pi_1\pi_2\pi_3.
+}
+\label{eq:trilinear-general}
+}
+\end{equation}
+
+\subsection{Deduction from the two-dimensional case}
+
+One way to obtain this result is to fix \(\pi_3=\pi_3^*\). Then \(G(\pi_1,\pi_2,\pi_3^*)\) must be bilinear in \((\pi_1,\pi_2)\) for all \(\pi_3^*\). This implies that the coefficients of the bilinear form depend affinely on \(\pi_3\), which leads to the trilinear form. The formal proof is included in Theorem~\ref{thm:multilinear} of the following section.
+
+\subsection{Sections for constant \(\pi_2\): confocal hyperbolas}
+
+Let us fix \(\pi_2=\pi_2^*\). Rearranging terms in the trilinear equation, we obtain:
+\[
+A(\pi_2)\pi_1\pi_3 + B(\pi_2)\pi_1 + C(\pi_2)\pi_3 + D(\pi_2) = 0,
+\]
+where
+\begin{align*}
+A(\pi_2) &= C_{13} + C_{123}\pi_2,\\
+B(\pi_2) &= C_1 + C_{12}\pi_2,\\
+C(\pi_2) &= C_3 + C_{23}\pi_2,\\
+D(\pi_2) &= C_0 + C_2\pi_2.
+\end{align*}
+This is a rectangular hyperbola in the plane \((\pi_1,\pi_3)\), with centre at
+\[
+\pi_1^* = -\frac{C(\pi_2)}{A(\pi_2)},\qquad \pi_3^* = -\frac{B(\pi_2)}{A(\pi_2)}.
+\]
+The asymptotes are
+\[
+\pi_1 = -\frac{C_3 + C_{23}\pi_2}{C_{13} + C_{123}\pi_2},\qquad
+\pi_3 = -\frac{C_1 + C_{12}\pi_2}{C_{13} + C_{123}\pi_2}.
+\]
+Note that both the centre and the asymptotes depend on \(\pi_2\), reflecting the interaction between the variables.
+
+\subsection{Factorised form and canonical equation}
+
+The trilinear equation can be factorised as
+\[
+(\pi_1 - \pi_1^*(\pi_2))(\pi_3 - \pi_3^*(\pi_2)) = k(\pi_2),
+\]
+with
+\[
+k(\pi_2) = \frac{B(\pi_2)C(\pi_2)}{A(\pi_2)^2} - \frac{D(\pi_2)}{A(\pi_2)}.
+\]
+This form is especially useful for visualisation and parameter estimation, as it shows how the curvature and position of the hyperbolas vary with the second conditioning variable.
+
+\subsection{Example: fatigue with \(\sigma_M\) and \(R\)}
+
+In the fatigue context, a common three-dimensional parametrisation is
+\[
+\pi_1 = \frac{\sigma_M}{\sigma_{M0}},\qquad \pi_2 = R,\qquad \pi_3 = \log\left(\frac{N}{N_0}\right).
+\]
+Substituting into the factorised form and applying the common simplifications, we obtain the model
+\[
+\left(\frac{\sigma_M}{\sigma_{M0}} - 1 - f_1(R)\right)\left(\log\frac{N}{N_0} - f_3(R)\right) = f_2(R),
+\]
+where \(f_1,f_2,f_3\) are rational functions of \(R\). This model unifies the S–N curves for different stress ratios and provides a solid basis for probabilistic design.
+
+\section{General multilinear theorem for \(n\) variables}
+\label{sec:multilinear-general}
+
+The deepest result of the theory is that the multilinear structure extends to any number of variables. This is the fundamental multilinear theorem, which we state here and outline its proof.
+
+\begin{theorem}[General multilinear theorem]
+\label{thm:multilinear}
+Let \((\Pi_1,\Pi_2,\ldots,\Pi_n)\) be continuous dimensionless random variables. Suppose that for each \(i=1,\ldots,n\) the conditional cumulative distribution function \(F_{\Pi_i|\Pi_{-i}}\) exists and that there exists an invertible distribution function \(F\) belonging to a location-scale family such that
+\[
+F_{\Pi_i|\Pi_{-i}}(\pi_i|\pi_{-i}) = F\bigl(G(\pi_1,\ldots,\pi_n)\bigr), \qquad \forall (\pi_1,\ldots,\pi_n),
+\]
+with the same function \(G\) for all \(i\). Then, the general admissible form of \(G\) is the multilinear function
+\begin{equation}G(\pi_1,\ldots,\pi_n) = \sum_{A\subseteq\{1,\ldots,n\}} a_A \prod_{i\in A} \pi_i,
+\label{eq:multilinear-general}
+\end{equation}
+where the sum runs over all subsets \(A\) of \(\{1,\ldots,n\}\) (including the empty set, with the convention \(\prod_{i\in\emptyset}\pi_i=1\)). Consequently, the model contains exactly \(2^n\) multilinear terms.
+\end{theorem}
+
+\begin{proof}[Sketch of the proof]
+The proof proceeds by induction on \(n\). The base case \(n=2\) is Theorem~\ref{thm:2Dmodel}. Assuming it holds for \(n\), we fix \(\Pi_{n+1}=\pi_{n+1}^*\). By the induction hypothesis, \(G(\pi_1,\ldots,\pi_n,\pi_{n+1}^*)\) is multilinear in the first \(n\) variables with coefficients depending on \(\pi_{n+1}^*\). Applying the equality of conditionals for the pair \((\Pi_{n+1},\Pi_i)\) and the location-scale hypothesis, one shows that each coefficient must be affine in \(\pi_{n+1}\), which completes the induction.
+\end{proof}
+
+\subsection{Consequences of the theorem}
+
+The theorem has profound implications:
+
+\begin{enumerate}
+    \item The dependence structure is completely determined by the \(2^n\) coefficients \(a_A\).
+    \item The coefficients can be interpreted as interactions of different orders: \(a_{\{i\}}\) are main effects, \(a_{\{i,j\}}\) pairwise interactions, etc.
+    \item The function \(G\) is uniquely determined by its values at the \(2^n\) vertices of the unit hypercube (vertex representation), and the coefficients are recovered by Möbius inversion:
+    \[
+    a_A = \sum_{B\subseteq A} (-1)^{|A|-|B|} G(\mathbf{1}_B).
+    \]
+    \item This representation provides a basis for global sensitivity analysis and interaction detection, as discussed in Chapter~\ref{ch:dependence_structure} in comparison with Sobol indices.
+\end{enumerate}
+
+\subsection{Special case: additive model and independence}
+
+If all coefficients of order \(\ge2\) vanish, the function reduces to
+\[
+G(\pi_1,\ldots,\pi_n) = a_0 + \sum_{i=1}^n a_i\pi_i.
+\]
+In this case, the variables are conditionally independent (in the sense that the dependence reduces to main effects). Strict independence between all variables is obtained when the main effects are such that \(G\) factorises, which in general does not occur.
+
+\section{Examples of fatigue parametrisations and their multilinear structure}
+\label{sec:examples-parametrizations}
+
+To illustrate the universality of the multilinear framework, we show how different fatigue parametrisations fit into the same structure.
+
+\subsection{Classical S-N model (2D)}
+
+With \(\pi_1 = \log(N/N_0)\), \(\pi_2 = \Delta\sigma/\sigma_0 - 1\), the equation \(G=0\) is written as
+\[
+C_0 + C_1\log\frac{N}{N_0} + C_2\left(\frac{\Delta\sigma}{\sigma_0}-1\right) + C_{12}\log\frac{N}{N_0}\left(\frac{\Delta\sigma}{\sigma_0}-1\right) = 0.
+\]
+If \(C_{12}\neq0\), this is a hyperbola with horizontal asymptote at \(\Delta\sigma=\sigma_0\), which is the endurance limit. If \(C_{12}=0\), Basquin's law is obtained (a straight line in log-log scale).
+
+\subsection{Model with maximum stress and stress ratio (3D)}
+
+Taking \(\pi_1=\sigma_M/\sigma_{M0}\), \(\pi_2=R\), \(\pi_3=\log(N/N_0)\), the complete trilinear form is
+\[
+G = C_0 + C_1\pi_1 + C_2\pi_2 + C_3\pi_3 + C_{12}\pi_1\pi_2 + C_{13}\pi_1\pi_3 + C_{23}\pi_2\pi_3 + C_{123}\pi_1\pi_2\pi_3.
+\]
+This model captures the interaction between maximum stress, stress ratio and life. In practice, many datasets show that the terms \(C_{13}\) and \(C_{23}\) are small, so reduced models can be used.
+
+\subsection{Nested models and selection}
+
+Table~\ref{tab:nested-models} shows some nested models obtained by setting certain coefficients to zero. Selection among them is performed using information criteria (AIC, BIC) as explained in Chapter~\ref{ch:weibull-hyperbola}.
+
+\begin{table}[htpb]
+\centering
+\caption{Nested models for the trilinear case (with the simplifications \(C_0=0,\ C_{23}=1,\ C_2=C_3=0\)).}
+\label{tab:nested-models}
+\begin{tabular}{@{}c c c@{}}
+\toprule
+\textbf{Model} & \textbf{Restrictions} & \textbf{Free parameters} \\
+\midrule
+M0 & none & \(C_1, C_{12}, C_{13}, C_{123}\) \\
+M1 & \(C_{123}=0\) & \(C_1, C_{12}, C_{13}\) \\
+M2 & \(C_{12}=0\) & \(C_1, C_{13}, C_{123}\) \\
+M3 & \(C_{13}=0\) & \(C_1, C_{12}, C_{123}\) \\
+M4 & \(C_{12}=C_{13}=0\) & \(C_1, C_{123}\) \\
+M5 & \(C_{123}=C_{12}=0\) & \(C_1, C_{13}\) \\
+M6 & \(C_{123}=C_{13}=0\) & \(C_1, C_{12}\) \\
+M7 & \(C_{12}=C_{13}=C_{123}=0\) & \(C_1\) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These models are interpreted geometrically as different families of hyperbolas (or straight lines) whose asymptotes and curvatures vary with the conditioning variable.
+
+\section*{Chapter conclusions}
+
+In this chapter we have consolidated the mathematical foundation for trajectory models in fatigue and in multivariate dependence problems:
+
+\begin{itemize}
+    \item We have rigorously derived the bilinear structure for the two-dimensional case from the functional equation and the location-scale hypothesis.
+    \item We have shown its geometric interpretation as rectangular hyperbolas with asymptotes representing physical limits (e.g., endurance limit).
+    \item We have presented the three Castillo-Galambos solutions for the Weibull model, which provide complete families of conditional distributions.
+    \item We have extended the analysis to three dimensions, obtaining the trilinear form and showing that the sections are confocal hyperbolas.
+    \item We have stated the general multilinear theorem, establishing that the structure holds for any number of variables, with \(2^n\) coefficients representing interactions of all orders.
+    \item We have illustrated how different fatigue parametrisations fit into this unified framework, and we have presented nested models that allow selection via information criteria.
+\end{itemize}
+
+This chapter lays the foundations for the next one, where the concept of interaction spectrum is introduced and the algebraic properties of multilinear functions, their vertex representation, dependence capacity and their connection with global sensitivity analysis are explored in depth. 

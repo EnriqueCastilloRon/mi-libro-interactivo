@@ -1,0 +1,588 @@
+\startcontents[chapter]
+\chapter{Data Driven Models. An AI Tool Based on Data}
+\label{ch:newaitool}
+\minitocboxed
+
+\section*{Introduction}
+The new idea of conditionals defined on non‑zero probability events, which can be factorised as Bayesian networks, avoids the instability of using the standard conditional probabilities (which condition on events of probability zero). We introduce the double‑bar conditional $F(x_1||x_2,\ldots,x_n) = P(X_1\le x_1\mid X_2\le x_2,\ldots,X_n\le x_n)$ and the central band conditional $G_c(x_n ||| x_1,\ldots,x_{n-1})$ that uses intervals of width $2c$. These definitions make the Bayesian network propagation methods applicable to continuous variables without numerical pathologies.
+
+This chapter also presents visual methods that permit visualizing the conditional of any output set of variables given any input set. A web‑based interactive application is described, where users can select input ranges via sliders on parallel coordinate plots and immediately see the conditional CDF of any output variable. The application updates in real time, allowing sensitivity analysis in milliseconds.
+
+In this section, based on all the results above, a general tool to analyze variable actions and interactions and predict subsets of variables (output) given information about other subsets (input) is presented. The idea is to use large sets of data only.
+
+All the previous sections have given valuable information about how the general structure of functions dealing with multivariate problems, that is, involving multiple variables must be and what information is looked for, normally in terms of conditional probabilities.
+
+One of the main properties of this approach is that one works with variables whose physical interpretation is well known. In addition, probability is the mathematical and statistical basis of our approach. Consequently, both elements together are the ideal material for easily interpretable result explanation, a property that is not easy to find in standard neural networks.
+
+Another significant contribution is the proposed change from the fixed idea of the couple input data-output data to the idea of a free selection of the couple known-variables to predicted-variables.
+
+All this leads to the need of determining conditional probabilities of the form $P(S_2|S_1)$, where $S_1$ and $S_2$ are events related to the first and second elements. However, not all probabilities of this type are free of serious numerical difficulties and problems when being estimated. Thus, some discussion of what are the most convenient ones becomes necessary.
+
+\begin{remarkbox}
+\begin{remarkT}[Authors' Note on the Scope of this Chapter]
+The present chapter is conceived as a \emph{conceptual proposal} and a \emph{bridge} between probability theory, computer science, and applied engineering. The authors do not claim mathematical originality for the operators introduced here; rather, they aim to organise known ideas (conditioning on positive-probability events, CDF factorisation, interval conditioning) into a coherent framework that can inspire researchers from different fields to collaborate on refining, extending, and rigorously formalising these notions. The algorithms and claims regarding Bayesian networks are stated as \emph{research directions} and \emph{invitations to formalisation}, not as settled theorems. The ultimate goal is to foster interdisciplinary work that transforms these pragmatic ideas into fully validated theoretical and applied tools.
+\end{remarkT}
+\end{remarkbox}
+
+\section{A New Conditional Operator for Continuous Variables}
+\label{sec:positive-probability-conditional}
+
+In standard probability theory, the conditional cumulative distribution function (CDF) for continuous variables is defined as
+\[
+F_{X|Y}(x|y) = P(X \le x \mid Y = y),
+\]
+which conditions on the \textbf{zero-probability event} $\{Y=y\}$. While mathematically sound, this definition has two major practical drawbacks:
+\begin{enumerate}
+    \item It forces the factorisation of a joint distribution into \emph{conditional densities} (PDFs) rather than CDFs, because the elementary product rule $P(A|B)=P(A\cap B)/P(B)$ does \textbf{not} apply when $P(B)=0$.
+    \item In Bayesian networks, inference algorithms (variable elimination, belief propagation, junction tree) are built on multiplying and marginalising \emph{probabilities of events with strictly positive mass}. Applying them directly to continuous variables with the standard operator introduces numerical instability and requires discretisation or kernel approximations.
+\end{enumerate}
+
+\subsection{Conditioning on events of positive probability}
+
+To overcome these limitations, we introduce a \textbf{conditional operator on positive-probability events}, denoted by a double vertical bar $\parallel$. For any two events $A$ and $B$ with $P(B) > 0$, define
+\[
+P(A || B) \;:=\; \frac{P(A \cap B)}{P(B)}.
+\]
+The key point is that $B$ is \textbf{not} required to be of the form $\{Y=y\}$ (probability zero for continuous variables). Instead, $B$ can be \textbf{any event of strictly positive probability}. The most natural and useful choices include:
+\begin{itemize}
+    \item \textbf{Half-lines}: $B = \{Y \le y\}$ (or $\{Y \ge y\}$), which correspond to cumulative events.
+    \item \textbf{Bounded intervals}: $B = \{a < Y \le b\}$ with $a<b$ and $F_Y(b)-F_Y(a) > 0$.
+    \item \textbf{Cartesian products} of such events for multivariate conditioning.
+\end{itemize}
+In particular, intervals are of great practical interest because they localise the conditioning without collapsing to a single point, and they always have positive probability for continuous distributions (provided the interval length is non‑zero).
+
+\subsection{Factorising the joint cdf using positive-probability events}
+
+Let $X_1,\dots,X_n$ be continuous random variables. Choose for each $k = 1,\dots,n$ a sequence of conditioning events
+\[
+E_1,\; E_2,\; \dots,\; E_{k-1}
+\]
+where each $E_i$ is an event of the form $\{X_i \in I_i\}$ with $I_i$ an interval (or, more generally, any measurable set with $P(E_i) > 0$). Define the \textbf{conditional CDF with respect to these events} as
+\[
+F_k\bigl(x_k \;\big\|\; E_1,\dots,E_{k-1}\bigr) \;:=\; P\bigl(X_k \le x_k \;\big|\; E_1,\dots,E_{k-1}\bigr).
+\]
+Because each $E_i$ has positive probability, the standard product rule applies, and we obtain an \textbf{exact factorisation} of the joint CDF evaluated at the intersection of the events:
+\[
+P\bigl(X_1 \le x_1,\; X_2 \le x_2,\; \dots,\; X_n \le x_n \;\big|\; E_1,\dots,E_n\bigr)
+= \prod_{k=1}^{n} P\bigl(X_k \le x_k \;\big|\; E_1,\dots,E_k\bigr),
+\]
+where $E_1,\dots,E_n$ are any events with $P(E_1\cap\cdots\cap E_n) > 0$.
+
+In the simplest and most useful case, we take the conditioning events to be \textbf{the same as the events whose probability we are computing}, i.e., $E_k = \{X_k \le x_k\}$. Then the factorisation becomes
+\[
+\boxed{
+F(x_1,\dots,x_n) \;=\; \prod_{k=1}^{n} F_k\bigl(x_k \;\big\|\; x_1,\dots,x_{k-1}\bigr) },
+\]
+where the notation $F_k(x_k || x_1,\dots,x_{k-1})$ now means
+\[
+P\bigl(X_k \le x_k \;\big|\; X_1 \le x_1,\; \dots,\; X_{k-1} \le x_{k-1}\bigr).
+\]
+Each conditioning event $\{X_i \le x_i\}$ has probability $F_i(x_i) \in (0,1)$ for interior points, hence strictly positive. Therefore the product rule is valid at every step, and the factorisation involves \textbf{only CDFs} – no densities, no limits, no division by zero.
+
+\subsection{Why this is a pragmatic contribution}
+
+\begin{enumerate}
+    \item \textbf{A pathway towards Bayesian networks for continuous variables.}
+    The factorisation above is structurally similar to the chain rule of a Bayesian network (see Chapter 11), but now expressed entirely in terms of CDFs conditioned on positive-probability events. We emphasise that this is not yet the standard Bayesian network factorisation (which relies on densities and a DAG structure), but it \emph{suggests} a promising direction: adapting inference algorithms to work with these CDF factors. We invite researchers in probabilistic graphical models to explore this connection formally.
+
+    \item \textbf{Flexibility in choosing conditioning events.}
+    The operator $||$ is not restricted to half-lines. One may condition on intervals, unions of intervals, or any measurable set with positive probability. This is particularly valuable when we want to answer queries like ``What is the probability that $X_1 \le x_1$ given that $X_2$ lies in a specific interval $[a,b]$?'' – a common scenario in engineering and medicine. The same factorisation holds, making the framework universally adaptable.
+
+    \item \textbf{Numerical stability and interpretability.}
+    Because every conditioning event has non-zero probability in any finite sample, empirical estimates are simply ratios of empirical CDFs (or counts of data points falling into the conditioning sets). This avoids the instability of estimating conditional densities from sparse data. Moreover, the result is a genuine probability (not a density), directly interpretable by practitioners.
+
+    \item \textbf{Unified treatment of discrete, continuous, and mixed variables.}
+    The $||$ operator works for any type of variable as long as the conditioning events have positive probability. Discrete variables automatically satisfy this (each elementary event has positive mass). Continuous variables are handled by using intervals or half-lines. Mixed data poses no additional difficulty. Thus the same product-of-conditional-CDFs formula provides a \textbf{universal factorisation} for modelling.
+
+    \item \textbf{Separation of dependence from marginals remains exact.}
+    By combining the above factorisation with the Rosenblatt transformation (now applied to events instead of point values), one obtains a group-wise generalisation of Sklar's theorem (Chapter 17) where the copula is expressed in terms of the $||$ operator. This preserves the elegant separation of marginal behaviour from dependence structure while working entirely with CDFs.
+\end{enumerate}
+
+\subsection{Formal statement}
+
+\begin{definition}[Positive-Probability Conditional CDF]
+Let $X_1,\dots,X_n$ be random variables (continuous, discrete, or mixed). For each $k = 1,\dots,n$, choose events $E_1,\dots,E_{k-1}$ with $P(E_1\cap\cdots\cap E_{k-1}) > 0$. Define
+\[
+F_k\bigl(x_k \;\big\|\; E_1,\dots,E_{k-1}\bigr) \;:=\; P\bigl(X_k \le x_k \;\big|\; E_1,\dots,E_{k-1}\bigr).
+\]
+In the particular (but very useful) case where $E_i = \{X_i \le x_i\}$, we write
+\[
+F_k(x_k || x_1,\dots,x_{k-1}) := P\bigl(X_k \le x_k \mid X_1 \le x_1,\dots,X_{k-1} \le x_{k-1}\bigr).
+\]
+\end{definition}
+
+\begin{theorem}[CDF Factorisation with Positive-Probability Conditioning]
+For any random variables $X_1,\dots,X_n$ and any $x_1,\dots,x_n$ such that $P(X_i \le x_i) > 0$ for $i=1,\dots,n-1$, the joint CDF factorises as
+\[
+F(x_1,\dots,x_n) = \prod_{k=1}^{n} F_k\bigl(x_k \;\big\|\; x_1,\dots,x_{k-1}\bigr).
+\]
+\end{theorem}
+
+\begin{remarkbox}
+\begin{remarkT}
+The factorisation holds for \emph{any} choice of conditioning events $E_1,\dots,E_{k-1}$ with positive probability, not only the half-lines $\{X_i \le x_i\}$. This flexibility allows the user to tailor the conditioning to the specific query (e.g., using bounded intervals) while preserving the exact product structure.
+\end{remarkT}
+\end{remarkbox}
+
+\textbf{Importance.}
+This factorisation transforms the theory of Bayesian networks from a discrete-only technique into a universal modelling framework for \textbf{all} variables, without the pathologies of zero-probability conditioning. The ability to choose arbitrary positive-probability events (especially intervals) gives the practitioner complete freedom to define conditional queries in a numerically stable and interpretable way. It is one of the fundamental innovations of this book, enabling the seamless integration of dimensional analysis, functional equations, copulas, and Bayesian networks into a single coherent methodology for science and engineering.
+
+
+\section{Some Conditional Distributions of Practical Interest}\index{Sectioning!Sections}
+
+When one deals with a multivariate distribution the most you can know is its joint cumulative distribution function
+\begin{equation}
+F(x_1, x_2,\ldots, x_n) = \text{Prob}[X_1 \leq x_1, X_2 \leq x_2,\ldots, X_n \leq x_n],
+\label{eq:jointcdf}
+\end{equation}
+from which any probability can be obtained.
+
+Since, we want to take advantage from the Bayesian network decomposition, and its factors can be learned, one by one, we show interest in:
+\begin{enumerate}
+\item The lower tail conditional cdf $\text{Prob}[X_1 \leq x_1|X_2 \leq x_2,\ldots,X_n \leq x_n]$.
+\item The central band conditional distribution: $F(S_1|S_2,S_3,\ldots,S_n)$, where $S_i = \{x_1-c_0 \leq X_1 \leq x_1+c_1\}$, $i = 1,2,\ldots,n$.
+\item Their relationships with the corresponding copulas.
+\end{enumerate}
+
+We note that the selected events are those with non-zero probability, ensuring that the samples do not result in empty observed events.
+
+Thus, the sample size needs to be sufficiently large. It is worth mentioning that Bayesian methods are particularly well-suited for this purpose, as they allow for the simulation of samples of any size, a significant advantage.
+
+\section{Lower Tail Conditional CDF}\index{Sectioning!Sections}
+
+\begin{tcolorbox}[colback=orange!5!white,colframe=orange!75!black,title=Practical Conceptual Innovation: Conditioning with Positive Probability]
+The classical conditional CDF \(F(x_1 \mid x_2,\dots,x_n)\) in continuous distributions is defined on an event of probability zero, which creates both theoretical difficulties and numerical instability. To overcome this limitation the book introduces an alternative definition using events of \emph{strictly positive probability}:
+
+\[
+F(x_1 || x_2,\dots,x_n) \coloneqq P(X_1\leq x_1 \mid X_2\leq x_2,\dots,X_n\leq x_n) = \frac{F(x_1,x_2,\dots,x_n)}{F(\infty,x_2,\dots,x_n)}.
+\]
+
+The double vertical bar \(||\) is used deliberately to distinguish this operator from the classical single bar \(|\).
+
+Combined with the generalization of Sklar’s theorem for groups, this new conditioning makes the entire Bayesian-network machinery (propagation algorithms, factor learning, etc.) directly valid for continuous variables. The result is a clean, scalable, and numerically robust framework that preserves all the advantages of Bayesian networks while eliminating the well-known pathologies of classical conditioning in continuous spaces.
+
+\vspace{0.2cm}
+\textit{Note to the reader:} The statement regarding Bayesian-network machinery is intended as a \emph{conceptual invitation} rather than a fully established algorithm. Adapting variable elimination and belief propagation to operate on CDF factors is a non-trivial task; we present this as an open research direction for the community.
+\end{tcolorbox}
+
+We consider of interest the following particular lower tail conditional cdf, defined as:
+\begin{align}
+F(x_1 || x_2,\ldots, x_n) &= \text{Prob}[X_1 \leq x_1|X_2 \leq x_2,\ldots,X_n \leq x_n] \nonumber\\
+&= \frac{\text{Prob}[X_1 \leq x_1, X_2 \leq x_2,\ldots, X_n \leq x_n]}{\text{Prob}[X_2 \leq x_2,\ldots, X_n \leq x_n]} \nonumber\\
+&= \frac{F(x_1, x_2,\ldots, x_n)}{F(\infty, x_2,\ldots, x_n)} = \frac{F(x_1, x_2,\ldots, x_n)}{F(x_2,\ldots, x_n)},
+\label{eq:lowertailconditional}
+\end{align}
+which must not be confused with the usual conditional cdf, $\text{Prob}[X_1 \leq x_1|X_2 = x_2,\ldots,X_n = x_n]$ and it is assumed that the denominator satisfies the condition $F(\infty, x_2,\ldots, x_n) > 0$. Note that otherwise we deal with impossible events. Note also that we use the double vertical bar instead of the usual single bar, to avoid confusion.
+
+Using the chain rule for probabilities:
+\begin{align}
+F(x_1, x_2,\ldots, x_n) &= \text{Prob}[X_1 \leq x_1, X_2 \leq x_2,\ldots, X_n \leq x_n] \nonumber\\
+&= \text{Prob}[X_1 \leq x_1] \cdot \ldots \cdot \text{Prob}[X_n \leq x_n | X_1 \leq x_1,\ldots, X_{n-1} \leq x_{n-1}] \nonumber\\
+&= F(x_1) \cdot \frac{F(x_1, x_2)}{F(x_1)} \cdot \frac{F(x_1, x_2, x_3)}{F(x_1, x_2)} \cdot \ldots \cdot \frac{F(x_1, x_2,\ldots, x_n)}{F(x_1, x_2,\ldots, x_{n-1})}.
+\end{align}
+
+By Sklar's theorem, for a joint distribution $F(x_1, x_2,\ldots, x_n)$ with continuous marginals $F_i(x_i) = F(x_i,\infty,\ldots,\infty)$, there exists a unique copula $C$ such that:
+\begin{equation}
+F(x_1, x_2,\ldots, x_n) = C(F_1(x_1),F_2(x_2),\ldots,F_n(x_n))
+\label{eq:sklarapplication}
+\end{equation}
+and
+\begin{equation}
+C(u_1,\ldots,u_n) = F(F_1^{-1}(u_1),\ldots,F_n^{-1}(u_n)),
+\label{eq:copulainverse}
+\end{equation}
+and then, the lower tail conditional cdf becomes:
+\begin{align}
+F(x_1 || x_2,\ldots, x_n) &= \text{Prob}[X_1 \leq x_1|X_2 \leq x_2,\ldots,X_n \leq x_n] \nonumber\\
+&= \frac{F(x_1, x_2,\ldots, x_n)}{F(x_2,\ldots, x_n)} \nonumber\\
+&= \frac{C(F_1(x_1),F_2(x_2),\ldots,F_n(x_n))}{C(1,F_2(x_2),\ldots,F_n(x_n))} \nonumber\\
+&= \frac{C(F_1(x_1),F_2(x_2),\ldots,F_n(x_n))}{C(F_2(x_2),\ldots,F_n(x_n))},
+\label{eq:copulaconditional}
+\end{align}
+which is equation~\eqref{eq:lowertailconditional} written in terms of the copula.
+
+In addition, this conditional probability is of interest too:
+\begin{align}
+&\text{Prob}[a_1 < X_1 \leq x_1 | a_2 < X_2 \leq x_2,\ldots, a_n < X_n \leq x_n] \nonumber\\
+&= \frac{\sum_{S \subseteq \{1,\ldots, n\}} (-1)^{|S|} C\left( \bigcap_{i \in S} F_i(x_i), \bigcap_{i \notin S} F_i(x_i) \right)}{C(1,F_2(x_2),\ldots,F_n(x_n)) - C(F_1(a_1),F_2(x_2),\ldots,F_n(x_n))}
+\end{align}
+
+\section{The Central Band Conditional Distribution Proposal}\index{Sectioning!Sections}
+
+In this section we are interested in conditional distribution functions of the form:
+\begin{equation}
+F(X_1 \leq x_1|X_2 = a_2, X_3 = a_3,\ldots, X_n = a_n),
+\label{eq:pointconditional}
+\end{equation}
+where variables $X_2,X_3,\ldots,X_n$ can be interpreted as the input, or data, and the variable $X_1$, as the output. Note that using this conditional we give the cdf of the output, $X_1$, given the input data $x_2, x_3,\ldots, x_n$, that is, we treat the problem as random, which enriches the analysis.
+
+Since exact conditional probabilities at specific points ($X_i = a_i$) are often problematic in continuous distributions due to zero density at a single point, we propose using the \textbf{central band conditional distribution}. To avoid notation inconsistencies, we fix the following convention: \emph{the output variable is always the last one, \(X_n\), and the input variables are \(X_1,\dots,X_{n-1}\)}. Define:
+\begin{align}
+G_c(x_n ||| x_1,\ldots, x_{n-1}) &:= P\bigl(X_n \leq x_n \;\big|\; x_1-c_0 < X_1 \leq x_1+c_1,\ldots, x_{n-1}-c_0 < X_{n-1} \leq x_{n-1}+c_1\bigr) \nonumber\\
+&= \frac{P\bigl(X_n \leq x_n,\; x_1-c_0 < X_1 \leq x_1+c_1,\ldots, x_{n-1}-c_0 < X_{n-1} \leq x_{n-1}+c_1\bigr)}
+        {P\bigl(x_1-c_0 < X_1 \leq x_1+c_1,\ldots, x_{n-1}-c_0 < X_{n-1} \leq x_{n-1}+c_1\bigr)}.
+\label{eq:centralband}
+\end{align}
+To express this compactly, define the auxiliary function
+\begin{equation}
+F_c(x_1,\ldots, x_n) := P\bigl(X_n \leq x_n,\; x_1-c_0 < X_1 \leq x_1+c_1,\ldots, x_{n-1}-c_0 < X_{n-1} \leq x_{n-1}+c_1\bigr).
+\label{eq:intervalcdf}
+\end{equation}
+Then we can write
+\[
+G_c(x_n ||| x_1,\ldots, x_{n-1}) = \frac{F_c(x_1,\ldots, x_n)}{F_c(\infty, x_1,\ldots, x_{n-1})},
+\]
+where \(F_c(\infty, x_1,\dots, x_{n-1})\) denotes the same probability with the event \(\{X_n \le \infty\}\) (which is the whole space for \(X_n\)), i.e., the denominator.
+
+This is created with the idea of approximating \(F(x_1|x_2,\ldots, x_n)\) within the central part of the corresponding band of width \(2c\). Note that now we use a triple bar \(|||\), to differentiate from \(||\) and \(|\).
+
+Using the copula, the numerator and denominator involve the probability over intervals, which requires the inclusion-exclusion principle. For the function \(F_c\) defined in \eqref{eq:intervalcdf}, the inclusion-exclusion formula is:
+\[
+F_c(x_1,\dots,x_n) = \sum_{S \subseteq \{1,\dots,n-1\}} (-1)^{|S|}
+C\bigl( F_1(v_1), \dots, F_{n-1}(v_{n-1}), F_n(x_n) \bigr),
+\]
+with \(v_i = x_i - c_0\) if \(i \in S\) and \(v_i = x_i + c_1\) if \(i \notin S\) (for \(i=1,\dots,n-1\)). Here we assume \(F_i(x_i - c_0) = 0\) if \(x_i - c_0 < \inf \text{supp}(X_i)\) and \(F_i(x_i + c_1) = 1\) if \(x_i + c_1 > \sup \text{supp}(X_i)\). The denominator is obtained by setting \(F_n(x_n) = 1\) in the same expression.
+
+As \(c \to 0\), this approximates the exact conditional distribution. The approximation is valid and practical, especially for continuous distributions. The use of intervals \([x_i - c_0, x_i + c_1]\) simplifies computations by avoiding point probabilities. The choice of \(c\) balances numerical stability (avoiding overly small \(c\)) and bias (avoiding large \(c\)).
+
+% Theorem 1: First variable with inequality
+\begin{theorem}[First variable with inequality]
+Let $(X_1, X_2, \dots, X_n)$ be a vector of \textbf{mutually independent} random variables. For $c > 0$ and $\mathbf{x} = (x_1, \dots, x_n) \in \mathbb{R}^n$, define:
+\[
+F_c(\mathbf{x}) = \mathrm{Prob}\left[ X_n \leq x_n,  x_1 - c_0 < X_1 \leq x_1 + c_1,  \dots,  x_{n-1} - c_0 < X_{n-1} \leq x_{n-1} + c_1 \right].
+\]
+\textbf{Then:}
+\begin{equation}\label{eee91a}
+\boxed{F_c(\mathbf{x}) = F_{X_n}(x_n) \cdot \prod_{i=1}^{n-1} \left[ F_{X_i}(x_i + c_1) - F_{X_i}(x_i - c_0) \right]}
+\end{equation}
+where $F_{X_i}$ is the cumulative distribution function of $X_i$. The events
+\[
+\{X_n \leq x_n\},\  \{x_1 - c_0 < X_1 \leq x_1 + c_1\},\  \dots,\  \{x_{n-1} - c_0 < X_{n-1} \leq x_{n-1} + c_1\}
+\]
+\textbf{are independent.}
+\end{theorem}
+
+% Theorem 2: All variables with symmetric intervals
+\begin{theorem}[All variables with symmetric intervals]
+Let $(X_1, X_2, \dots, X_n)$ be a vector of \textbf{mutually independent} random variables. For $c > 0$ and $\mathbf{x} = (x_1, \dots, x_n) \in \mathbb{R}^n$, define:
+\[
+F_c(\mathbf{x}) = \mathrm{Prob}\left[ x_1 - c_0 < X_1 \leq x_1 + c_1,  x_2 - c_0 < X_2 \leq x_2 + c_1,  \dots,  x_n - c_0 < X_n \leq x_n + c_1 \right].
+\]
+\textbf{Then:}
+\begin{equation}\label{eee91b}
+\boxed{F_c(\mathbf{x}) = \prod_{i=1}^n \left[ F_{X_i}(x_i + c_1) - F_{X_i}(x_i - c_0) \right]}
+\end{equation}
+where $F_{X_i}$ is the cumulative distribution function of $X_i$. The events
+\[
+\{x_1 - c_0 < X_1 \leq x_1 + c_1\},\  \dots,\  \{x_n - c_0 < X_n \leq x_n + c_1\}
+\]
+\textbf{are independent.}
+\end{theorem}
+
+\begin{proof}[Proof (common to both theorems)]
+The mutual independence of $\{X_i\}_{i=1}^n$ implies that any collection of events where each event depends on a single different $X_i$ are independent. Therefore:
+
+\begin{itemize}
+\item \textbf{Theorem 1:}
+\[
+\mathrm{Prob}\left( \bigcap_{i=1}^n A_i \right) = \prod_{i=1}^n \mathrm{Prob}(A_i) \quad \text{where} \quad
+\begin{cases}
+A_n = \{X_n \leq x_n\} \\
+A_i = \{x_i - c_0 < X_i \leq x_i + c_1\} \text{ for } i = 1,\dots,n-1
+\end{cases}
+\]
+
+\item \textbf{Theorem 2:}
+\[
+\mathrm{Prob}\left( \bigcap_{i=1}^n B_i \right) = \prod_{i=1}^n \mathrm{Prob}(B_i) \quad \text{where} \quad
+B_i = \{x_i - c_0 < X_i \leq x_i + c_1\} \quad \forall i
+\]
+\end{itemize}
+The factorization follows directly from the mutual independence assumption. The specific probability expressions are computed using the CDF of each $X_i$.
+\end{proof}
+
+\begin{corollary}[Case of the U variables]
+Assume \(U_1,\dots,U_n\) are independent uniform random variables on \((0,1)\). Let \(0<u_i<1\) for all \(i\) and choose \(c>0\) such that \(0 < u_i - c_0 < u_i + c_1 < 1\) for all relevant indices. Then the formulas (\ref{eee91a}) and (\ref{eee91b}) become:
+\[
+F_c(\mathbf{u}) = (2c)^{n-1} u_n
+\]
+for Theorem 1 (with \(X_n=U_n\) as the variable with the tail), and
+\[
+F_c(\mathbf{u}) = (2c)^n
+\]
+for Theorem 2 (all intervals). If any interval \((u_i-c_0, u_i+c_1]\) is not entirely contained in \((0,1)\), the probability of that interval is \(\min(u_i+c_1,1) - \max(u_i-c_0,0)\), and the product formulas must be adjusted accordingly. The expressions \((2c)^{n-1}u_n\) and \((2c)^n\) are therefore valid only in the interior case.
+\end{corollary}
+
+
+
+\subsection*{Consistency with classical conditioning}
+
+The central band conditional $G_c(x_n ||| x_1,\dots,x_{n-1})$ approximates the classical point‑conditional distribution. The following theorem establishes its convergence as the interval half‑width $c$ tends to zero.
+
+\begin{theorem}[Consistency of the Central Band Approximation]
+Assume that the joint distribution of $(X_1,\dots,X_n)$ admits a continuous density $f$ and that $f$ is bounded in a neighbourhood of $(x_1,\dots,x_{n-1})$. Then
+\[
+\lim_{c\to 0} G_c(x_n ||| x_1,\dots,x_{n-1}) = P(X_n \le x_n \mid X_1 = x_1,\dots,X_{n-1}=x_{n-1}),
+\]
+for every $x_n$ where the classical conditional CDF is defined.
+\end{theorem}
+
+\begin{proof}[Sketch]
+Using the definitions of $G_c$ and $F_c$, the numerator and denominator are integrals over intervals of width $2c$. By the mean value theorem for integrals and the continuity of the density, both numerator and denominator converge to the corresponding joint density values multiplied by $(2c)^{n-1}$, which cancels in the ratio, yielding the classical conditional CDF. A rigorous proof follows from the Lebesgue differentiation theorem. ∎
+\end{proof}
+
+In practice, $c$ should be chosen small enough to keep bias low, but large enough to ensure that each conditioning interval contains a sufficient number of data points for stable empirical estimation. A rule of thumb is to select $c$ so that the empirical probability of each interval is at least $5/n$ (where $n$ is the sample size), or to use a cross‑validation criterion.
+
+\subsection*{Copula interpretation of interval conditioning}
+
+The central band conditional becomes particularly transparent when expressed in terms of the copula $C$ of the variables. Recall that for continuous marginals, $U_i = F_i(X_i)$ are uniformly distributed on $(0,1)$ and
+\[
+F(x_1,\dots,x_n) = C(F_1(x_1),\dots,F_n(x_n)).
+\]
+
+The event $\{x_i - c_0 < X_i \le x_i + c_1\}$ transforms into
+\[
+U_i \in \bigl( F_i(x_i - c_0),\, F_i(x_i + c_1) \bigr].
+\]
+Denote $u_i^-(c_0) = F_i(x_i - c_0)$ and $u_i^+(c_1) = F_i(x_i + c_1)$. Then the probability in the denominator of $G_c$ becomes
+\[
+P\bigl( X_i \in (x_i-c_0,x_i+c_1], i=1,\dots,n-1 \bigr) = C\bigl( u_1^+(c_1)-u_1^-(c_0),\dots, u_{n-1}^+(c_1)-u_{n-1}^-(c_0), 1 \bigr),
+\]
+where the inclusion–exclusion over the intervals is absorbed into the copula evaluation. More generally, the numerator $F_c(x_1,\dots,x_n)$ defined in \eqref{eq:intervalcdf} is given by the inclusion-exclusion formula stated earlier. For the special case of independent variables ($C = \Pi$), the formulas reduce to the product expressions given in Theorems 1 and 2 above.
+
+A key insight is that conditioning on intervals is equivalent to imposing a rectangular restriction in copula space:
+\[
+(U_1,\dots,U_{n-1}) \in \prod_{i=1}^{n-1} \bigl( F_i(x_i-c_0), F_i(x_i+c_1) \bigr].
+\]
+Thus the central band conditional $G_c(x_n ||| x_1,\dots,x_{n-1})$ is simply the conditional distribution of $U_n$ given that the other uniforms lie in those specific rectangles. This geometric view facilitates both theoretical analysis and simulation.
+
+\subsection*{Simulation under interval constraints}
+
+One of the practical advantages of the central band approach is that it allows direct sampling from the conditioned distribution without requiring the full conditional density. Given a dataset (or a generative model) of $N$ i.i.d. samples from the joint distribution, we can simulate from $G_c(\,\cdot\,||| x_1,\dots,x_{n-1})$ using one of the following methods:
+
+\begin{enumerate}
+\item \textbf{Rejection sampling (empirical):}
+   Keep only those data points whose conditioning variables fall inside the chosen intervals $(x_i-c_0,x_i+c_1]$. The empirical CDF of the output variable $X_n$ among the retained points is a consistent estimator of $G_c$.
+
+\item \textbf{Truncated conditional sampling (parametric):}
+   If a copula model $C$ and marginals $F_i$ are available, one can sample $(U_1,\dots,U_{n-1})$ uniformly from the rectangle
+   $\prod_{i=1}^{n-1} (F_i(x_i-c_0), F_i(x_i+c_1)]$ and then sample $U_n$ from the conditional copula $C_{n|1,\dots,n-1}$; finally transform back via $X_n = F_n^{-1}(U_n)$. This yields exact samples from $G_c$.
+
+\item \textbf{Importance sampling:}
+   When the conditioning intervals are narrow, rejection sampling may discard many points. In that case, sample from a proposal distribution (e.g., a multivariate normal centred at $(x_1,\dots,x_{n-1})$ with small variance) and reweight by the ratio of the true density to the proposal density. The weighted empirical CDF of $X_n$ estimates $G_c$.
+\end{enumerate}
+
+These simulation techniques are particularly valuable for sensitivity analysis, where one repeatedly conditions on different input intervals and examines the resulting output distribution.
+
+\subsection*{Advantages and discussion}
+
+The central band conditional distribution, together with the positive‑probability conditioning framework, offers several significant benefits over classical point‑conditioning in applied AI and data science:
+
+\begin{itemize}
+\item \textbf{Well‑defined on any sample.}
+   For any finite dataset, the conditioning intervals contain a non‑negative number of points. No division by zero occurs as long as at least one point falls into the conditioning region.
+
+\item \textbf{Direct empirical estimation.}
+   The conditional CDF $G_c$ can be estimated as the proportion of retained points with $X_n \le x_n$, without any density estimation or smoothing. This is robust and computationally trivial.
+
+\item \textbf{Interpretability.}
+   The result is a genuine probability (not a density) that answers a natural question: “What is the chance that the output is below a threshold, given that each input lies in a specific interval?” This is directly understandable by domain experts.
+
+\item \textbf{Flexibility.}
+   The user is free to choose the interval width $c$ according to the problem: a larger $c$ gives a smoother, more stable estimate (but may bias the result away from the point‑conditional), while a smaller $c$ better approximates $P(X_n \le x_n \mid X_i = x_i)$ at the cost of higher variance. A data‑driven choice (e.g., using cross‑validation) is possible.
+
+\item \textbf{Compatibility with modelling frameworks.}
+   Because every factor in the chain rule is a CDF conditioned on positive‑probability events (half‑lines or intervals), the framework integrates naturally with copula-based models and simulation engines. The connection to Bayesian networks is a promising avenue for future research, particularly in adapting propagation algorithms to operate on these CDF factors.
+
+\item \textbf{Separation of input/output roles.}
+   As emphasised in the introduction, the analyst is free to choose any subset of variables as “inputs” and any other as “output” without retraining the model. The same joint distribution (or its empirical version) answers all possible conditional queries of the form $P(S_2 | S_1)$ where $S_1,S_2$ are events of positive probability.
+\end{itemize}
+
+In summary, the central band conditional $G_c$ provides a practical, robust, and theoretically grounded approximation to classical point‑conditioning. Its integration with copulas, simulation techniques, and modelling frameworks makes it a cornerstone of the data‑driven AI tool presented in this chapter.
+
+\section{Simulating Synthetic Data Inside a Central Band Around a Target}
+\label{sec:simulate-central-band}
+
+When analysing multivariate data, a common question is: How does the distribution of the variables behave in a neighbourhood of a given member of the population? This member may be an actual observation from the dataset or a hypothetical (virtual) point of interest. Answering this question requires conditioning on events of the form
+\[
+\bigl\{ |X_i - x_i^0| \le c \bigr\},\quad i=1,\dots,n,
+\]
+where $\mathbf{x}^0 = (x_1^0,\dots,x_n^0)$ is the target member and $c>0$ is a half‑width defining the size of the central band. In terms of the Chebyshev distance ($L_\infty$ norm), the condition is $\|\mathbf{X} - \mathbf{x}^0\|_\infty \le c$.
+
+\subsection{Problem: empty or sparse conditioning regions}
+
+For a finite dataset of size $N$, if $c$ is chosen too small, the hyper‑rectangle
+\[
+R_c(\mathbf{x}^0) = \prod_{i=1}^n [x_i^0 - c_0,\; x_i^0 + c_1]
+\]
+may contain no data points at all. Even if it contains a few points, the empirical estimate of the conditional distribution will have high variance and poor reliability. To obtain a stable estimate, one might be tempted to increase $c$ until enough points fall into the region. However, a large $c$ smooths away local details and may produce a conditional distribution that no longer approximates the behaviour near the target point.
+
+Thus we face a dilemma:
+\begin{itemize}
+    \item Small $c$ → few or zero observations → unstable or impossible inference.
+    \item Large $c$ → biased estimate, far from the true point‑conditional distribution.
+\end{itemize}
+
+The solution is not to rely solely on observed data points inside $R_c(\mathbf{x}^0)$, but to generate synthetic data directly from the conditional distribution of $\mathbf{X}$ given that $\mathbf{X} \in R_c(\mathbf{x}^0)$. This approach decouples the choice of $c$ (which should be small enough to capture local behaviour) from the need for a large empirical sample.
+
+\subsection{Solution: conditional simulation after learning}
+
+Assume that a learning phase has been completed, yielding an estimate of the joint distribution of $\mathbf{X} = (X_1,\dots,X_n)$. This estimate can be:
+\begin{itemize}
+    \item A parametric copula with marginals (e.g., estimated by maximum likelihood),
+    \item A non‑parametric empirical distribution (e.g., kernel density or smooth CDF),
+    \item A model based on the positive‑probability conditioning operators ($|$ or $|||$).
+\end{itemize}
+
+The goal is to generate synthetic i.i.d. samples from
+\[
+\mathbf{X} \;\big|\; \mathbf{X} \in R_c(\mathbf{x}^0),
+\]
+where $R_c(\mathbf{x}^0) = \prod_{i=1}^n [x_i^0 - c_0,\; x_i^0 + c_1]$. Once such samples are obtained, any conditional quantity (e.g., $P(X_n \le x_n \mid \mathbf{X}_{-n} \in R_{c,-n})$ ) can be estimated by the empirical distribution of the simulated points.
+
+\subsubsection*{Relation to the Central Band Conditional}
+
+Using the notation of Section~\ref{sec:positive-probability-conditional} (with triple bar $|||$ for central band conditioning), the event $\mathbf{X} \in R_c(\mathbf{x}^0)$ corresponds to conditioning on all variables simultaneously. The joint conditional CDF is
+\[
+H_c(\mathbf{x} \mid \mathbf{x}^0) := P\bigl( X_1 \le x_1,\dots,X_n \le x_n \;\big|\; \mathbf{X} \in R_c(\mathbf{x}^0) \bigr).
+\]
+By the definition of $G_c$ (central band conditional for output $X_n$ given inputs) we have a similar structure. Simulating from $H_c$ is the most general way to explore the neighbourhood of $\mathbf{x}^0$.
+
+\subsection{Simulation algorithms}
+
+Three practical algorithms can be employed, depending on the form of the estimated joint distribution.
+
+\subsubsection*{1. Rejection Sampling (Empirical or Parametric)}
+
+This method requires the ability to draw i.i.d. samples from the unconditional joint distribution $\hat{F}_{\mathbf{X}}$.
+
+\begin{algorithm}[H]
+\caption{Rejection sampling inside $R_c(\mathbf{x}^0)$}
+\begin{algorithmic}[1]
+\Repeat
+    \State Generate $\mathbf{X}^{\text{(cand)}} \sim \hat{F}_{\mathbf{X}}$ (one sample from the learned model)
+    \State Compute $\displaystyle \text{inside} = \mathbf{1}\bigl\{ \max_i |X_i^{\text{(cand)}} - x_i^0| \le c \bigr\}$
+\Until{inside = 1}
+\State \Return $\mathbf{X}^{\text{(cand)}}$
+\end{algorithmic}
+\end{algorithm}
+
+\textbf{Advantage:} trivial to implement; works for any $\hat{F}_{\mathbf{X}}$.
+\textbf{Disadvantage:} acceptance probability is $P(\mathbf{X} \in R_c(\mathbf{x}^0))$, which becomes extremely small for narrow bands $c$. If $c$ is chosen small (e.g., $c$ of order $1\%$ of the marginal range), the method may require millions of trials per accepted sample.
+
+\subsubsection*{2. Truncated Conditional Sampling via Copula}
+
+When the joint distribution is represented by a copula $C$ with continuous marginals $F_i$, a much more efficient method exists. The condition $\mathbf{X} \in R_c(\mathbf{x}^0)$ is equivalent to
+\[
+U_i \in \bigl[ F_i(x_i^0 - c_0),\; F_i(x_i^0 + c_1) \bigr] =: [\ell_i, u_i],\qquad i=1,\dots,n,
+\]
+where $U_i = F_i(X_i)$. The $U_i$ are uniformly distributed on $(0,1)$ with joint copula $C$.
+
+Sampling from $\mathbf{U} \mid \mathbf{U} \in \prod_i [\ell_i, u_i]$ can be done by a conditional copula simulator:
+
+\begin{enumerate}
+    \item Sample $(U_1,\dots,U_n)$ from the copula $C$ truncated to the hyper‑rectangle $\prod_i [\ell_i, u_i]$. This can be performed using:
+    \begin{itemize}
+        \item A Gibbs sampler that updates each $U_i$ from its full conditional distribution $C_{i| -i}$ restricted to $[\ell_i, u_i]$.
+        \item An acceptance‑rejection step inside the rectangle if the copula is simple (e.g., Gaussian or $t$‑copula with low dimension).
+        \item For the independent copula ($C=\Pi$), the $U_i$ are independent uniform on $[\ell_i, u_i]$.
+    \end{itemize}
+    \item Transform back: $X_i = F_i^{-1}(U_i)$ for $i=1,\dots,n$.
+\end{enumerate}
+
+The resulting $\mathbf{X}$ is an exact sample from the desired conditional distribution.
+
+\textbf{Advantage:} highly efficient even for very small $c$, because sampling is performed directly inside the conditioning region.
+\textbf{Disadvantage:} requires a parametric copula model and the ability to sample from the conditional copula.
+
+\subsubsection*{3. Importance Sampling (When Direct Sampling is Hard)}
+
+If rejection sampling is too inefficient and a full conditional copula simulator is not available, importance sampling provides a compromise. Choose a proposal distribution $q$ that concentrates mass inside $R_c(\mathbf{x}^0)$ (e.g., a truncated multivariate normal with small variance). Then:
+
+\begin{enumerate}
+    \item Draw $\mathbf{X}^{(k)} \sim q$, for $k=1,\dots,M$.
+    \item Compute weights $w_k = \dfrac{\hat{f}_{\mathbf{X}}(\mathbf{X}^{(k)})}{q(\mathbf{X}^{(k)})}$, where $\hat{f}_{\mathbf{X}}$ is the estimated joint density (or a kernel density estimate).
+    \item The weighted empirical distribution of $\mathbf{X}^{(k)}$ approximates the target conditional distribution.
+\end{enumerate}
+
+\subsection{Performing simulation after learning: step‑by‑step workflow}
+
+Assume that the learning phase (Chapters~11–13) has already produced:
+\begin{itemize}
+    \item Estimated marginal CDFs $\hat{F}_i$ (empirical or parametric).
+    \item An estimated copula $\hat{C}$ (or a model based on positive‑probability factors).
+\end{itemize}
+
+The following workflow generates synthetic points inside the central band around a target member $\mathbf{x}^0$ with half‑width $c$:
+
+\begin{enumerate}
+    \item Choose the band width $c$ based on the desired level of localisation. For stability, $c$ may be selected so that the marginal probability $P(|X_i - x_i^0| \le c)$ is between $0.01$ and $0.1$ for each $i$ – but even this small $c$ is acceptable because we will simulate, not rely on observed data.
+    \item Compute transformed bounds $\ell_i = \hat{F}_i(x_i^0 - c_0)$, $u_i = \hat{F}_i(x_i^0 + c_1)$.
+    \item Generate $M$ samples (e.g., $M=10\,000$) from $\mathbf{U} \mid \mathbf{U} \in \prod_i [\ell_i, u_i]$ using one of the algorithms above. For a Gaussian copula, this can be done by:
+    \begin{itemize}
+        \item Sampling $\mathbf{Z} \sim \mathcal{N}(\mathbf{0}, \mathbf{R})$ where $\mathbf{R}$ is the correlation matrix,
+        \item Transforming $U_i = \Phi(Z_i)$ (standard normal CDF),
+        \item Accepting only those $\mathbf{U}$ that fall inside the rectangle. This is still rejection sampling but in the latent Gaussian space; if the rectangle probability is not too low (e.g., $ > 10^{-4}$), it is acceptable.
+        \item For the independent copula, simply sample $U_i \sim \text{Uniform}(\ell_i, u_i)$.
+    \end{itemize}
+    \item Transform back $X_i = \hat{F}_i^{-1}(U_i)$ for all $i$.
+    \item The resulting set $\{\mathbf{X}^{(1)},\dots,\mathbf{X}^{(M)}\}$ is an i.i.d. sample from the conditional distribution $\mathbf{X} \mid \mathbf{X} \in R_c(\mathbf{x}^0)$.
+\end{enumerate}
+
+\subsection{Practical example: virtual target with no nearby observations}
+
+Suppose the dataset contains $N=500$ points in $\mathbb{R}^3$, and we are interested in a virtual target $\mathbf{x}^0 = (2.5, 1.8, 0.7)$ that lies far from any observed point. The chosen half‑width is $c=0.05$ (small relative to the scale of the variables). Direct rejection sampling from the empirical distribution would have acceptance probability near zero because no observed point falls into the band. However, after learning a Gaussian copula with kernel density marginals, we apply the conditional copula sampler (Algorithm 2). We generate $10\,000$ synthetic points inside the band in less than a second, and from them we estimate the conditional mean, variance, or any quantile of the output variable $X_3$ given $X_1,X_2$ near the target point.
+
+\subsection{Relation to the central band conditional $G_c$}
+
+The procedure above directly simulates the joint distribution inside the band. If one is only interested in the conditional distribution of a single output variable $X_n$ given the others (i.e., $G_c(x_n ||| x_1^0,\dots,x_{n-1}^0)$ defined in \eqref{eq:centralband}), the same simulation approach applies after setting $X_n$ as the output and treating the remaining variables as inputs. The synthetic samples for $X_n$ obtained under the constraint $\mathbf{X}_{-n} \in R_{c,-n}(\mathbf{x}_{-n}^0)$ provide a direct empirical estimator of $G_c$.
+
+\subsection{Why this solves the original problem}
+
+\begin{itemize}
+    \item No need to increase $c$ arbitrarily. Even if $c$ is so small that no real data point satisfies the constraint, we can generate an unlimited number of synthetic points inside the band.
+    \item Preserves local accuracy. $c$ can be chosen as small as the problem requires (e.g., $c$ equal to measurement precision or a small fraction of the standard deviation).
+    \item Leverages the learned model. The simulation exploits the estimated copula and marginals, which summarise the entire dependence structure.
+    \item Output is a genuine conditional distribution. The synthetic points allow computing any conditional probability, quantile, or expectation without numerical pathologies.
+\end{itemize}
+
+Thus, by combining the positive‑probability conditioning framework (Section~\ref{sec:positive-probability-conditional}) with the simulation techniques described here, the analyst can explore the local behaviour around any target member – real or virtual – without being limited by the finite sample size. This capability is implemented in the web application of Section~\ref{sec:webapp} (see Figure~\ref{fig:parallelcoordinatesapp}) where the user can select a target point and a band width, and the system generates synthetic points on‑the‑fly to display the conditional distributions.
+
+\section{A Web Page for Data Analysis Based Only on Data}\label{sec:webapp}\index{Sectioning!Sections}
+In what follows we look for a simple but powerful application able to compute with the due precision probabilities and related functions of the type discussed in the two previous subsections.
+
+A web page has been designed to illustrate the capabilities of the above material. The idea is to build an interactive application allowing to analyze the actions and interactions among variables.
+
+Given some information about input variables, where here can be freely selected without the need of a relearning process, the most common and expected required probabilities will be of the form $P(S_2|S_1)$, where $S_1$ is the information about the input variables, those known, and $S_2$ is the information required about the output variables, those unknown.
+
+The most common sets $S_1$ and $S_2$ are of the form $X_i = x_1, X_2 = x_2,\ldots, X_k = x_k$, but these events, for continuous variables have associated null probability and then are normally non-observed. Thus, we have designed the application to deal with two other different events, looking for a high enough probability of being observed even more than one time. This leads to the conditional distributions in the following subsections.
+
+\begin{figure}[htpb]
+\centering
+\includegraphics[width=\textwidth]{webApp_con_fondo.png}
+\href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/MultivarVis_Analysis.html}{\underline{Click to open application}}.
+(\href{https://youtu.be/nn_Ii6je3Yg}{\textcolor{blue}{\underline{Click to play video}}})
+\caption{Main window of the application showing the information supported by the application. Two buttons at the top allow for aligning the sliders to the top and bottom of the scales.}
+\label{fig:parallelcoordinatesapp}
+\end{figure}
+
+Figure~\ref{fig:parallelcoordinatesapp} shows the main window of the application where the columns correspond to the variables and the sample data are polygonal lines joining the points of the associated values. Interactive sliders allow selecting the ranges associated with a given percentage of the data for each variable, which can be edited on the fields at the bottom of the page. Below the different variable scales, the cdf of the corresponding variable conditioned on the selected ranges are shown. The conditional probability field on the left top part shows the probability corresponding to the data such that all their variables are inside the corresponding slider intervals, that is, the cdf.
+
+\begin{figure}[htpb]
+\centering
+\includegraphics[width=\textwidth]{Input_Output_con_fondo.png}
+\caption{Main window of the application showing the information supported by the application. Two buttons at the top allow for aligning the sliders to the top and bottom of the scales.}
+\label{fig:parallelcoordinatesapp1}
+\end{figure}
+
+These graphics are interactive and update in real time so that changes allow measuring the sensitivities of any information to any changes. The webpage can be accessed from this link.
+
+This comprehensive web-based data analytics application provides a sophisticated framework for multivariate data exploration through interactive parallel coordinates visualization. The platform is specifically designed for high-dimensional dataset analysis, offering advanced statistical preprocessing, real-time interactive filtering, and comprehensive visualization capabilities with integrated statistical analysis tools. In addition facilities are given for the results and figures to be easily exported.
+
+The combination of positive‑probability conditioning, flexible modelling frameworks, and interactive visualization provides a complete toolbox for data‑driven AI. Users are no longer forced to predefine inputs and outputs; they can explore the data freely. The final chapter (Chapter~\ref{ch:conclusions}) synthesises all the results and states the ultimate goal: the conditional probability of the approximated output set given the approximated input set, which changes completely the idea of input and output.
+
+\begin{remarkbox}
+\begin{remarkT}[Final Interdisciplinary Invitation]
+The authors view this chapter as a living proposal. We have deliberately chosen pragmatic definitions and algorithms to make the framework immediately usable in applications. However, we are fully aware that many theoretical questions remain open: the precise conditions under which the CDF factorisation defines a proper Bayesian network, the development of exact propagation algorithms for these factors, the optimal selection of the band width $c$ in a minimax sense, and the extension to non-continuous or heavy-tailed distributions. We warmly invite researchers in probability, statistics, computer science, and engineering to engage with these challenges, refine the mathematics, and transform this conceptual bridge into a robust, fully validated theory.
+\end{remarkT}
+\end{remarkbox} 

@@ -1,0 +1,274 @@
+\startcontents[chapter]
+\chapter{Online Resources and Software Links}
+\label{ch:links-appendix}
+\minitocboxed
+
+\section*{Introduction}
+
+Throughout this book, numerous references are made to online resources, interactive web applications, software downloads, and video demonstrations. These resources complement the theoretical content by providing hands-on tools for dimensional analysis, fatigue modeling, Bayesian inference, and conditional visualization. This appendix compiles all such links in one place, organized by the chapter in which they appear, along with a description of each resource's purpose and functionality.
+
+All links have been verified and are active as of the publication date. The software and applications are open-source or freely available for academic and research purposes.
+
+\section{Resources by Chapter}
+
+\subsection{Chapter 3: The Buckingham Pi Theorem}
+
+The Buckingham Pi Theorem Calculator is a comprehensive web-based platform for performing dimensional analysis. It constructs the dimensional matrix, computes its rank, solves the homogeneous system for the null space, and generates all possible dimensionless $\pi$ groups. The tool also classifies the analysis into one of six cases and exports professional \LaTeX{} reports.
+
+\begin{table}[H]
+\centering
+\caption{Buckingham Pi Theorem resources.}
+\begin{tabular}{p{3cm}p{8cm}p{3cm}}
+\toprule
+\textbf{Resource} & \textbf{Description} & \textbf{Location} \\
+\midrule
+Homogeneous system solver & Interactive tool for solving the linear system $\mathbf{D}\mathbf{x}=\mathbf{0}$ to find dimensionless combinations. & Page 27 \\
+Buckingham Pi Theorem Calculator & Main interactive application for dimensional analysis and $\pi$-group generation with full case classification. & Page 29, 30, 157, 443 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Direct links:}
+\begin{itemize}
+    \item \href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/SolveHomogeneousSystemSteps.html}{\nolinkurl{SolveHomogeneousSystemSteps.html}}
+    \item \href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/PRUEBAObtainPiTerms_Flexible_LinearBUENO9a.html}{\nolinkurl{PRUEBAObtainPiTerms_Flexible_LinearBUENO9a.html}}
+\end{itemize}
+
+\subsection{Chapter 9: Archimedean Copulas}
+
+The computational examples for Clayton, Gumbel, and Frank copulas are accompanied by Python software for simulating samples, estimating parameters, and constructing Bernstein polynomial approximations. All three case studies use the same Python script.
+
+\begin{table}[H]
+\centering
+\caption{Archimedean copula software resources.}
+\begin{tabular}{p{3cm}p{8cm}p{3cm}}
+\toprule
+\textbf{Resource} & \textbf{Description} & \textbf{Location} \\
+\midrule
+Bernstein copula Python software & Complete Python code for simulating Clayton, Gumbel, and Frank copulas with Bernstein polynomial approximation, MSE, Spearman, and KS evaluation. & Page 139 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Direct link:}
+\begin{itemize}
+    \item \href{https://github.com/enriquecastilloron-coder/PRUEBA/raw/refs/heads/main/Bernsteincopulasbook.py}{\nolinkurl{Bernsteincopulasbook.py}}
+\end{itemize}
+
+\subsection{Chapter 10: The Fatigue Problem}
+
+Interactive visualizations and software tools are provided to explore three-dimensional fatigue data using opacity techniques. The applications allow users to visualise conditional distributions, percentile curves, and interactively explore the fatigue data space.
+
+\begin{table}[H]
+\centering
+\caption{Fatigue analysis interactive resources.}
+\begin{tabular}{p{3.5cm}p{8cm}p{2.5cm}}
+\toprule
+\textbf{Resource} & \textbf{Description} & \textbf{Location} \\
+\midrule
+GraphsAllPairs web application & Interactive tool for exploring all pairwise conditional plots of fatigue data with opacity control for the third variable. & Page 157 \\
+GraphsAllPairs user manual & PDF manual explaining the use of the GraphsAllPairs application. & Page 157 \\
+GraphsAllPairs video & Video demonstration of the GraphsAllPairs application. & Page 157 \\
+Fatigue3DModel web application & Interactive 3D fatigue model explorer with percentile curves and conditional distributions. & Page 163 \\
+Fatigue3DModel user manual & PDF manual for the Fatigue3DModel application. & Page 163 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Direct links:}
+\begin{itemize}
+    \item \href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/GraphsAllPairs.html}{\nolinkurl{GraphsAllPairs.html}}
+    \item \href{https://raw.githubusercontent.com/EnriqueCastilloRon/mi-libro-interactivo/main/manuales/GraphsAllPairsPYManual.pdf}{\nolinkurl{GraphsAllPairsPYManual.pdf}}
+    \item \href{https://youtu.be/0fQ34rgzQn8}{\nolinkurl{Video: GraphsAllPairs demonstration}}
+    \item \href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/Fatigue3DModel.html}{\nolinkurl{Fatigue3DModel.html}}
+    \item \href{https://raw.githubusercontent.com/EnriqueCastilloRon/mi-libro-interactivo/main/manuales/Fatigue3DModel_UserManual.pdf}{\nolinkurl{Fatigue3DModel_UserManual.pdf}}
+\end{itemize}
+
+\subsection{Chapter 13: Stochastic Models Based on Copulas}
+
+Each case study (hyperbolic simulated, Beta simulated, Holmen real, Maennig real) is accompanied by downloadable Python code that implements the four-step copula-based modeling methodology. The same Python script covers all four cases.
+
+\begin{table}[H]
+\centering
+\caption{Copula-based fatigue modeling software.}
+\begin{tabular}{p{3.5cm}p{8cm}p{2.5cm}}
+\toprule
+\textbf{Resource} & \textbf{Description} & \textbf{Location} \\
+\midrule
+Python software for all cases & Complete Python implementation of the Frank copula methodology for fatigue data, including pseudo-observations, parameter estimation, synthetic data generation, and percentile curves. & Page 192, 193, 194, 195 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Direct link:}
+\begin{itemize}
+    \item \href{https://raw.githubusercontent.com/EnriqueCastilloRon/mi-libro-interactivo/main/codigo/Examples4Python.py}{\nolinkurl{Examples4Python.py}}
+\end{itemize}
+
+\subsection{Chapter 18: A Trivariate Weibull–Hyperbola Model}
+
+An interactive web application is provided for fitting the trivariate Weibull–hyperbola model to fatigue or other three-variable problems. The application includes parameter estimation, model selection (AIC/BIC), and visualisation of percentile curves.
+
+\begin{table}[H]
+\centering
+\caption{Trivariate Weibull–hyperbola model resources.}
+\begin{tabular}{p{3.5cm}p{8cm}p{2.5cm}}
+\toprule
+\textbf{Resource} & \textbf{Description} & \textbf{Location} \\
+\midrule
+Weibull–hyperbola web application & Interactive application for fitting the trivariate Weibull–hyperbola model with OLS and MLE estimation, model selection, and percentile curve visualisation. & Page 323 \\
+Weibull application user manual & PDF manual for the Weibull–hyperbola application. & Page 323 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Direct links:}
+\begin{itemize}
+    \item \href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/weibull_hyperbola44.html}{\nolinkurl{weibull_hyperbola44.html}}
+    \item \href{https://github.com/enriquecastilloron-coder/PRUEBA/raw/main/Fatigue3DModel_UserManual.pdf}{\nolinkurl{Fatigue3DModel_UserManual.pdf}} (also used in Chapter 10)
+\end{itemize}
+
+\subsection{Chapter 20: Opacity as a Magnifying Glass}
+
+Video demonstrations and software downloads are provided to illustrate the opacity technique for visualizing conditional distributions. The Conditional Explorer application (Chapter 21) implements the opacity technique in a full interactive environment.
+
+\begin{table}[H]
+\centering
+\caption{Opacity visualization resources.}
+\begin{tabular}{p{3.5cm}p{8cm}p{2.5cm}}
+\toprule
+\textbf{Resource} & \textbf{Description} & \textbf{Location} \\
+\midrule
+Conditional Explorer application & Interactive web application implementing opacity-based conditional visualisation (see Chapter 21). & Page 365 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Direct link:}
+\begin{itemize}
+    \item \href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/ConditionalExplorerFINAL.html}{\nolinkurl{ConditionalExplorerFINAL.html}}
+\end{itemize}
+
+\subsection{Chapter 21: The Conditional Dimensional Explorer}
+
+A web-based interactive application for learning Bayesian networks through conditional visualisation. The tool allows users to select represented variables (output) and conditioning variables (input), adjust the conditioning point via sliders, and observe the conditional distribution in real time.
+
+\begin{table}[H]
+\centering
+\caption{Conditional Dimensional Explorer resources.}
+\begin{tabular}{p{3.5cm}p{8cm}p{2.5cm}}
+\toprule
+\textbf{Resource} & \textbf{Description} & \textbf{Location} \\
+\midrule
+Conditional Explorer application & Interactive web application for exploring conditional distributions and learning Bayesian networks. & Page 365 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Direct link:}
+\begin{itemize}
+    \item \href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/ConditionalExplorerFINAL.html}{\nolinkurl{ConditionalExplorerFINAL.html}}
+\end{itemize}
+
+\subsection{Chapter 22: New Concepts in Functional Networks}
+
+Video demonstrations of safety analysis applications using Bayesian networks, including road safety and COVID-19 pandemic modelling.
+
+\begin{table}[H]
+\centering
+\caption{Functional networks and safety analysis video resources.}
+\begin{tabular}{p{3.5cm}p{8cm}p{2.5cm}}
+\toprule
+\textbf{Resource} & \textbf{Description} & \textbf{Location} \\
+\midrule
+Road safety video & Video demonstrating probabilistic safety analysis of road sections with Bayesian networks. & Page 371 \\
+COVID-19 web application & Interactive HTML application for real-time evaluation of pandemic parameters and their effects on cumulative curves. & Page 373 \\
+COVID-19 video & Short video demonstration of the COVID-19 interactive application. & Page 373 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Direct links:}
+\begin{itemize}
+    \item \href{https://raw.githubusercontent.com/EnriqueCastilloRon/mi-libro-interactivo/main/videos/VideoN623.mp4}{\nolinkurl{VideoN623.mp4}} (Road safety)
+    \item \href{https://enriquecastilloron.github.io/PRUEBA/COVID5.html}{\nolinkurl{COVID5.html}}
+    \item \href{https://enriquecastilloron.github.io/PRUEBA/VIDEOAPPCORTO.mp4}{\nolinkurl{VIDEOAPPCORTO.mp4}}
+\end{itemize}
+
+\subsection{Chapter 23: Data Driven Models. An AI Tool Based on Data}
+
+An interactive web application for data analysis based on conditional probabilities and central band conditioning. The application uses parallel coordinates and real-time sliders to explore multivariate dependencies.
+
+\begin{table}[H]
+\centering
+\caption{Data-driven AI tool resources.}
+\begin{tabular}{p{3.5cm}p{8cm}p{2.5cm}}
+\toprule
+\textbf{Resource} & \textbf{Description} & \textbf{Location} \\
+\midrule
+MultivarVis Analysis web application & Interactive tool for multivariate data exploration with parallel coordinates, conditional CDF visualisation, and real-time sensitivity analysis. & Page 392 \\
+Data analysis video & Video demonstration of the MultivarVis Analysis application. & Page 392 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent
+\textbf{Direct links:}
+\begin{itemize}
+    \item \href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/MultivarVis_Analysis.html}{\nolinkurl{MultivarVis_Analysis.html}}
+    \item \href{https://youtu.be/nn_Ii6je3Yg}{\nolinkurl{Video: MultivarVis Analysis demonstration}}
+\end{itemize}
+
+\section{Summary of All Links}
+
+The following table provides a consolidated list of all online resources mentioned in the book, along with the chapters where they appear and a brief description of their purpose.
+
+\begin{table}[H]
+\centering
+\caption{Complete list of online resources.}
+\begin{tabular}{p{3.5cm}p{5.5cm}p{2.5cm}p{2.5cm}}
+\toprule
+\textbf{Resource Name} & \textbf{Description} & \textbf{Chapters} & \textbf{Type} \\
+\midrule
+SolveHomogeneousSystemSteps & Interactive solver for the dimensional homogeneous system. & 3 & Web app \\
+PRUEBAObtainPiTerms\_Flexible\_LinearBUENO9a & Buckingham Pi Theorem calculator with case classification. & 3, C & Web app \\
+Bernsteincopulasbook.py & Python code for Archimedean copula simulation and Bernstein approximation. & 9 & Python code \\
+GraphsAllPairs.html & Interactive fatigue data explorer with all pairwise conditional plots. & 10 & Web app \\
+GraphsAllPairsPYManual.pdf & User manual for GraphsAllPairs. & 10 & PDF \\
+Video: GraphsAllPairs & Video demonstration of GraphsAllPairs. & 10 & Video \\
+Fatigue3DModel.html & Interactive 3D fatigue model explorer with percentile curves. & 10 & Web app \\
+Fatigue3DModel\_UserManual.pdf & User manual for Fatigue3DModel. & 10, 18 & PDF \\
+Examples4Python.py & Python code for Frank copula fatigue case studies (4 cases). & 13 & Python code \\
+weibull\_hyperbola44.html & Interactive Weibull–hyperbola model fitting application. & 18 & Web app \\
+ConditionalExplorerFINAL.html & Interactive conditional visualisation for Bayesian network learning. & 20, 21 & Web app \\
+VideoN623.mp4 & Video of road safety Bayesian network analysis. & 22 & Video \\
+COVID5.html & Interactive COVID-19 parameter sensitivity application. & 22 & Web app \\
+VIDEOAPPCORTO.mp4 & Video demonstration of COVID-19 application. & 22 & Video \\
+MultivarVis\_Analysis.html & Multivariate data analysis with parallel coordinates and conditional CDF. & 23 & Web app \\
+Video: MultivarVis Analysis & Video demonstration of MultivarVis Analysis. & 23 & Video \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Companion Website and Repositories}
+
+All software, applications, and videos are open-source or freely available for academic and research purposes. The complete code and resources are hosted in the following repositories:
+
+\begin{itemize}
+    \item \textbf{Main repository:} \url{https://github.com/EnriqueCastilloRon/mi-libro-interactivo}
+    \item \textbf{Companion website:} \url{https://enriquecastilloron.github.io/mi-libro-interactivo/}
+\end{itemize}
+
+For the most up-to-date links and additional resources, please refer to the companion website. The interactive versions of the book and its applications are available at the GitHub Pages site above.
+
+\section*{Note on Video Formats}
+
+Some video resources are provided as MP4 files hosted on GitHub. For optimal viewing, we recommend downloading the files and playing them locally with a standard media player (e.g., VLC, Windows Media Player). Alternatively, YouTube links are provided where available for online streaming. 

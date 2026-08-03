@@ -1,0 +1,974 @@
+\startcontents[chapter]
+\chapter{The Trivariate Weibull–Hyperbola Model: Applications}
+\label{ch:weibull-hyperbola}
+\minitocboxed
+
+\section*{Motivation}
+
+In the previous chapters we established the multilinear structure of the trajectories (Chapter~\ref{ch:trajectory_models}) and analysed the interactions among variables via the interaction spectrum (Chapter~\ref{ch:dependence_structure}), techniques which are valid for deterministic and stochastic models. We now take the step to a complete stochastic model: the deterministic multilinear function becomes a latent random variable. If we assume that this latent variable follows a three‑parameter Weibull distribution — a choice justified by extreme value theory and the weakest‑link principle — we obtain the trivariate Weibull–Hyperbola model.
+
+This chapter is fundamentally practical and applied. It provides:
+
+\begin{itemize}
+    \item A hierarchy of nested models (M0 to M7) that allows selecting the most appropriate interaction structure for the data using information criteria (AIC/BIC).
+    \item Two complementary parameter estimation methods: Ordinary Least Squares (OLS) for a fast initialisation, and Maximum Likelihood Estimation (MLE) for rigorous statistical inference that properly handles censored data (run‑outs).
+    \item Explicit formulae for the generation of synthetic data and for the construction of percentile curves, which are the final tool for probabilistic design.
+    \item A copula representation, which connects this specific model with the general copula framework developed in subsequent chapters.
+\end{itemize}
+
+Fatigue is again the main application example, but the presented methodology is directly transferable to any system that can be described by three dimensionless variables. The chapter concludes with a description of the complete fitting algorithm, including a grid search for the reference parameters \((\sigma_{M0}, N_0)\), joint refinement, and interactive visualisation via the opacity technique.
+
+\section{General trilinear interaction model}
+\label{sec:trilinear-model}
+
+Let \(\pi_1\), \(\pi_2\) and \(\pi_3\) be three dimensionless variables characterising the system. The most general \emph{multilinear} relationship among them — linear in each \(\pi_i\) separately and including all possible interactions — is given by the deterministic equation:
+
+\begin{equation}\label{eq:general_model}
+\boxed{
+V = v(\pi_1,\pi_2,\pi_3) = C_0
+    + C_1\pi_1
+    + C_2\pi_2
+    + C_3\pi_3
+    + C_{12}\pi_1\pi_2
+    + C_{13}\pi_1\pi_3
+    + C_{23}\pi_2\pi_3
+    + C_{123}\pi_1\pi_2\pi_3,
+}
+\end{equation}
+where the eight scalar coefficients \(C_0, C_1, C_2, C_3, C_{12}, C_{13}, C_{23}, C_{123} \in \mathbb{R}\) are model parameters to be estimated from the data. The subscripts of each \(C\) indicate which \(\pi\) variables it multiplies: \(C_{12}\) is the coefficient of \(\pi_1\pi_2\), \(C_{123}\) that of the triple product \(\pi_1\pi_2\pi_3\), and so on.
+
+The equation \(V = v(\pi_1,\pi_2,\pi_3)\) defines a two‑dimensional \emph{response surface} embedded in the three‑dimensional space \((\pi_1,\pi_2,\pi_3)\). This surface represents a deterministic relationship among the three variables.
+
+\subsection{Sections as rectangular hyperbolas}
+\label{sec:hyperbola-sections}
+
+A key property of this model is that when \(\pi_1\) is fixed, one obtains a family of straight lines or rectangular hyperbolas in the \((\pi_2,\pi_3)\) plane. To see this, we group terms with the same functional dependence:
+
+\begin{equation}\label{eq:conic_general}
+A(\pi_1)\,\pi_2\pi_3 + B(\pi_1)\,\pi_2 + C(\pi_1)\,\pi_3 + D(\pi_1) = 0,
+\end{equation}
+where the \emph{section coefficients} are:
+
+\begin{equation}\label{eq:ABCD}
+\begin{aligned}
+A(\pi_1) &= C_{23} + C_{123}\,\pi_1,\\
+B(\pi_1) &= C_2 + C_{12}\,\pi_1,\\
+C(\pi_1) &= C_3 + C_{13}\,\pi_1,\\
+D(\pi_1) &= C_0 + C_1\,\pi_1.
+\end{aligned}
+\end{equation}
+
+Equation \eqref{eq:conic_general} is a \emph{rectangular hyperbola}: it contains the mixed term \(\pi_2\pi_3\) but no quadratic terms \(\pi_2^2\) or \(\pi_3^2\). This structure ensures that the sections are hyperbolas whose axes are parallel to the coordinate axes after a translation.
+
+\paragraph{Centre of the hyperbola.}
+The centre \((\pi_2^*, \pi_3^*)\) is found by solving the system of partial derivatives:
+
+\begin{equation}\label{eq:center_conditions}
+\frac{\partial v}{\partial \pi_2} = A\pi_3 + B = 0,\qquad
+\frac{\partial v}{\partial \pi_3} = A\pi_2 + C = 0,
+\end{equation}
+which gives:
+\begin{equation}\label{eq:center}
+\boxed{
+\pi_2^* = -\frac{C(\pi_1)}{A(\pi_1)} = -\frac{C_3 + C_{13}\,\pi_1}{C_{23} + C_{123}\,\pi_1},\qquad
+\pi_3^* = -\frac{B(\pi_1)}{A(\pi_1)} = -\frac{C_2 + C_{12}\,\pi_1}{C_{23} + C_{123}\,\pi_1}.
+}
+\end{equation}
+
+\paragraph{Canonical equation.}
+Introducing translated coordinates \(u = \pi_2 - \pi_2^*\) and \(v = \pi_3 - \pi_3^*\), the equation simplifies to:
+
+\begin{equation}\label{eq:canonical_general}
+\boxed{
+u\,v = k(\pi_1),\qquad
+k(\pi_1) = \frac{B(\pi_1)C(\pi_1)-A(\pi_1)D(\pi_1)}{A(\pi_1)^2},
+}
+\end{equation}
+provided \(A(\pi_1) \neq 0\). The asymptotes in the original coordinates are:
+
+\begin{equation}\label{eq:asymptotes_general}
+\boxed{
+\pi_2 = \pi_2^* = -\frac{C(\pi_1)}{A(\pi_1)},\qquad
+\pi_3 = \pi_3^* = -\frac{B(\pi_1)}{A(\pi_1)}.
+}
+\end{equation}
+
+\section{Probabilistic extension: the Weibull distribution}
+\label{sec:probabilistic-weibull}
+
+In real applications, experimental observations exhibit scatter. We model this by treating \(V\) as a \emph{three‑parameter Weibull random variable}:
+
+\begin{equation}
+V \sim \mathcal{W}(\lambda,\delta,\beta),
+\end{equation}
+where \(\lambda \in \mathbb{R}\) is the \textbf{location} parameter (lower threshold), \(\delta > 0\) is the \textbf{scale} parameter (dispersion), and \(\beta > 0\) is the \textbf{shape} parameter (tail behaviour). The probability density and survival functions are respectively:
+
+\begin{align}
+f(V;\lambda,\delta,\beta) &= \frac{\beta}{\delta}\left(\frac{V-\lambda}{\delta}\right)^{\beta-1}\exp\left[-\left(\frac{V-\lambda}{\delta}\right)^{\beta}\right],\qquad V>\lambda,\\
+S(V;\lambda,\delta,\beta) &= \exp\left[-\left(\frac{V-\lambda}{\delta}\right)^{\beta}\right].
+\end{align}
+
+The choice of the Weibull distribution is justified by:
+\begin{itemize}
+    \item The weakest‑link principle: failure occurs when the most critical defect reaches a critical size, leading to an extreme value distribution (Weibull).
+    \item Extreme value theory: the Weibull is the limiting distribution for minima of i.i.d. variables with a power‑law tail.
+    \item Extensive empirical evidence in fatigue: numerous datasets show that fatigue life follows a Weibull or log‑normal distribution, with the Weibull being more flexible due to its shape parameter.
+\end{itemize}
+
+\subsection{Percentile curves}
+
+Let \(V_p\) be the \(p\)-th quantile of \(\mathcal{W}(\lambda,\delta,\beta)\):
+
+\begin{equation}\label{eq:Vp}
+V_p = \lambda + \delta\bigl(-\ln(1-p)\bigr)^{1/\beta}.
+\end{equation}
+
+The locus of the \(p\)-th percentile is obtained by setting \(V = V_p\) in \eqref{eq:general_model}, i.e., replacing \(D(\pi_1)\) by \(D_p(\pi_1) = D(\pi_1) - V_p\). The centres remain unchanged, while the curvature parameter becomes:
+
+\begin{equation}\label{eq:canonical_percentile}
+\boxed{
+u\,v = k_p(\pi_1),\qquad
+k_p(\pi_1) = \frac{B(\pi_1)C(\pi_1)-A(\pi_1)\bigl[D(\pi_1)-V_p\bigr]}{A(\pi_1)^2}.
+}
+\end{equation}
+
+All percentile curves share the same asymptotes, forming a nested family of confocal hyperbolas.
+
+\section{Common simplifications and nested models}
+\label{sec:simplifications}
+
+Before fitting the model to data, we must eliminate parameter redundancy and impose physically meaningful constraints that are common to all applications.
+
+\subsection{Elimination of redundant parameters}
+
+The location parameter \(\lambda\) and the scale parameter \(\delta\) of the Weibull distribution play the same mathematical roles as \(C_0\) and \(C_{23}\), respectively. Hence they are redundant, and keeping both would make the model \emph{non‑identifiable}. Therefore we impose:
+
+\begin{equation}\label{eq:reduction_conditions}
+\boxed{C_0 = 0,\qquad C_{23} = 1.}
+\end{equation}
+
+These conditions are admissible provided \(C_{23} \neq 0\), which is a testable hypothesis. With these choices, the section coefficients simplify to:
+
+\begin{equation}\label{eq:ABCD_reduced}
+A(\pi_1) = 1 + C_{123}\,\pi_1,\quad
+B(\pi_1) = C_2 + C_{12}\,\pi_1,\quad
+C(\pi_1) = C_3 + C_{13}\,\pi_1,\quad
+D(\pi_1) = C_1\,\pi_1,
+\end{equation}
+and the reduced model becomes:
+
+\begin{equation}\label{eq:reduced_model}
+\boxed{
+V = C_1\pi_1
+    + C_2\pi_2
+    + C_3\pi_3
+    + C_{12}\pi_1\pi_2
+    + C_{13}\pi_1\pi_3
+    + \pi_2\pi_3
+    + C_{123}\pi_1\pi_2\pi_3.
+}
+\end{equation}
+
+The model now has six free parameters: \(C_1, C_2, C_3, C_{12}, C_{13}, C_{123}\).
+
+\subsection{Asymptote conditions at the reference point}
+
+In many applications, the reference point \((\pi_1=0,\pi_2=0,\pi_3=0)\) has special physical meaning. For example, it may correspond to a reference condition where the system exhibits known behaviour. We impose that the asymptotes at \(\pi_1=0\) coincide with the coordinate axes:
+
+\begin{equation}\label{eq:asymptote_conditions}
+\boxed{\pi_2^*|_{\pi_1=0} = 0,\qquad \pi_3^*|_{\pi_1=0} = 0.}
+\end{equation}
+
+From \eqref{eq:center}, we have \(\pi_2^*|_{\pi_1=0} = -C_3\) and \(\pi_3^*|_{\pi_1=0} = -C_2\). Hence:
+
+\begin{equation}\label{eq:w2w3_conditions}
+\boxed{C_2 = 0,\qquad C_3 = 0.}
+\end{equation}
+
+These conditions ensure that at the reference point, the asymptotes align with the coordinate axes, providing a natural baseline.
+
+\subsection{The common simplified model}
+
+After applying the above simplifications, the section coefficients become:
+
+\begin{equation}\label{eq:ABCD_simplified}
+A = 1 + C_{123}\,\pi_1,\quad
+B = C_{12}\,\pi_1,\quad
+C = C_{13}\,\pi_1,\quad
+D = C_1\,\pi_1,
+\end{equation}
+and the model simplifies to:
+
+\begin{equation}\label{eq:simplified_model}
+\boxed{
+V = C_1\pi_1
+    + C_{12}\pi_1\pi_2
+    + C_{13}\pi_1\pi_3
+    + \pi_2\pi_3
+    + C_{123}\pi_1\pi_2\pi_3.
+}
+\end{equation}
+
+The centre of the hyperbola for fixed \(\pi_1\) is:
+
+\begin{equation}\label{eq:center_simplified}
+\pi_2^* = -\frac{C_{13}\pi_1}{1 + C_{123}\pi_1},\qquad
+\pi_3^* = -\frac{C_{12}\pi_1}{1 + C_{123}\pi_1},
+\end{equation}
+and the canonical equation is:
+
+\begin{equation}\label{eq:canonical_simplified}
+\boxed{
+u\,v = k(\pi_1),\qquad
+k(\pi_1) = \frac{\pi_1\bigl(C_{12}C_{13}\pi_1 - C_1(1 + C_{123}\pi_1)\bigr)}{(1 + C_{123}\pi_1)^2}.
+}
+\end{equation}
+
+The asymptotes are:
+
+\begin{equation}\label{eq:asymptotes_simplified}
+\boxed{
+\pi_2 = -\frac{C_{13}\pi_1}{1 + C_{123}\pi_1},\qquad
+\pi_3 = -\frac{C_{12}\pi_1}{1 + C_{123}\pi_1}.
+}
+\end{equation}
+
+This simplified model has \textbf{four free parameters}: \(C_1, C_{12}, C_{13}, C_{123}\). It serves as the common basis for all applications.
+
+\subsection{Additional hypotheses and nested models}
+
+Beyond the common simplifications, we may impose additional hypotheses that reflect specific physical behaviours. These hypotheses lead to nested submodels with fewer parameters, which can be compared using information criteria.
+
+\begin{assumption}[No saturation effect]
+\label{hyp:no_saturation}
+The curvature parameter \(k(\pi_1)\) does not involve saturation effects, i.e., the denominator in \eqref{eq:canonical_simplified} is constant. This implies \(C_{123}=0\), reducing the canonical equation to
+\[
+k(\pi_1) = C_{12}C_{13}\pi_1^2 - C_1\pi_1.
+\]
+Thus \(k(\pi_1)\) is quadratic in \(\pi_1\) (becomes linear only if additionally \(C_{12}=0\) or \(C_{13}=0\)). This hypothesis corresponds to Model M1 in Table~\ref{tab:nested_models}.
+\end{assumption}
+
+\begin{assumption}[Asymptote independence I — \(\pi_2\) asymptote independent of \(\pi_1\)]
+\label{hyp:independence1}
+The \(\pi_2\) asymptote is independent of \(\pi_1\). From \eqref{eq:center_simplified},
+\[
+\pi_2^* = -\frac{C_{13}\pi_1}{1+C_{123}\pi_1},
+\]
+so \(\partial\pi_2^*/\partial\pi_1 = 0\) for all \(\pi_1\) if and only if \(C_{13}=0\). This hypothesis corresponds to Model M3 in Table~\ref{tab:nested_models}.
+\end{assumption}
+
+\begin{assumption}[Asymptote independence II — \(\pi_3\) asymptote independent of \(\pi_1\)]
+\label{hyp:independence2}
+The \(\pi_3\) asymptote is independent of \(\pi_1\). From \eqref{eq:center_simplified},
+\[
+\pi_3^* = -\frac{C_{12}\pi_1}{1+C_{123}\pi_1},
+\]
+so \(\partial\pi_3^*/\partial\pi_1 = 0\) for all \(\pi_1\) if and only if \(C_{12}=0\). This hypothesis corresponds to Model M2 in Table~\ref{tab:nested_models}.
+\end{assumption}
+
+\begin{table}[h]
+\centering
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.3}
+\caption{Nested models derived from the general simplified model.}
+\label{tab:nested_models}
+\begin{tabular}{@{}c c c c@{}}
+\toprule
+\textbf{Model} & \textbf{Restrictions} & \textbf{Parameters} & \textbf{Description} \\
+\midrule
+M0 & none & \(C_1, C_{12}, C_{13}, C_{123}\) & Full simplified model \\
+M1 & \(C_{123}=0\) & \(C_1, C_{12}, C_{13}\) & No saturation effect \\
+M2 & \(C_{12}=0\) & \(C_1, C_{13}, C_{123}\) & \(\pi_3\) asymptote independent of \(\pi_1\) \\
+M3 & \(C_{13}=0\) & \(C_1, C_{12}, C_{123}\) & \(\pi_2\) asymptote independent of \(\pi_1\) \\
+M4 & \(C_{12}=C_{13}=0\) & \(C_1, C_{123}\) & Both asymptotes fixed; curvature varies \\
+M5 & \(C_{123}=C_{12}=0\) & \(C_1, C_{13}\) & \(\pi_3\) asymptote fixed; linear curvature \\
+M6 & \(C_{123}=C_{13}=0\) & \(C_1, C_{12}\) & \(\pi_2\) asymptote fixed; linear curvature \\
+M7 & \(C_{12}=C_{13}=C_{123}=0\) & \(C_1\) & Minimal model: only curvature depends on \(\pi_1\) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\setlength{\tabcolsep}{2pt}
+\renewcommand{\arraystretch}{1.5}
+\caption{Explicit expressions for \(V\) for each nested model.}
+\label{tab:V_expressions}
+\begin{tabular}{@{}ccl@{}}
+\toprule
+\textbf{Model} & \textbf{Restrictions} & \textbf{Expression for \(V\)} \\
+\midrule
+M0 & none & \(V = C_1\pi_1 + \pi_2\pi_3 + C_{123}\pi_1\pi_2\pi_3 + C_{12}\pi_1\pi_2 + C_{13}\pi_1\pi_3\) \\
+M1 & \(C_{123}=0\) & \(V = C_1\pi_1 + \pi_2\pi_3 + C_{12}\pi_1\pi_2 + C_{13}\pi_1\pi_3\) \\
+M2 & \(C_{12}=0\) & \(V = C_1\pi_1 + \pi_2\pi_3 + C_{123}\pi_1\pi_2\pi_3 + C_{13}\pi_1\pi_3\) \\
+M3 & \(C_{13}=0\) & \(V = C_1\pi_1 + \pi_2\pi_3 + C_{123}\pi_1\pi_2\pi_3 + C_{12}\pi_1\pi_2\) \\
+M4 & \(C_{12}=C_{13}=0\) & \(V = C_1\pi_1 + \pi_2\pi_3 + C_{123}\pi_1\pi_2\pi_3\) \\
+M5 & \(C_{123}=C_{12}=0\) & \(V = C_1\pi_1 + \pi_2\pi_3 + C_{13}\pi_1\pi_3\) \\
+M6 & \(C_{123}=C_{13}=0\) & \(V = C_1\pi_1 + \pi_2\pi_3 + C_{12}\pi_1\pi_2\) \\
+M7 & \(C_{12}=C_{13}=C_{123}=0\) & \(V = C_1\pi_1 + \pi_2\pi_3\) \\
+\midrule
+\multicolumn{3}{c}{Common restrictions: \(C_0 = C_2 = C_3 = 0\), \(C_{23} = 1\)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\setlength{\tabcolsep}{15pt}
+\renewcommand{\arraystretch}{2.5}
+\caption{Percentile curves \(\pi_3\) for each nested model.}
+\label{tab:percentile_curves}
+\begin{tabular}{@{}ccc@{}}
+\toprule
+\textbf{Model} & \textbf{Restrictions} & \textbf{Percentile curves} \\
+\midrule
+M0 & none & \(\displaystyle \pi_3 = \frac{V_p - C_1\pi_1 - C_{12}\pi_1\pi_2}{\pi_2 + C_{13}\pi_1 + C_{123}\pi_1\pi_2}\) \\
+M1 & \(C_{123}=0\) & \(\displaystyle \pi_3 = \frac{V_p - C_1\pi_1 - C_{12}\pi_1\pi_2}{\pi_2 + C_{13}\pi_1}\) \\
+M2 & \(C_{12}=0\) & \(\displaystyle \pi_3 = \frac{V_p - C_1\pi_1}{\pi_2 + C_{13}\pi_1 + C_{123}\pi_1\pi_2}\) \\
+M3 & \(C_{13}=0\) & \(\displaystyle \pi_3 = \frac{V_p - C_1\pi_1 - C_{12}\pi_1\pi_2}{\pi_2 + C_{123}\pi_1\pi_2}\) \\
+M4 & \(C_{12}=0,\; C_{13}=0\) & \(\displaystyle \pi_3 = \frac{V_p - C_1\pi_1}{\pi_2 + C_{123}\pi_1\pi_2}\) \\
+M5 & \(C_{123}=0,\; C_{12}=0\) & \(\displaystyle \pi_3 = \frac{V_p - C_1\pi_1}{\pi_2 + C_{13}\pi_1}\) \\
+M6 & \(C_{123}=0,\; C_{13}=0\) & \(\displaystyle \pi_3 = \frac{V_p - C_1\pi_1 - C_{12}\pi_1\pi_2}{\pi_2}\) \\
+M7 & \(C_{12}=0,\; C_{13}=0,\; C_{123}=0\) & \(\displaystyle \pi_3 = \frac{V_p - C_1\pi_1}{\pi_2}\) \\
+\midrule
+\multicolumn{3}{c}{\(V_p = \lambda + \delta\bigl(-\ln(1-p)\bigr)^{1/\beta}\) is the \(p\)-th quantile of the Weibull distribution.} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Copula representation of the model}
+\label{sec:copula}
+In this section we use our action‑and‑interaction model to derive its associated copula model. This, which was motivated by the fatigue problem, allows us to find a model that can be used in many other fields of science, as indicated above. While reading this book, we insist the reader to make a continuous effort to discover other areas where the models analysed are identified, explained, and subsequently applied to particular cases.
+
+\subsection{Conditional distribution of \(\pi_3|\pi_1,\pi_2\)}
+
+With
+\begin{equation}
+V=v(\pi_1,\pi_2,\pi_3)
+=
+C_1\pi_{1}
++ C_{12}\pi_{1}\pi_{2}
++ C_{13}\pi_{1}\pi_{3}
++ \pi_{2}\pi_{3}
++ C_{123}\pi_{1}\pi_{2}\pi_{3},
+\end{equation}
+the probabilistic model assumes a conditional distribution of \(\pi_3\) given \((\pi_1,\pi_2)\):
+
+\begin{equation}
+V = v(\pi_1,\pi_2,\pi_3) \sim \text{Weibull}(\lambda,\delta,\beta),
+\end{equation}
+where here $v()$ refers to the $G()$ function.
+Hence,
+\begin{equation}
+P(\pi_3 \le z \mid \pi_1,\pi_2)
+=
+P\bigl(V \le v(\pi_1,\pi_2,z)\bigr)
+\end{equation}
+and using the Weibull cumulative distribution function
+\begin{equation}
+F_V(v)
+=
+1 -
+\exp\!\left[
+-\left(\frac{v-\lambda}{\delta}\right)^\beta
+\right],
+\qquad v>\lambda,
+\end{equation}
+we obtain
+\begin{equation}\label{eq:condcdf}
+\boxed{
+F_{\pi_3|\pi_1,\pi_2}(z)
+=
+1 -
+\exp\!\left[
+-
+\left(
+\frac{
+v(\pi_1,\pi_2,z)-\lambda
+}{\delta}
+\right)^\beta
+\right], \quad v(\pi_1,\pi_2,z)\ge \lambda.
+}
+\end{equation}
+
+\subsection{Implied copula}
+
+By Sklar’s theorem, the joint distribution admits a copula representation
+
+\begin{equation}
+F(\pi_1,\pi_2,\pi_3)
+=
+C\bigl(F_1(\pi_1),F_2(\pi_2),F_3(\pi_3)\bigr).
+\end{equation}
+
+Using the structural Weibull formulation, the copula can be written as
+
+\begin{equation}\label{eq:associatedcopula}
+\boxed{
+C(u_1,u_2,u_3)
+=
+1 -
+\exp\!\left[
+-
+\left(
+\frac{
+v(u_1,u_2,u_3)-\lambda
+}{\delta}
+\right)^\beta
+\right],\quad v(u_1,u_2,u_3)\ge \lambda
+}
+\end{equation}
+
+\subsection{Conditional copula form}
+
+The model can also be expressed as a conditional copula of \(U_3\) given \((U_1,U_2)\):
+
+\begin{equation}\label{eq:condcopcdf}
+\boxed{
+C_{3|12}(u_3|u_1,u_2)
+=
+1 -
+\exp\!\left[
+-
+\left(
+\frac{
+v(u_1,u_2,u_3)-\lambda
+}{\delta}
+\right)^\beta
+\right], \quad v(u_1,u_2,u_3)\ge \lambda.
+}
+\end{equation}
+
+A comparison of (\ref{eq:condcdf}) and (\ref{eq:condcopcdf}) shows that the conditional probabilities can be computed using either the cdf of the conditional distribution or the conditional copula, since they coincide when using the corresponding values.
+
+\begin{remarkbox}
+\begin{remarkT}
+The resulting copula does not generally belong to the standard Archimedean, elliptical, or extreme‑value families in closed form. It is a \emph{semiparametric copula} whose dependence structure is fully determined by the four (or fewer) parameters of the simplified Weibull–Hyperbola model plus the three Weibull parameters \((\lambda, \delta, \beta)\). This gives the model great flexibility while remaining interpretable through the hyperbolic geometry of the response surface.
+\end{remarkT}
+\end{remarkbox}
+
+This copula representation allows inserting the model into a fully multivariate framework, facilitating tasks such as joint scenario simulation, uncertainty propagation, and comparison with other dependence structures used in reliability, fatigue, or risk analyses.
+
+\subsection{Interpretation}
+
+The dependence structure is entirely governed by the multilinear interaction structure of \(v\). The Weibull parameters control:
+
+\begin{itemize}
+\item \(\beta\) : tail dependence strength
+\item \(\delta\) : scale of dependence
+\item \(\lambda\) : dependence threshold
+\end{itemize}
+
+The parameters \(C_{12},C_{13},C_{123}\) determine how the dependence varies with \(\pi_1\):
+\begin{itemize}
+\item \(C_{123}\) introduces higher‑order interaction dependence
+\item \(C_{12}\) controls the interaction between \(\pi_1\) and \(\pi_2\)
+\item \(C_{13}\) controls the interaction between \(\pi_1\) and \(\pi_3\)
+\end{itemize}
+
+Thus, the model defines a flexible parametric copula whose geometry is inherited from the hyperbolic structure of the deterministic equation.
+
+\begin{remarkbox}
+\begin{remarkT}
+Equation~\eqref{eq:associatedcopula} is the closed‑form copula induced by the Weibull–Hyperbola model. It belongs to the class of \emph{distortion copulas}: the dependence structure is completely encoded in the model function \(v\), which acts as a generator, while the Weibull parameters \((\lambda,\delta,\beta)\) control the marginal shape. In particular:
+\begin{itemize}
+    \item The copula is \textbf{not} elliptical (it is asymmetric in \(u_1,u_2,u_3\) in general).
+    \item The tail behaviour is governed by \(\beta\): heavy upper tails (\(\beta<1\)), light tails (\(\beta>1\)), or exponential (\(\beta=1\)).
+    \item Conditional independence of \(\pi_3\) with respect to \(\pi_1\) (given \(\pi_2\)) holds if and only if \(\partial v/\partial\pi_1=0\), i.e., if the coefficients \(C_1=C_{12}=C_{13}=C_{123}=0\).
+\end{itemize}
+\end{remarkT}
+\end{remarkbox}
+
+\section{Parameter estimation}
+\label{sec:estimation}
+
+\subsection{Data structure and residual definition}
+
+Suppose we have collected \(n\) observations, each consisting of a triplet \((\pi_{1i},\pi_{2i},\pi_{3i})\) and a censoring indicator \(r_i\):
+\[
+r_i = \begin{cases}
+1 & \text{if observation $i$ is censored (e.g., run‑out)},\\
+0 & \text{if observation $i$ is a complete failure}.
+\end{cases}
+\]
+
+For any candidate parameter vector \(\boldsymbol{\theta}\), the residual for observation \(i\) is:
+\begin{equation}\label{eq:Vi_general}
+V_i(\boldsymbol{\theta}) = C_1\pi_{1i} + C_{12}\pi_{1i}\pi_{2i} + C_{13}\pi_{1i}\pi_{3i} + \pi_{2i}\pi_{3i} + C_{123}\pi_{1i}\pi_{2i}\pi_{3i}.
+\end{equation}
+
+\subsection{Method 1: Ordinary Least Squares (OLS)}
+\label{sec:method-ols}
+
+The simplest approach treats the \(V_i\) as independent random variables with zero mean and constant variance. Rearranging \eqref{eq:Vi_general} gives a linear system:
+\begin{equation}\label{eq:linear_system}
+C_1\pi_{1i} + C_{12}\pi_{1i}\pi_{2i} + C_{13}\pi_{1i}\pi_{3i} + C_{123}\pi_{1i}\pi_{2i}\pi_{3i} = -\pi_{2i}\pi_{3i}.
+\end{equation}
+
+We define the design matrix \(\mathbf{X}\) of size \(n \times 4\) and the response vector \(\mathbf{Y}\):
+\[
+\mathbf{X}_i = \bigl[\pi_{1i},\; \pi_{1i}\pi_{2i},\; \pi_{1i}\pi_{3i},\; \pi_{1i}\pi_{2i}\pi_{3i}\bigr],\qquad
+Y_i = -\pi_{2i}\pi_{3i}.
+\]
+
+The linear regression model in matrix notation is:
+\begin{equation}
+\mathbf{y} = \mathbf{X}\boldsymbol{\beta} + \boldsymbol{\epsilon},
+\label{eq:matrixregression}
+\end{equation}
+where \(\boldsymbol{\beta} = (C_1, C_{12}, C_{13}, C_{123})^\top\). Explicitly:
+\[
+\mathbf{y} = \begin{bmatrix}
+-\pi_{21}\pi_{31} \\
+-\pi_{22}\pi_{32} \\
+\vdots \\
+-\pi_{2n}\pi_{3n}
+\end{bmatrix} =
+\begin{bmatrix}
+\pi_{11} & \pi_{11}\pi_{21} & \pi_{11}\pi_{31} & \pi_{11}\pi_{21}\pi_{31} \\
+\pi_{12} & \pi_{12}\pi_{22} & \pi_{12}\pi_{32} & \pi_{12}\pi_{22}\pi_{32} \\
+\vdots & \vdots & \vdots & \vdots \\
+\pi_{1n} & \pi_{1n}\pi_{2n} & \pi_{1n}\pi_{3n} & \pi_{1n}\pi_{2n}\pi_{3n}
+\end{bmatrix}
+\begin{bmatrix}
+C_1 \\ C_{12} \\ C_{13} \\ C_{123}
+\end{bmatrix}
++
+\begin{bmatrix}
+\epsilon_1 \\ \epsilon_2 \\ \vdots \\ \epsilon_n
+\end{bmatrix}.
+\]
+
+The parameters can be estimated by:
+\begin{equation}
+\hat{\boldsymbol{\beta}} = (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^T\mathbf{y},
+\label{eq:olsestimator}
+\end{equation}
+and the covariance matrix is:
+\begin{equation}
+\text{Var}(\hat{\boldsymbol{\beta}}) = \sigma^2(\mathbf{X}^T\mathbf{X})^{-1},
+\label{eq:varianceestimator}
+\end{equation}
+where \(\sigma^2\) is the error variance (estimated from the residuals).
+
+This method provides fast and consistent initial estimates (though not efficient if errors are heteroscedastic), which are essential for initialising the maximum likelihood procedure.
+
+\subsection{Method 2: Maximum Likelihood Estimation (MLE)}
+\label{sec:method-mle}
+
+\subsubsection*{Log‑likelihood function}
+
+The full parameter vector is \(\boldsymbol{\Theta} = (C_1, C_{12}, C_{13}, C_{123}, \lambda, \delta, \beta)\). For a failure observation (\(r_i=0\)), the contribution to the likelihood is the Weibull probability density:
+\[
+f(V_i;\lambda,\delta,\beta) = \frac{\beta}{\delta}\left(\frac{V_i-\lambda}{\delta}\right)^{\beta-1}\exp\left[-\left(\frac{V_i-\lambda}{\delta}\right)^{\beta}\right],\quad V_i > \lambda.
+\]
+
+For a censored observation (\(r_i=1\)), we only know that \(V > V_i\), so the contribution is the survival function:
+\[
+S(V_i;\lambda,\delta,\beta) = \exp\left[-\left(\frac{V_i-\lambda}{\delta}\right)^{\beta}\right].
+\]
+
+The log‑likelihood is:
+\begin{equation}\label{eq:loglik}
+\ell(\boldsymbol{\Theta}) = \sum_{\{i: r_i=0\}} \log f(V_i) + \sum_{\{i: r_i=1\}} \log S(V_i).
+\end{equation}
+
+Expanding:
+\begin{equation}\label{eq:loglik_expanded}
+\ell(\boldsymbol{\Theta}) = n_f(\log\beta - \log\delta) + (\beta-1)\sum_{\{r_i=0\}}\log\left(\frac{V_i-\lambda}{\delta}\right) - \sum_{i=1}^{n}\left(\frac{V_i-\lambda}{\delta}\right)^{\beta},
+\end{equation}
+where \(n_f = \sum_i (1 - r_i)\) is the number of failures.
+
+\subsubsection*{Initialisation strategy}
+
+Proper initialisation is crucial for convergence to the global optimum. We recommend the following strategy:
+
+\begin{enumerate}
+    \item \textbf{OLS initialisation:} Compute \(\hat{\mathbf{w}}_{\mathrm{OLS}}\) using Section~\ref{sec:method-ols}. These estimates are unbiased and provide a good starting point for the \(C\) parameters.
+    \item \textbf{Weibull parameter initialisation:}
+    \begin{itemize}
+        \item Set \(\lambda^{(0)} = \min_i V_i(\hat{\mathbf{w}}_{\mathrm{OLS}}) - \varepsilon\), where \(\varepsilon\) is a small positive number (e.g., \(0.01\)) to ensure \(V_i > \lambda\).
+        \item Set \(\delta^{(0)} = \operatorname{std}(V_i(\hat{\mathbf{w}}_{\mathrm{OLS}}))\) (sample standard deviation).
+        \item Set \(\beta^{(0)} = 2\) (this corresponds to a Rayleigh distribution, which often approximates fatigue scatter).
+    \end{itemize}
+    \item \textbf{Sequential optimisation:}
+    \begin{enumerate}
+        \item First optimise over \(\lambda, \delta, \beta\) with the \(C\) parameters fixed at \(\hat{\mathbf{w}}_{\mathrm{OLS}}\).
+        \item Then perform a full optimisation over all seven parameters using a gradient‑based method (e.g., L‑BFGS‑B).
+        \item If convergence is slow, restart from the current optimum with a different algorithm (e.g., Nelder‑Mead).
+    \end{enumerate}
+    \item \textbf{Multiple restarts:} To avoid local optima, run the optimisation from several perturbed starting points and keep the solution with the highest log‑likelihood.
+\end{enumerate}
+
+\subsubsection*{Standard errors and confidence intervals}
+
+The observed Fisher information matrix is:
+\[
+\mathcal{I}(\boldsymbol{\Theta}) = -\frac{\partial^2 \ell(\boldsymbol{\Theta})}{\partial \boldsymbol{\Theta}\,\partial \boldsymbol{\Theta}^{\!\top}}.
+\]
+The asymptotic covariance matrix of the MLE is \(\operatorname{Cov}(\hat{\boldsymbol{\Theta}}) = \mathcal{I}(\hat{\boldsymbol{\Theta}})^{-1}\), and approximate \(95\%\) confidence intervals are:
+\[
+\hat{\Theta}_j \pm 1.96 \sqrt{\operatorname{Cov}(\hat{\boldsymbol{\Theta}})_{jj}}.
+\]
+
+\section{Generation of synthetic data}
+\label{sec:synthetic-data-generation}
+
+Synthetic data generation is essential for validation and sensitivity analysis. The procedure is:
+
+\begin{enumerate}
+    \item \textbf{Choose the joint distribution of \((\pi_1,\pi_2)\):} This should reflect the intended application domain. Options include:
+    \begin{itemize}
+        \item Uniform over a rectangular region (for testing and validation).
+        \item Stratified sampling of the experimental design space.
+        \item Weighted sampling to mimic real operating conditions.
+    \end{itemize}
+    \item \textbf{Simulate \(m\) random pairs:} Generate \((\pi_{1i},\pi_{2i})\) from the chosen distribution.
+    \item \textbf{Simulate Weibull residuals:} Generate \(V_i \sim \mathcal{W}(\lambda,\delta,\beta)\).
+    \item \textbf{Compute \(\pi_3\):} Solving for \(\pi_3\) from \eqref{eq:simplified_model}:
+    \begin{equation}\label{eq:pi3_synthetic}
+    \pi_3 = \frac{V - C_1\pi_1 - C_{12}\pi_1\pi_2}{C_{13}\pi_1 + \pi_2 + C_{123}\pi_1\pi_2}.
+    \end{equation}
+    \item \textbf{Assemble the synthetic dataset:} The result is \(\{(\pi_{1i},\pi_{2i},\pi_{3i})\}_{i=1}^m\).
+\end{enumerate}
+
+This methodology allows generating data that mimic the behaviour of the model for any combination of parameters, useful for testing estimation algorithms, designing experiments, and performing sensitivity analyses.
+
+\section{Model selection using information criteria}
+\label{sec:model-selection}
+
+\subsection{Akaike Information Criterion (AIC)}
+
+AIC balances goodness‑of‑fit with model complexity:
+\begin{equation}
+\mathrm{AIC} = 2k - 2\ell(\hat{\boldsymbol{\Theta}}),
+\end{equation}
+where \(k\) is the number of estimated parameters and \(\ell(\hat{\boldsymbol{\Theta}})\) is the maximised log‑likelihood. Lower AIC indicates a better model for prediction.
+
+\subsection{Bayesian Information Criterion (BIC)}
+
+BIC applies a stronger penalty for complexity:
+\begin{equation}
+\mathrm{BIC} = k\ln(n) - 2\ell(\hat{\boldsymbol{\Theta}}),
+\end{equation}
+where \(n\) is the number of observations. BIC is consistent for selecting the true model when \(n\) is large.
+
+\subsection{Model selection strategy}
+
+The recommended approach is:
+\begin{enumerate}
+    \item Fit all candidate models (M0 to M7 from Table~\ref{tab:nested_models}) via MLE.
+    \item Compute AIC and BIC for each model.
+    \item Select the model with the lowest AIC (for prediction) or lowest BIC (to identify the true structure).
+    \item If two models have similar AIC values (\(|\Delta\mathrm{AIC}| < 2\)), prefer the simpler model.
+    \item Validate the selected model via residual diagnostics and cross‑validation.
+\end{enumerate}
+
+\section{Application to fatigue analysis}
+\label{sec:fatigue-application}
+
+We now apply the general methodology to the specific case of constant‑amplitude fatigue loading. This section shows how the general \(\pi\) variables map to physical fatigue quantities.
+
+\subsection{Definition of the \(\pi\) variables for fatigue}
+
+In fatigue analysis, the relevant physical quantities are:
+\begin{itemize}
+    \item \(R = \sigma_m/\sigma_M\) — stress ratio (minimum stress over maximum stress),
+    \item \(\sigma_M\) — maximum stress in the loading cycle,
+    \item \(N\) — number of cycles to failure,
+    \item \(\sigma_{M_0}\) — material endurance limit (reference stress),
+    \item \(N_0\) — reference number of cycles.
+\end{itemize}
+
+The dimensionless groups are:
+\begin{equation}\label{eq:pi_fatigue}
+\boxed{\pi_1 = R,\qquad \pi_2 = \frac{\sigma_M}{\sigma_{M_0}} - 1,\qquad \pi_3 = \log_{10}\left(\frac{N}{N_0}\right).}
+\end{equation}
+
+With this definition, the reference condition \(R=0\), \(\sigma_M = \sigma_{M_0}\), \(N=N_0\) corresponds to \((\pi_1,\pi_2,\pi_3)=(0,0,0)\), and the asymptotes at \(\pi_1=0\) are forced to be \(\pi_2^*=0\) and \(\pi_3^*=0\) via the common simplifications \(C_2=0\), \(C_3=0\) (see Section~\ref{sec:simplifications}).
+
+\subsection{The fatigue model in physical notation}
+
+We adopt Model M6 from Table~\ref{tab:nested_models} (\(C_{13}=0\), \(C_{123}=0\)), which is the simplest model that retains a life asymptote depending on the stress ratio. Substituting \eqref{eq:pi_fatigue} into the general simplified model \eqref{eq:simplified_model} with these restrictions yields:
+\begin{equation}\label{eq:fatigue_model}
+\boxed{
+V = C_1 R + C_{12} R\left(\frac{\sigma_M}{\sigma_{M_0}}-1\right) + \left(\frac{\sigma_M}{\sigma_{M_0}}-1\right)\log_{10}\left(\frac{N}{N_0}\right).
+}
+\end{equation}
+
+\subsection{Geometric interpretation}
+
+The centre of the section hyperbola for fixed \(R\) is obtained from \eqref{eq:center_simplified} with \(C_{13}=0\), \(C_{123}=0\):
+\[
+\pi_2^* = 0,\qquad \pi_3^* = -C_{12}R.
+\]
+
+Thus, the stress asymptote is fixed at \(\sigma_M = \sigma_{M_0}\) (the endurance limit) for all \(R\), while the life asymptote \(\log_{10}(N/N_0)^* = -C_{12}R\) shifts linearly with \(R\). The canonical equation becomes:
+\[
+(\pi_2 - \pi_2^*)(\pi_3 - \pi_3^*) = -C_1 R,
+\]
+or in physical variables,
+\[
+u\,v = -C_1 R,\qquad
+u = \frac{\sigma_M}{\sigma_{M_0}}-1,\qquad
+v = \log_{10}\frac{N}{N_0} + C_{12}R.
+\]
+
+\subsection{S–N percentile curves}
+
+Let \(V_p\) be the \(p\)-th quantile of the Weibull distribution defined in \eqref{eq:Vp}. The \(p\)-th percentile curve is obtained by solving \(V = V_p\) in \eqref{eq:fatigue_model} for \(\log_{10}(N/N_0)\):
+\begin{equation}\label{eq:SN_percentile_fatigue}
+\boxed{
+\log_{10}\frac{N}{N_0}
+= \frac{V_p - C_1 R}{\left(\dfrac{\sigma_M}{\sigma_{M_0}} - 1\right)} - C_{12}R.
+}
+\end{equation}
+
+For a fixed stress ratio \(R\), this describes a hyperbola in the \((\log N,\sigma_M)\) plane. The curve has a horizontal asymptote at \(\sigma_M = \sigma_{M_0}\) (the endurance limit) and a vertical asymptote at \(\log_{10}(N/N_0) = -C_{12}R\) for high stresses.
+
+\subsection{Implementation considerations for fatigue data}
+
+When applying the model to fatigue data, several practical considerations arise:
+
+\begin{enumerate}
+    \item \textbf{Censored data:} Fatigue tests often include run‑outs (specimens that did not fail within the test duration). The MLE method handles these correctly via the survival function.
+    \item \textbf{Choice of reference values:} \(\sigma_{M_0}\) is usually taken as the fatigue limit (stress below which failure does not occur for \(N > N_0\)), while \(N_0\) is the asymptote of \(N\). In practice, these parameters are estimated jointly with the others using the grid search described below.
+    \item \textbf{Multiple stress ratios:} To estimate the two parameters \(C_1\) and \(C_{12}\), data should be collected at several distinct stress ratios (e.g., \(R = -1, 0, 0.3, 0.5\)). However, it is more convenient to use all distinct \(R\) values.
+    \item \textbf{Model selection:} For a given dataset, nested models (including those with \(C_{13}\) and \(C_{123}\)) can be fitted and compared via AIC/BIC to determine whether the additional parameters are justified.
+\end{enumerate}
+
+\subsection{Complete fitting algorithm with estimation of \((\sigma_{M_0}, N_0)\)}
+
+Figure~\ref{fig:flowchart} shows the complete workflow. The key feature is the \emph{outer loop} over candidate pairs \((\sigma_{M_0},N_0)\), which treats the reference values as unknown parameters to be estimated rather than fixed heuristically. For each candidate pair, the coordinate transformation is recomputed, an internal MLE is run over all nested models M0–M7, and the pair yielding the highest global log‑likelihood is retained. A final joint refinement step polishes all parameters simultaneously.
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[
+  node distance = 6mm and 10mm,
+  every node/.style  = {font=\small},
+  startstop/.style   = {rectangle, rounded corners=6pt,
+                         minimum width=3.2cm, minimum height=0.8cm,
+                         draw, thick, fill=gray!20, align=center},
+  process/.style     = {rectangle, rounded corners=3pt,
+                         minimum width=7.8cm, minimum height=0.9cm,
+                         draw, thick, fill=blue!10, align=center},
+  decision/.style    = {diamond, aspect=2.2,
+                         minimum width=5.5cm, minimum height=1.2cm,
+                         draw, thick, fill=purple!10,
+                         align=center, inner sep=2pt},
+  subprocess/.style  = {rectangle, rounded corners=3pt,
+                         minimum width=3.5cm, minimum height=1.2cm,
+                         draw, thick, fill=teal!10, align=center},
+  compute/.style     = {rectangle, rounded corners=3pt,
+                         minimum width=7.8cm, minimum height=0.9cm,
+                         draw, thick, fill=orange!15, align=center},
+  outer/.style       = {rectangle, rounded corners=3pt,
+                         minimum width=7.8cm, minimum height=0.9cm,
+                         draw, thick, fill=violet!12, align=center},
+  select/.style      = {rectangle, rounded corners=3pt,
+                         minimum width=7.8cm, minimum height=0.9cm,
+                         draw, thick, fill=red!10, align=center},
+  output/.style      = {rectangle, rounded corners=3pt,
+                         minimum width=7.8cm, minimum height=0.9cm,
+                         draw, thick, fill=teal!15, align=center},
+  arrow/.style       = {-Stealth, thick},
+]
+
+\node[startstop]  (start)  {Start};
+\node[process,   below=of start]  (input)
+  {Data input \\ \footnotesize(simulation or CSV file)};
+\node[decision,  below=8mm of input]  (dec)  {Simulate data?};
+\node[subprocess, below left=12mm and 18mm of dec]  (sim)
+  {Simulate data \\ \footnotesize Sample $(\pi_1,\pi_2)$ \\
+   \footnotesize $V\!\sim\!\mathcal{W}(\lambda,\delta,\beta)$,
+   compute $\pi_3$};
+\node[subprocess, below right=12mm and 18mm of dec] (csv)
+  {Load CSV \\ \footnotesize Read $\sigma_m,\sigma_M,N$ \\
+   \footnotesize Detect run‑outs};
+\node[outer,     below=28mm of dec]  (grid)
+  {Build logarithmic grid of candidates
+   $\mathcal{G}$ for $(\sigma_{M_0},N_0)$ \\
+   \footnotesize 10 fractions of $\min(\sigma_M)$
+   $\times$ 10 fractions of $\min(N)$};
+\node[outer,     below=6mm of grid]  (outerloop)
+  {Outer loop: for each $(\sigma_{M_0},N_0)\in\mathcal{G}$ \\
+   \footnotesize recompute $(\pi_1,\pi_2,\pi_3)$,
+   run internal MLE over M0--M7};
+\node[compute,   below=6mm of outerloop]  (ols)
+  {OLS initial estimation \\
+   \footnotesize
+   $\hat{\mathbf{w}}_{\mathrm{OLS}}=
+   (\mathbf{X}^\top\mathbf{X})^{-1}\mathbf{X}^\top\mathbf{Y}$;\quad
+   initialise $\lambda^{(0)},\delta^{(0)},\beta^{(0)}$};
+\node[select,    below=6mm of ols]  (mloop)
+  {Internal loop: MLE over models M0--M7,
+   15 restarts each};
+\node[outer,     below=6mm of mloop]  (bestgrid)
+  {Keep $(\sigma_{M_0}^*,N_0^*)$
+   that maximises $\ell^*$ over $\mathcal{G}$};
+\node[compute,   below=6mm of bestgrid]  (refine)
+  {Joint refinement: optimise
+   $(\sigma_{M_0},N_0,\boldsymbol{\theta})$
+   simultaneously via L‑BFGS‑B};
+\node[select,    below=6mm of refine]  (best)
+  {Select best model:
+   $\hat{M}\leftarrow\arg\min_M\,\mathrm{AIC}_M$};
+\node[output,    below=6mm of best]  (viz)
+  {Visualise percentile curves \\
+   \footnotesize
+   $p\in\{1\%,5\%,25\%,50\%,75\%,95\%,99\%\}$
+   for each slice $\pi_1$};
+\node[startstop, below=6mm of viz]  (end)  {End};
+
+\draw[arrow] (start)     -- (input);
+\draw[arrow] (input)     -- (dec);
+\draw[arrow] (dec.west)  -| node[above,pos=0.25]{\footnotesize Yes}
+             (sim.north);
+\draw[arrow] (dec.east)  -| node[above,pos=0.25]{\footnotesize No}
+             (csv.north);
+\draw[arrow] (sim.south) |- (grid.west);
+\draw[arrow] (csv.south) |- (grid.east);
+\draw[arrow] (grid)      -- (outerloop);
+\draw[arrow] (outerloop) -- (ols);
+\draw[arrow] (ols)       -- (mloop);
+\draw[arrow] (mloop)     -- (bestgrid);
+\draw[arrow] (bestgrid)  -- (refine);
+\draw[arrow] (refine)    -- (best);
+\draw[arrow] (best)      -- (viz);
+\draw[arrow] (viz)       -- (end);
+\draw[arrow, dashed]
+  (bestgrid.east) -- ++(1.0,0)
+  |- node[right,pos=0.25]{\footnotesize next $(\sigma_{M_0},N_0)$}
+  (outerloop.east);
+
+\end{tikzpicture}
+\caption{Flowchart of the complete fitting procedure of the Weibull–Hyperbola model applied to fatigue data, including the outer loop over the reference parameters \((\sigma_{M_0}, N_0)\).}
+\label{fig:flowchart}
+\end{figure}
+
+The corresponding pseudocode is detailed in Algorithm~\ref{alg:whm}.
+
+\begin{remarkbox}
+\begin{remarkT}
+The two‑stage strategy — grid search followed by joint refinement — is essential because the log‑likelihood surface in \((\sigma_{M_0},N_0,\boldsymbol{\theta})\) is typically multimodal. Direct joint optimisation from a single starting point almost always converges to a local maximum. The grid of \(G^2=100\) logarithmically spaced pairs provides a well‑dispersed exploration of the strictly feasible region \(\sigma_{M_0}<\min_i\sigma_{M,i}\), \(N_0<\min_i N_i\), and its winner serves as the starting point for the final gradient‑based refinement. The logarithmic spacing is deliberate: both reference values enter the likelihood through logarithmic and ratio terms, so equal spacing on the log scale gives a more uniform exploration of the likelihood landscape than linear spacing.
+\end{remarkT}
+\end{remarkbox}
+
+\begin{algorithm}[htbp]
+\caption{Fitting algorithm for the Weibull–Hyperbola model with joint estimation of \(\sigma_{M_0}\) and \(N_0\)}
+\label{alg:whm}
+\begin{algorithmic}[1]
+\Require Raw dataset $\mathcal{D}=\{(\sigma_{m,i},\sigma_{M,i},N_i,r_i)\}_{i=1}^{n}$, run‑out threshold $N_{\mathrm{ro}}$, grid points $G=10$, MLE restarts $R=15$
+\Ensure Optimal parameters $(\hat{\sigma}_{M_0},\hat{N}_0,\hat{\boldsymbol{\theta}})$, selected model $\hat{M}$, percentile curves
+
+\Statex \textbf{--- Step 1: Data input ---}
+\If{simulation mode}
+  \State Generate raw pairs $(\sigma_{m,i},\sigma_{M,i})$ within specified ranges
+  \State Draw $V_i\sim\mathcal{W}(\lambda,\delta,\beta)$ and compute $\pi_{3,i}$ using equation~\eqref{eq:pi3_synthetic}
+\Else
+  \State Load CSV with columns $(\sigma_m,\sigma_M,N,\text{runout})$
+  \State $r_i\leftarrow\mathbf{1}[N_i\ge N_{\mathrm{ro}}]$
+\EndIf
+\State $S_\sigma\leftarrow\min_i\sigma_{M,i}$;\quad $S_N\leftarrow\min_i N_i$
+
+\Statex \textbf{--- Step 2: Build candidate grid ---}
+\State Generate $G$ logarithmically spaced fractions $\mathcal{F}=\mathrm{logspace}(0.50,\;0.95,\;G)$
+\State $\mathcal{G}_\sigma\leftarrow\{f\cdot S_\sigma:f\in\mathcal{F}\}$;\quad $\mathcal{G}_N\leftarrow\{f\cdot S_N:f\in\mathcal{F}\}$
+\State $\mathcal{G}\leftarrow\mathcal{G}_\sigma\times\mathcal{G}_N$ \hfill\Comment{$G^2=100$ candidate pairs}
+\State $\ell^{}\leftarrow-\infty$;\quad $\sigma_{M_0}^*\leftarrow\varnothing$;\quad $N_0^*\leftarrow\varnothing$;\quad $\hat{\boldsymbol{\theta}}^*\leftarrow\varnothing$;\quad $\hat{M}^*\leftarrow\varnothing$
+
+\Statex \textbf{--- Step 3: Outer loop over $(\sigma_{M_0},N_0)$ ---}
+\For{each $(\sigma_{M_0},N_0)\in\mathcal{G}$}
+  \Statex\hspace{1.5em} \textit{3a. Coordinate transformation}
+  \For{$i=1,\ldots,n$}
+    \State $\pi_{1,i}\leftarrow\sigma_{m,i}/\sigma_{M,i}$
+    \State $\pi_{2,i}\leftarrow\sigma_{M,i}/\sigma_{M_0}-1$ \hfill\Comment{$>0$ by construction}
+    \State $\pi_{3,i}\leftarrow\log_{10}(N_i/N_0)$ \hfill\Comment{$>0$ for failures}
+  \EndFor
+  \State Discard observations with non‑finite $\pi_{2,i}$ or $\pi_{3,i}$
+  \Statex\hspace{1.5em} \textit{3b. OLS initialisation}
+  \State Build $\mathbf{X}_i\leftarrow[\pi_{1,i},\,\pi_{1,i}\pi_{2,i},\,\pi_{1,i}\pi_{3,i},\,\pi_{1,i}\pi_{2,i}\pi_{3,i}]$,\quad $Y_i\leftarrow-\pi_{2,i}\pi_{3,i}$
+  \State $\hat{\mathbf{w}}_{\mathrm{OLS}}\leftarrow(\mathbf{X}^\top\mathbf{X}+\epsilon\mathbf{I})^{-1}\mathbf{X}^\top\mathbf{Y}$
+  \State Compute OLS residuals $V_i^{(0)}$ using equation~\eqref{eq:Vi_general}
+  \State $\lambda^{(0)}\leftarrow\min_i V_i^{(0)}-0.2$;\quad $\delta^{(0)}\leftarrow\operatorname{std}(V^{(0)})$;\quad $\beta^{(0)}\leftarrow 2.0$
+  \Statex\hspace{1.5em} \textit{3c. Internal MLE loop over nested models}
+  \For{$M\in\{\mathrm{M0},\ldots,\mathrm{M7}\}$}
+    \State Apply parameter restrictions of $M$ (Table~\ref{tab:nested_models})
+    \State $\ell^*_M\leftarrow-\infty$;\quad $\hat{\boldsymbol{\theta}}_M\leftarrow\varnothing$
+    \For{restart $=1,\ldots,R$}
+      \State $\boldsymbol{\theta}^{(0)}\leftarrow \hat{\boldsymbol{\theta}}_{\mathrm{OLS}} + \mathcal{N}(\mathbf{0},\,0.05|\hat{\boldsymbol{\theta}}_{\mathrm{OLS}}|)$
+      \State Minimise $-\ell(\boldsymbol{\theta})$ via L‑BFGS‑B, subject to $\delta>0$, $\beta>1.05$, $\lambda<\min_i V_i$
+      \If{$\ell(\hat{\boldsymbol{\theta}})>\ell^*_M$}
+        \State $\ell^*_M\leftarrow\ell(\hat{\boldsymbol{\theta}})$;\quad $\hat{\boldsymbol{\theta}}_M\leftarrow\hat{\boldsymbol{\theta}}$
+      \EndIf
+    \EndFor
+    \State $k_M\leftarrow|\text{free }C\text{ parameters of }M|+3$
+    \State $\mathrm{AIC}_M\leftarrow 2k_M-2\ell^*_M$
+  \EndFor
+  \State $M_{\mathrm{best}}\leftarrow\arg\min_M\,\mathrm{AIC}_M$;\quad $\ell_{\mathrm{pair}}\leftarrow\ell^*_{M_{\mathrm{best}}}$
+  \If{$\ell_{\mathrm{pair}}>\ell^{}$}
+    \State $\ell^{}\leftarrow\ell_{\mathrm{pair}}$;\quad $\sigma_{M_0}^*\leftarrow\sigma_{M_0}$;\quad $N_0^*\leftarrow N_0$
+    \State $\hat{\boldsymbol{\theta}}^*\leftarrow\hat{\boldsymbol{\theta}}_{M_{\mathrm{best}}}$;\quad $\hat{M}^*\leftarrow M_{\mathrm{best}}$
+  \EndIf
+\EndFor
+
+\Statex \textbf{--- Step 4: Joint refinement ---}
+\State Augment parameter vector: $\boldsymbol{\Theta}\leftarrow(\sigma_{M_0},N_0,\boldsymbol{\theta})$
+\State Define joint objective (recomputing $\pi_2,\pi_3$ inside):
+\Statex\hspace{2em} $\mathcal{L}(\boldsymbol{\Theta})= \ell\!\left(\boldsymbol{\theta}\;\big|\; \pi_{2,i}(\sigma_{M_0}),\pi_{3,i}(N_0)\right)$
+\State Impose: $0<\sigma_{M_0}<S_\sigma$, $0<N_0<S_N$, $\delta>0$, $\beta>1.05$, $\lambda<\min_i V_i(\boldsymbol{\Theta})$
+\State Initialise from grid winner: $\boldsymbol{\Theta}^{(0)}\leftarrow(\sigma_{M_0}^*,N_0^*,\hat{\boldsymbol{\theta}}^*)$
+\State Minimise $-\mathcal{L}(\boldsymbol{\Theta})$ via L‑BFGS‑B with $R$ restarts, perturbing $\boldsymbol{\Theta}^{(0)}$ by $\pm5\%$ Gaussian noise
+\State Extract: $(\hat{\sigma}_{M_0},\hat{N}_0,\hat{\boldsymbol{\theta}})\leftarrow\hat{\boldsymbol{\Theta}}$
+
+\Statex \textbf{--- Step 5: Model selection ---}
+\State Recompute AIC for all models at $(\hat{\sigma}_{M_0},\hat{N}_0)$, penalising $k+2$ parameters
+\State $\hat{M}\leftarrow\arg\min_M\,\mathrm{AIC}_M$
+\State If $|\Delta\mathrm{AIC}|<2$, choose the model with smaller $k$
+
+\Statex \textbf{--- Step 6: Visualisation ---}
+\State Update visualisation with $(\hat{\sigma}_{M_0},\hat{N}_0,\hat{\boldsymbol{\theta}}_{\hat{M}})$
+\For{each slice $\pi_{1,s}$}
+  \For{$p\in\{0.01,0.05,0.25,0.50,0.75,0.95,0.99\}$}
+    \State $V_p\leftarrow \hat{\lambda} + \hat{\delta}(-\ln(1-p))^{1/\hat{\beta}}$
+    \State Plot in $(\pi_2,\pi_3)$ or $(\sigma_M,N)$:
+    \Statex\hspace{2em} $\pi_3 = \dfrac{V_p - \hat{w}_1\pi_{1,s} - \hat{w}_{12}\pi_{1,s}\pi_2}{\pi_2 + \hat{w}_{13}\pi_{1,s} + \hat{w}_{123}\pi_{1,s}\pi_2}$
+  \EndFor
+\EndFor
+
+\State \Return $(\hat{\sigma}_{M_0},\hat{N}_0,\hat{\boldsymbol{\theta}}_{\hat{M}},\hat{M},\text{percentile curves})$
+\end{algorithmic}
+\end{algorithm}
+
+\section{Visualisation with opacity}
+\label{sec:opacity-visualization}
+
+A key conceptual and visual innovation introduced in this chapter is the use of opacity to hide irrelevant data points. The three‑dimensional occlusion problem is addressed by modulating the opacity of each point according to its distance from the reference value of the conditioning variable. This “opacity as magnifying glass” technique makes the forest transparent, revealing the internal structure of the model — the trunks (reference parameters), the branches (interaction coefficients), the leaves (individual percentile curves), and the fruits (reliability predictions). It is an essential tool for model validation and exploratory data analysis.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.90\textwidth]{Weibull-HyperbolaModel.png}
+\caption{Web page of an interactive application for solving fatigue or other problems using the Trivariate Weibull–Hyperbola model. The opacity is adjusted in real time according to the selected value of the third variable. See the interactive version at \href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/weibull_hyperbola45.html}{\textcolor{blue}{\underline{Run Weibull Application}}}. \href{https://github.com/enriquecastilloron-coder/PRUEBA/raw/main/Fatigue3DModel_UserManual.pdf}{\textcolor{blue}{\underline{User Manual (PDF)}}}.}
+\label{fig:interactive-app}
+\end{figure}
+
+The opacity technique not only facilitates the discovery of the internal structure of the model, but also provides a visual language for conditional analysis. The ability to hide points that are irrelevant to the query set (input and output) is a powerful way to focus on what matters. This idea will be revisited in later chapters, where it will be shown that the input and output variables can be chosen freely after learning, without the need to retrain the model.
+
+\section*{Chapter conclusions}
+
+In this chapter we have presented a complete methodology for the trivariate Weibull–Hyperbola modelling, which combines the deterministic multilinear structure with a Weibull probability assignment. The main contributions are:
+
+\begin{enumerate}
+    \item A general trilinear interaction model that yields rectangular hyperbolas when one variable is fixed, with explicit centre, asymptotes, and canonical equation.
+    \item A probabilistic extension using a three‑parameter Weibull distribution, which properly handles censored data and percentile prediction.
+    \item Common simplifications that eliminate redundant parameters and impose physically meaningful asymptote conditions, resulting in a four‑parameter base model.
+    \item A hierarchy of nested models (M0 to M7) obtained by imposing additional hypotheses, facilitating model selection via AIC and BIC.
+    \item Two complementary estimation methods: OLS for fast initialisation and MLE for rigorous statistical inference with censoring handling.
+    \item Explicit formulae for synthetic data generation and percentile curve construction, which are the final tool for probabilistic design.
+    \item A detailed application to fatigue analysis with the \(\sigma_M\)-\(R\)-\(N\) model, including joint estimation of the reference parameters \((\sigma_{M_0}, N_0)\) via grid search and joint refinement.
+    \item An interactive visualisation technique with opacity that allows exploring the internal structure of the model and validating the fits.
+\end{enumerate}
+
+This framework is easily adaptable to other fields where three dimensionless groups capture the essential physics. The combination of deterministic hyperbolic geometry with Weibull statistics provides a powerful tool for analysing experimental data, making predictions, and designing under uncertainty.
+
+In the next chapter, Chapter~\ref{ch:castillo-canteli}, we step back to present the general Castillo–Canteli method, which allows constructing complete families of joint distributions from a single conditional specification, thus providing a unifying perspective on all the models developed so far. 

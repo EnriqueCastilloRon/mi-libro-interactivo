@@ -1,0 +1,331 @@
+\startcontents[chapter]
+\chapter{Dependence structure and interaction analysis}
+\label{ch:dependence_structure}
+\minitocboxed
+
+\section*{Motivation}
+
+In Chapter~\ref{ch:trajectory_models} we proved that the equality of the full conditional distributions, under the location-scale hypothesis, forces the common argument to be a multilinear function:
+\[
+G(\pi_1,\ldots,\pi_n) = \sum_{A\subseteq\{1,\ldots,n\}} a_A \prod_{i\in A} \pi_i.
+\]
+
+This result, although elegant and profound, is only the starting point. The true richness of the theory lies in the analysis of the \(2^n\) coefficients \(a_A\). Each coefficient quantifies an irreducible interaction among the variables of a subset \(A\): coefficients of order 1 are main effects, order 2 are pairwise interactions, order 3 are triple interactions, and so on.
+
+This chapter is devoted to systematically exploring these interactions. We begin with the vertex representation, which allows determining the multilinear function from its values at the vertices of the unit hypercube, and the Möbius inversion formula, which recovers the coefficients from those values. We introduce the concept of dependence capacity, a set function that assigns to each coalition of variables a measure of their joint contribution, thus connecting our theory with cooperative game theory and fuzzy measures.
+
+Next, we define the interaction spectrum as the collection of all coefficients \(a_A\), and we show how the sums \(S_k = \sum_{|A|=k}|a_A|\) provide a compact signature of the dependence structure, with direct applications in interaction detection, model reduction, and explainable artificial intelligence. We compare this approach with Sobol indices, highlighting the advantages of the multilinear spectrum (exact finite decomposition, absence of Monte Carlo error, algebraic interpretation).
+
+Finally, we connect the multilinear structure with copula theory. After transformation to uniform marginals, we show that the induced copula takes the form \(C(u_1,\ldots,u_n)=K\bigl(G^*(u_1,\ldots,u_n)\bigr)\), where \(G^*\) is multilinear and \(K\) is monotone. We derive the conditions that the conditional copulas must satisfy and pose the open problem of characterising all admissible transformations \(K\).
+
+\section{Vertex representation and Möbius inversion}
+\label{sec:vertex-mobius}
+
+The space of multilinear functions in \(n\) variables has dimension \(2^n\), since the monomials \(\prod_{i\in A} u_i\) form a basis. This suggests that the function is determined by its values at a suitably chosen set of \(2^n\) points. The fundamental result is that these points are precisely the vertices of the unit hypercube \(\{0,1\}^n\).
+
+\begin{theorem}[Vertex representation and Möbius inversion]
+\label{thm:vertex-mobius}
+Let \(G:[0,1]^n\to\mathbb{R}\) be a multilinear function. Then:
+
+\begin{enumerate}
+    \item \textbf{(Vertex determination)} \(G\) is uniquely determined by its values at the \(2^n\) vertices of the unit hypercube \(\{0,1\}^n\). Conversely, any assignment of values \(h_v\) for \(v\in\{0,1\}^n\) defines a unique multilinear interpolant.
+    \item \textbf{(Möbius inversion)} For any subset \(A\subseteq\{1,\ldots,n\}\), the coefficient \(a_A\) can be recovered from the vertex values by
+    \[
+    a_A = \sum_{B\subseteq A} (-1)^{|A|-|B|}\, G(\mathbf{1}_B),
+    \]
+    where \(\mathbf{1}_B\) denotes the vertex with coordinates \(1\) in \(B\) and \(0\) elsewhere.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\textit{Proof of (1).} The space of multilinear functions in \(n\) variables has dimension \(2^n\) because the monomials \(\prod_{i\in A} u_i\) form a basis. The evaluation map at the \(2^n\) vertices is a linear map from this \(2^n\)-dimensional space to \(\mathbb{R}^{2^n}\). When the vertices are ordered lexicographically, the associated matrix is triangular with ones on the diagonal (since each monomial evaluates to 1 only at the vertex where all its variables are 1, and to 0 at vertices where any variable of the monomial is 0). Therefore, the matrix is invertible, so the map is a bijection. Consequently, the vertex values uniquely determine the multilinear function.
+
+\textit{Proof of (2).} Let us write the multilinear expansion
+\[
+G(u_1,\ldots,u_n) = \sum_{B\subseteq\{1,\ldots,n\}} a_B \prod_{i\in B} u_i.
+\]
+Evaluate at a vertex \(\mathbf{1}_A\). For any subset \(B\), the product \(\prod_{i\in B} u_i\) equals 1 if and only if \(B\subseteq A\) (because all coordinates in \(A\) are 1 and the rest are 0). Therefore,
+\[
+G(\mathbf{1}_A) = \sum_{B\subseteq A} a_B.
+\]
+This is a standard Möbius inversion on the Boolean lattice. Let \(\mu(A) = G(\mathbf{1}_A)\). Then the inclusion-exclusion principle gives
+\[
+a_A = \sum_{B\subseteq A} (-1)^{|A|-|B|} \mu(B),
+\]
+which is exactly the claimed formula. ∎
+\end{proof}
+
+This theorem is extremely practical: it reduces the problem of determining the multilinear function to evaluating it at the vertices, and provides an explicit formula for the coefficients analogous to Möbius inversion on the Boolean lattice.
+
+\subsection{Illustrative example for \(n=3\)}
+
+Suppose we know the values of \(G\) at the 8 vertices. To compute \(a_{\{1,2,3\}}\), we apply the formula:
+\[
+a_{123} = G(1,1,1) - G(1,1,0) - G(1,0,1) - G(0,1,1) + G(1,0,0) + G(0,1,0) + G(0,0,1) - G(0,0,0).
+\]
+This is exactly the mixed difference of order 3, which measures the pure triple interaction. Similarly, \(a_{12} = G(1,1,0) - G(1,0,0) - G(0,1,0) + G(0,0,0)\), which is the pairwise interaction when the third variable is fixed at 0. This inclusion-exclusion pattern repeats for all subsets.
+
+\section{Dependence capacity}
+\label{sec:dependence-capacity}
+
+The vertex values of \(G\) define a set function on the power set of \(\{1,\ldots,n\}\).
+
+\begin{definition}[Dependence capacity]
+Let \(G\) be the multilinear function from Theorem~\ref{thm:multilinear}. For each subset \(A\subseteq\{1,\ldots,n\}\) we define
+\[
+\mu(A) = G(\mathbf{1}_A),
+\]
+where \(\mathbf{1}_A\) is the vertex with ones in \(A\) and zeros elsewhere. The set function \(\mu\) is called the \emph{dependence capacity} associated with the multilinear structure.
+\end{definition}
+
+The term “capacity” is taken from cooperative game theory and fuzzy measure theory, where \(\mu(A)\) quantifies the joint contribution of the variables in \(A\) to the global dependence. In the context of conditional distributions, \(\mu(A)\) represents the value of the common argument \(G\) when all variables in \(A\) are set to their maximum (1) and all others to their minimum (0).
+
+The interpretation as a capacity connects the multilinear theorem with Choquet integration and non-additive measures. Moreover, the Möbius inversion formula can be rewritten as
+\[
+a_A = \sum_{B\subseteq A} (-1)^{|A|-|B|} \mu(B),
+\]
+which is exactly the expression for the Möbius coefficients (also known as interaction coefficients) of a capacity.
+
+\subsection{Usefulness for artificial intelligence and machine learning}
+
+The capacity perspective is particularly useful in machine learning and explainable AI:
+
+\begin{itemize}
+    \item \textbf{Feature importance:} The capacity \(\mu(A)\) measures the “strength” of the coalition \(A\) of features. Comparing \(\mu(A)\) for different \(A\) allows identifying which subsets of variables are most influential.
+    \item \textbf{Non-additive interactions:} Traditional additive models ignore interactions; the capacity approach naturally captures synergy and redundancy among variables.
+    \item \textbf{Fairness and causality:} The vanishing of certain \(a_A\) indicates conditional independencies. In a causal graph, if a coefficient involving a set \(A\) is zero, it suggests that there is no irreducible interaction among those variables, which can be used to test causal structures.
+\end{itemize}
+
+Beyond AI, the capacity interpretation appears in economics (coalitional games), environmental modelling (criteria aggregation), and reliability engineering (structure functions). The multilinear theorem thus provides a bridge between probability theory and these domains.
+
+\section{Interaction spectrum and hierarchical decomposition}
+\label{sec:interaction-spectrum}
+
+The coefficients \(a_A\) decompose the multilinear function into irreducible interactions of different orders. This leads to the concept of \emph{interaction spectrum}.
+
+\begin{definition}[Interaction spectrum]
+For the multilinear function \(G\) as in (\ref{eq:multilinear-general}), the collection
+\[
+\mathcal{I}(G) = \{ a_A : A\subseteq\{1,\ldots,n\} \}
+\]
+is called the \emph{interaction spectrum} of \(G\). For each order \(k = 0,1,\ldots,n\), the sum
+\[
+S_k = \sum_{|A|=k} |a_A|
+\]
+is the \emph{order interaction spectrum}.
+\end{definition}
+
+The multilinear expansion naturally separates contributions by subset size:
+\[
+G = G_0 + G_1 + \cdots + G_n,\qquad G_k = \sum_{|A|=k} a_A \prod_{i\in A} u_i.
+\]
+Each \(G_k\) contains exclusively interactions of order \(k\). In particular, \(G_0\) is constant, \(G_1\) represents the main effects, \(G_2\) pairwise interactions, and so on. The highest-order term \(G_n\) corresponds to the pure \(n\)-way interaction, and its coefficient is
+\[
+a_{12\cdots n} = \frac{\partial^n G}{\partial u_1\cdots\partial u_n},
+\]
+which is constant over the hypercube.
+
+\begin{theorem}[Vanishing criterion]
+All interactions of order greater than \(m\) vanish if and only if \(a_A = 0\) for all \(|A| > m\).
+\end{theorem}
+
+\begin{proof}
+If \(a_A = 0\) for all \(|A|>m\), then the expansion contains no terms of order greater than \(m\), so all such interactions vanish. Conversely, if all interactions of order greater than \(m\) vanish, then by definition the coefficients \(a_A\) for \(|A|>m\) must be zero, because the monomials are linearly independent. ∎
+\end{proof}
+
+Thus, the interaction spectrum provides a complete hierarchical decomposition of the dependence structure. This is analogous to a Fourier decomposition, but instead of frequencies, the decomposition is organised by orders of interaction.
+
+\subsection{Examples for \(n=3\)}
+
+We illustrate the interaction spectrum with several examples for \(n=3\).
+
+\begin{example}[Purely additive structure]
+Let
+\[
+G(u_1,u_2,u_3) = 1 + 2u_1 + 3u_2 + 4u_3.
+\]
+The non-zero coefficients are \(a_0=1\), \(a_1=2\), \(a_2=3\), \(a_3=4\); all higher-order coefficients vanish. Therefore,
+\[
+S_0=1,\quad S_1=2+3+4=9,\quad S_2=0,\quad S_3=0.
+\]
+There are no interactions present; the dependence is completely explained by the individual main effects.
+\end{example}
+
+\begin{example}[Pairwise dependence]
+Let
+\[
+G = u_1+u_2+u_3 + 5u_1u_2 + 2u_1u_3 + u_2u_3.
+\]
+Here \(a_1=a_2=a_3=1\), \(a_{12}=5\), \(a_{13}=2\), \(a_{23}=1\), and \(a_{123}=0\). The spectrum is
+\[
+S_1=3,\quad S_2=5+2+1=8,\quad S_3=0.
+\]
+All dependence is explained by pairwise interactions; there is no irreducible triple interaction.
+\end{example}
+
+\begin{example}[Genuine triple interaction]
+Let
+\[
+G = u_1+u_2+u_3 + u_1u_2u_3.
+\]
+Then \(a_1=a_2=a_3=1\), \(a_{123}=1\), and all pairwise coefficients are zero. The spectrum is
+\[
+S_1=3,\quad S_2=0,\quad S_3=1.
+\]
+The dependence appears only when the three variables act together. This is a pure third-order synergy.
+\end{example}
+
+\begin{example}[Independence]
+Let
+\[
+G = u_1+u_2+u_3.
+\]
+All \(a_A\) with \(|A|>1\) vanish. Therefore, \(S_2=S_3=0\). In this sense, independence corresponds to the complete disappearance of all higher-order interaction coefficients.
+\end{example}
+
+\subsection{Usefulness for artificial intelligence and machine learning (continued)}
+
+The interaction spectrum is a powerful tool for modern AI and ML:
+
+\begin{enumerate}
+    \item \textbf{Explainable interaction detection:} In high-dimensional models, knowing which subsets of variables interact is crucial for interpretability. The spectrum reveals not only pairwise interactions but also higher-order synergies. For example, a pure third-order interaction (only \(a_{123}\neq0\) in addition to main effects) indicates that dependence appears only when the three variables act together.
+
+    \item \textbf{Model reduction:} If higher-order coefficients are negligible (e.g., \(S_k \approx 0\) for \(k\ge 3\)), the full multilinear model can be replaced by a lower-order approximation, drastically reducing complexity while retaining the essential dependence structure.
+
+    \item \textbf{Generative modelling:} The representation \(C = K(G)\) with \(G\) multilinear yields a new family of copula-based generative models. Sampling is direct: generate uniform marginals, compute \(G\), and then apply the monotone transformation \(K\). This is analogous to Archimedean copulas but with a multilinear generator.
+
+    \item \textbf{Bayesian inference:} Prior distributions inducing sparsity can be assigned to the coefficients \(a_A\) to learn the interaction structure from data. This automatically selects which interactions are present.
+\end{enumerate}
+
+\section{Comparison with Sobol indices and ANOVA decomposition}
+\label{sec:sobol-comparison}
+
+Sobol indices are a widely used global sensitivity measure based on variance. For a square-integrable function \(f:[0,1]^d\to\mathbb{R}\) with independent uniform inputs, the Sobol decomposition writes
+\[
+f(X) = f_0 + \sum_i f_i(X_i) + \sum_{i<j} f_{ij}(X_i,X_j) + \cdots + f_{1,\ldots,d}(X_1,\ldots,X_d),
+\]
+and the Sobol indices are defined as \(S_{i_1,\ldots,i_k} = \operatorname{Var}(f_{i_1,\ldots,i_k})/\operatorname{Var}(f)\). These indices measure the contribution of each subset of inputs to the output variance.
+
+The multilinear interaction spectrum offers several distinct advantages over Sobol indices:
+
+\begin{enumerate}
+    \item \textbf{Exact finite decomposition:} The multilinear expansion is a finite sum with \(2^n\) terms, whereas Sobol decompositions are generally infinite series (or require orthogonality conditions) and must be approximated.
+
+    \item \textbf{No Monte Carlo estimation:} The coefficients \(a_A\) are obtained directly from vertex evaluations via Möbius inversion, without the need for random sampling. Sobol indices typically require expensive numerical integration (Monte Carlo or quasi-Monte Carlo).
+
+    \item \textbf{Non-probabilistic (algebraic) interpretation:} The multilinear spectrum does not depend on a probability measure over the inputs. Sobol indices change when the input distribution changes, even if the underlying function remains the same.
+
+    \item \textbf{No confusion between interaction orders:} In the multilinear basis, each coefficient \(a_A\) multiplies a unique monomial, so interactions of different orders are not confounded. In ANOVA-based decompositions, interaction terms can be confounded with lower-order effects if the input distribution is not uniform or independent.
+
+    \item \textbf{Direct connection with copula geometry:} The multilinear spectrum determines the level sets of compatible copulas. Sobol indices describe variance attribution, which is not invariant under monotone transformations and is therefore not directly applicable to copula-based dependence analysis.
+
+    \item \textbf{Parsimonious parametrisation under symmetry:} When the dependence structure is exchangeable, the multilinear spectrum reduces to \(n+1\) parameters (coefficients of elementary symmetric polynomials). Sobol indices do not reduce parametrically in the same way.
+
+    \item \textbf{Hierarchical order interaction spectrum:} The sums \(S_k = \sum_{|A|=k}|a_A|\) provide immediate and intuitive measures of the total interaction strength at each order, allowing clear model truncation decisions.
+\end{enumerate}
+
+It should be noted that the two approaches are complementary rather than antagonistic. The multilinear spectrum can be seen as a fundamental invariant from which variance-based sensitivity measures can be derived. In the fatigue analysis context, the interaction spectrum allows identifying which combinations of load descriptors (e.g., \(R\) and \(\sigma_M\)) are truly relevant, thus guiding model simplification.
+
+\section{Connection with copulas: the form \(C = K(G^*)\)}
+\label{sec:copula-connection}
+
+The multilinear theorem has a direct and powerful application to copula theory. In this section we show how the multilinear structure translates into a geometric restriction on the associated copula, and how it can be used directly to define new families of copulas.
+
+\subsection{Transformation to uniform marginals}
+
+Let \((\Pi_1,\ldots,\Pi_n)\) be a continuous random vector with joint cumulative distribution function \(F_{\Pi_1,\ldots,\Pi_n}\) and marginal CDFs \(F_1,\ldots,F_n\). We define the uniform variables \(U_i = F_i(\Pi_i)\). Sklar's theorem guarantees the existence of a unique copula \(C:[0,1]^n\to[0,1]\) such that
+\[
+F_{\Pi_1,\ldots,\Pi_n}(\pi_1,\ldots,\pi_n) = C\bigl(F_1(\pi_1),\ldots,F_n(\pi_n)\bigr).
+\]
+
+Under the conditional equality hypothesis, we have
+\[
+F_{\Pi_i|\Pi_{-i}}(\pi_i|\pi_{-i}) = F\bigl(G(\pi_1,\ldots,\pi_n)\bigr).
+\]
+After transformation to uniform marginals, this becomes
+\[
+F_{U_i|U_{-i}}(u_i|\mathbf{u}_{-i}) = F\bigl(G^*(u_1,\ldots,u_n)\bigr), \qquad \forall i,
+\]
+where
+\[
+G^*(u_1,\ldots,u_n) = G\bigl(F_1^{-1}(u_1),\ldots,F_n^{-1}(u_n)\bigr).
+\]
+Since \(G\) is multilinear, \(G^*\) is, in general, a more complex function (the composition with the inverses of the marginals). However, if the marginals are such that \(G^*\) turns out to be multilinear (for example, when the marginals are identities or affine transformations), the structure is preserved.
+
+\subsection{Copulas of the form \(C = K(G^*)\)}
+
+A natural way to ensure that the copula is compatible with the multilinear structure is to postulate
+\begin{equation}
+C(u_1,\ldots,u_n) = K\bigl(G^*(u_1,\ldots,u_n)\bigr),
+\label{eq:copula-K-H}
+\end{equation}
+where \(K:[h_{\min},h_{\max}]\to[0,1]\) is a monotonically increasing function. This form ensures that the level sets of the copula coincide with the level sets of \(G^*\), which is precisely the geometric condition derived from the equality of conditionals.
+
+The boundary conditions for \(C\) to be a valid copula are:
+\[
+K(G^*(0,\ldots,0)) = 0,\qquad K(G^*(1,\ldots,1)) = 1.
+\]
+Furthermore, the function \(C\) must be \(n\)-increasing, which imposes that the mixed partial derivative
+\[
+\frac{\partial^n C}{\partial u_1\cdots\partial u_n} \ge 0
+\]
+almost everywhere. This condition translates into a differential equation for \(K\) in terms of the partial derivatives of \(G^*\).
+
+\subsection{Bivariate case: differential equation for \(K\)}
+
+For \(n=2\), the multilinear copula becomes
+\[
+C(u,v) = K\bigl(C_0 + C_1 u + C_2 v + C_{12} uv\bigr).
+\]
+The conditional copula of \(U\) given \(V=v\) is
+\[
+C_{U|V}(u|v) = \frac{\partial C(u,v)}{\partial v} = K'(G^*) \cdot (C_2 + C_{12} u).
+\]
+For this conditional to depend on \((u,v)\) only through \(G^*\), and hence to be of the form \(F(G^*)\) (with \(F=K\) after appropriate scaling), it is required that
+\[
+\frac{C_2 + C_{12} u}{K'(G^*)} \quad \text{be a function of } G^* \text{ only}.
+\]
+This imposes the differential equation
+\[
+\frac{d}{du}\left(\frac{C_2 + C_{12} u}{K'(G^*)}\right) = 0,
+\]
+which, together with the condition that the quotient depends only on \(G^*\), leads to a family of solutions for \(K\). For example, if \(K\) is the identity, the Farlie-Gumbel-Morgenstern (FGM) copula is obtained as a particular case.
+
+\subsection{Open problem: characterisation of admissible \(K\)}
+
+Not every monotone function \(K\) produces a valid copula when inserted into (\ref{eq:copula-K-H}). The \(n\)-increasing condition imposes restrictions on \(K\) and its derivatives that are difficult to characterise in general. For a given multilinear \(G^*\), the set of admissible \(K\) is an open research problem. However, many parametric families can be proposed, such as power transformations, logistic transformations, or monotone splines, and the positivity of the density can be verified numerically.
+
+\subsection{Advantages of the multilinear copula approach}
+
+\begin{enumerate}
+    \item \textbf{Explicit level sets:} The copula is constant on the hypersurfaces \(G^*(u)=h\), which are multilinear varieties. This geometry is easy to visualise and interpret.
+    \item \textbf{Parsimonious parametrisation:} The multilinear function \(G^*\) has \(2^n\) coefficients. Under symmetry assumptions, this reduces to \(n+1\) coefficients.
+    \item \textbf{Direct sampling:} To sample from the copula, the conditional distribution method can be used. Because the conditional CDF is \(F(G^*)\) with \(F=K\) invertible, sampling reduces to generating uniform marginals and solving for \(u_i\) given the others.
+    \item \textbf{Connection with Archimedean copulas:} Archimedean copulas have the form \(C(u) = \varphi^{-1}(\varphi(u_1)+\cdots+\varphi(u_n))\). Here the additive generator is replaced by the multilinear function \(G^*(u)\). Thus, multilinear copulas constitute a new class of copulas with a qualitatively different dependence structure.
+    \item \textbf{Non-exchangeable structures:} Unlike Archimedean copulas, which are exchangeable, multilinear copulas can incorporate asymmetry through the coefficients \(a_A\).
+\end{enumerate}
+
+\section{Implications for dependence analysis in fatigue}
+\label{sec:implications-fatigue}
+
+In the fatigue context, the interaction spectrum and the copula representation offer powerful tools:
+
+\begin{itemize}
+    \item \textbf{Selection of load descriptors:} The interaction spectrum allows identifying which combinations of variables (e.g., \(\sigma_M\) and \(R\)) are truly relevant. If the interaction coefficients involving a variable are small, that variable can be omitted without significant loss of accuracy.
+    \item \textbf{Laboratory vs. service models:} The separation between \(G\) (dependence structure) and the marginals allows reusing the copula learned in the laboratory (with fixed marginals) under service conditions (with variable marginals). The copula \(C=K(G^*)\) captures the intrinsic dependence, while the marginals \(F_i\) can be changed to reflect the actual service loading.
+    \item \textbf{Percentile curves:} Conditional percentile curves are obtained by solving \(G^*(u_1,\ldots,u_n)=K^{-1}(p)\), which provides a probabilistic generalisation of traditional S-N curves.
+\end{itemize}
+
+\section*{Chapter conclusions}
+
+In this chapter we have explored the profound consequences of the multilinear theorem:
+
+\begin{itemize}
+    \item We have shown that the multilinear function is determined by its values at the \(2^n\) vertices of the hypercube, and that the coefficients are recovered by Möbius inversion.
+    \item We have introduced the dependence capacity as a set function that quantifies the contribution of each coalition of variables, connecting our theory with game theory and fuzzy measures.
+    \item We have defined the interaction spectrum, which decomposes dependence into main effects, pairwise interactions, triple interactions, etc., and we have shown how the sums \(S_k\) provide a compact signature of the system.
+    \item We have compared the multilinear spectrum with Sobol indices, highlighting its advantages (exact finite decomposition, absence of Monte Carlo, algebraic interpretation) and its complementarity.
+    \item We have established the connection with copulas, showing that compatible copulas take the form \(C=K(G^*)\), and we have derived the conditions they must satisfy, including the differential equation for the bivariate case and the open problem of characterising admissible \(K\).
+\end{itemize}
+
+This chapter provides the algebraic and conceptual tools necessary to analyse the dependence structure in any multivariate system. In the next chapter, Chapter~\ref{ch:weibull-hyperbola}, we will apply these ideas to the trivariate Weibull-Hyperbola model, where the multilinear structure is combined with the Weibull distribution to obtain a complete stochastic model with parameter estimation, model selection, and synthetic data generation. 

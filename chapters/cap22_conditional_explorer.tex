@@ -1,0 +1,214 @@
+\startcontents[chapter]
+\chapter{A Conditional Dimensional Explorer for Learning Bayesian Networks}\label{ch:conditional_explorer}
+\minitocboxed
+
+\section{Motivation and Introduction}
+
+Bayesian networks are among the most powerful frameworks for reasoning under uncertainty. They combine graph theory with probability theory to represent complex joint distributions as a product of local conditional distributions. Yet, for all their mathematical elegance, Bayesian networks remain notoriously difficult to \emph{intuitively understand}—especially for beginners, and especially when the variables are continuous.
+
+The difficulty is not accidental. A Bayesian network is defined by two components: a directed acyclic graph (DAG) that encodes conditional independence relationships, and a set of conditional probability distributions (CPDs) that specify how each node depends on its parents. Learning a Bayesian network from data therefore requires two things: first, discovering the structure of the graph (which variables are connected); second, estimating the conditional densities \(P(X_i \mid \text{Parents}(X_i))\) for each node given its parents.
+
+Both tasks are challenging. Structure learning involves searching an exponentially large space of DAGs. Parameter learning for continuous variables typically requires strong parametric assumptions (e.g., linear Gaussian models) or complex nonparametric methods. But even when a network has been learned—by whatever algorithm—the analyst faces a final, crucial question: \emph{does this network actually make sense?}
+
+This chapter introduces a tool designed to answer that question visually, intuitively, and interactively. The \textbf{Conditional Dimensional Explorer} (henceforth, the Conditional Explorer) is a web-based application that implements the opacity technique introduced in Chapter~\ref{ch:Opacity} to make conditional distributions directly visible. By transforming abstract conditional probability queries into dynamic, real-time visualizations, the tool serves both as a pedagogical instrument for learning what Bayesian networks mean and as a practical validation tool for assessing whether a learned network faithfully represents the data.
+
+\section{The Need for a Visual Conditional Tool}
+
+Why is a dedicated tool necessary? Could we not simply compute conditional distributions numerically and inspect the numbers? The answer lies in the nature of conditional probability itself.
+
+\paragraph{The Curse of Dimensionality Hides Conditional Structure.}
+Consider a dataset with \(d\) continuous variables. The joint distribution lives in a \(d\)-dimensional space. When we project this space onto any two-dimensional scatter plot, we collapse all other \(d-2\) dimensions into the background. The result is a dense, undifferentiated cloud of points—a forest where individual trees are invisible. Within this cloud, the relationship between two specific variables, say \(X\) (output) and \(Y\) (input), is completely obscured by the variation of all other variables \(Z_1, Z_2, \dots\).
+
+Conditioning is precisely the tool we use to cut through this obscurity. We ask: what is the distribution of \(X\) \emph{when \(Y\) takes a particular value}? But classical conditioning on an exact value \(\{Y = y\}\) is problematic for continuous variables (zero probability). Even if we condition on an interval \(\{Y \in [y-\delta, y+\delta]\}\), standard plots fail to show which data points actually satisfy that condition and how close they are to the specified input value.
+
+\paragraph{Numerical Summaries Are Insufficient.}
+One could, of course, compute conditional means, variances, or even full conditional density estimates numerically. But numbers alone cannot convey the shape of a conditional distribution—whether it is unimodal or multimodal, whether its variance changes with the conditioning value (heteroscedasticity), whether the effect of one input depends on the value of another input (interaction), or whether the conditional relationship is linear, exponential, or something else entirely. These are \emph{visual} questions, and they demand visual answers.
+
+\paragraph{Bayesian Networks Are Abstract by Nature.}
+A Bayesian network factorizes a joint distribution as
+\[
+P(X_1, X_2, \dots, X_d) = \prod_{i=1}^d P(X_i \mid \text{Parents}(X_i)).
+\]
+This equation is compact and computationally convenient, but it is also deeply abstract. The left-hand side is a high-dimensional object that no human can visualize directly. The right-hand side decomposes it into smaller pieces, but each piece—each conditional distribution—is itself an object that lives in a space whose dimension is one plus the number of parents. For a node with two continuous parents, the conditional distribution \(P(X_i \mid X_j, X_k)\) is a surface in three dimensions. For three parents, it is a hypersurface. How can we possibly develop intuition for such objects?
+
+The answer, we argue, is \emph{interactive visualization}. Instead of trying to see the entire conditional distribution at once, we explore it slice by slice, moving sliders that represent the conditioning variables and watching how the distribution of the output variables changes. This is precisely what the Conditional Explorer enables.
+
+\section{From Abstract Probability to Interactive Exploration}
+
+The Conditional Explorer transforms the abstract concept of conditional probability into a tangible, hands-on experience. Its design is guided by a simple principle: \emph{the user should be able to ask any conditional query and see the answer immediately.}
+
+\subsection{The opacity mechanism revisited}
+
+The tool implements the opacity technique introduced in Chapter~\ref{ch:Opacity}. For a chosen set of conditioning variables (the \textbf{input}) with values \(\mathbf{c} = (c_1, c_2, \dots, c_k)\), the opacity \(\alpha_i\) of data point \(i\) is defined as
+\[
+\alpha_i = \max\!\left(0.05,\; 1 - \frac{d_i}{\tau}\right),
+\]
+where \(d_i\) is the Euclidean distance in quantile space between the point's conditioning values and \(\mathbf{c}\), and \(\tau\) is a user-controlled distance threshold. Points very close to \(\mathbf{c}\) are fully opaque; points farther away fade smoothly into the background.
+
+This is not merely a visualization trick. It implements a \emph{soft, probabilistic conditioning} that mirrors the logic of Bayesian networks: the influence of a conditioning variable decays with distance. The user interacts directly with the conditional query: ``Show me the distribution of the output variable(s) for inputs close to these values.''
+
+\subsection{The learning loop}
+
+The magic of the method is that the user does not need to compute the conditional distribution. She sees it emerge in real time. By moving the sliders of the conditioning variables, the cloud of points dynamically changes its transparency. Points that are compatible with the current input remain visible; incompatible points vanish.
+
+This provides an immediate, intuitive understanding of:
+
+\begin{itemize}
+    \item \textbf{Sensitivity:} How fast does the output distribution change when we vary one input while keeping others fixed?
+    \item \textbf{Interactions:} Does the effect of one input depend on the value of another input? (Visible as a change in the shape of the opaque cloud when two sliders are moved together.)
+    \item \textbf{Non-linear dependencies:} The opaque region may form curves, clusters, or voids that no linear correlation could capture.
+    \item \textbf{Heteroscedasticity:} The spread (variance) of the output may grow or shrink as we move the input sliders.
+\end{itemize}
+
+In the context of Bayesian networks, each node's conditional distribution is exactly this: the distribution of the node given its parents. The Conditional Explorer makes this abstract concept concrete. The represented variables (output) are the child node; the conditioning variables (input) are its parents. By exploring the space of the parents, the user learns the shape of the conditional probability function—the very heart of the network's local structure.
+
+\section{Learning Bayesian Networks with the Conditional Explorer}
+
+How can the Conditional Explorer be used to learn Bayesian networks? The answer proceeds in two steps: first, learning the \emph{structure} (which variables are parents of which), and second, learning the \emph{parameters} (the form of the conditional distributions).
+
+\subsection{Discovering structure: which variables are dependent?}
+
+A Bayesian network requires an ordering of the variables. Given an ordering \(X_1, X_2, \dots, X_d\), the network is constructed by allowing each variable \(X_i\) to have as parents any subset of the preceding variables \(\{X_1, \dots, X_{i-1}\}\). The optimal parent set is the one that makes the conditional distribution \(P(X_i \mid \text{Parents})\) as simple as possible while still fitting the data.
+
+The Conditional Explorer helps discover these parent-child relationships visually. The procedure is as follows:
+
+\begin{enumerate}
+    \item \textbf{Choose a candidate child variable} \(X_i\) as the represented (output) variable.
+    \item \textbf{Choose one candidate parent variable} \(X_j\) (with \(j < i\) in the proposed ordering) as the conditioning (input) variable.
+    \item \textbf{Move the slider for \(X_j\) from 0 to 1} while observing the distribution of \(X_i\). Does the distribution change? If moving the slider has no visible effect on the opaque cloud of \(X_i\), then \(X_i\) is independent of \(X_j\) given the other conditioning variables already selected. If the distribution changes systematically, then \(X_j\) is a plausible parent of \(X_i\).
+    \item \textbf{Add a second candidate parent} \(X_k\). Now condition on both \(X_j\) and \(X_k\) simultaneously. Move their sliders in different combinations. If the effect of \(X_j\) on \(X_i\) depends on the value of \(X_k\) (i.e., the opaque cloud shifts differently when \(X_j\) is moved at high \(X_k\) versus low \(X_k\)), then there is an interaction—which suggests that both variables should be parents, and that the conditional distribution is not simply additive.
+    \item \textbf{Remove a candidate parent} to test for conditional independence. If, after conditioning on \(X_k\), moving \(X_j\) no longer changes the distribution of \(X_i\), then \(X_i\) and \(X_j\) are conditionally independent given \(X_k\). This is a visual test of one of the core concepts in Bayesian network theory.
+\end{enumerate}
+
+This visual approach to structure learning has a profound advantage over purely algorithmic methods: it involves the analyst's domain knowledge. A statistical algorithm might detect a spurious correlation that makes no physical sense; the analyst, watching the conditional distribution change, can immediately recognize whether the detected relationship is plausible.
+
+\subsection{Learning conditional Distributions: Shape, Spread, and Support}
+
+Once the parent set for a node is known, the next task is to characterize the conditional distribution \(P(X_i \mid \text{Parents})\). The Conditional Explorer makes this characterization visual and intuitive.
+
+\begin{itemize}
+    \item \textbf{Shape:} Is the conditional distribution symmetric or skewed? Does it have one mode or multiple modes? By adjusting the distance threshold to a small value (e.g., \(\tau = 0.2\)), the user sees only points extremely close to the conditioning point. The shape of this tight cluster reveals the local shape of the conditional density.
+    \item \textbf{Spread (variance):} Does the spread of \(X_i\) change as the parents vary? Set \(\tau\) to a moderate value (e.g., \(\tau = 0.5\)) and move a parent slider. If the vertical spread of the opaque cloud widens or narrows, the conditional distribution is heteroscedastic—a fact that many standard models (like linear regression) assume away.
+    \item \textbf{Support:} Does the range of possible values of \(X_i\) depend on the parents? In some physical systems, the output may be bounded in ways that depend on the inputs. The opacity plot reveals this immediately: if at some parent values the opaque points occupy only a subset of the possible range, the conditional support is constrained.
+\end{itemize}
+
+\subsection{Validating a Learned Network}
+
+After a Bayesian network has been learned (whether by algorithm or by visual exploration), the Conditional Explorer serves as a validation tool. For each node in the network, the analyst can:
+
+\begin{enumerate}
+    \item Set the conditioning variables to the parents of that node (as specified by the learned graph).
+    \item Set the represented variable to the node itself.
+    \item Move the parent sliders and observe whether the conditional distribution behaves as the learned model predicts.
+\end{enumerate}
+
+If the learned model assumes linearity but the opacity plot reveals curvature, the model is misspecified. If the model assumes independence but the plot reveals interaction, the graph structure is incomplete. The Conditional Explorer thus provides a direct, visual goodness-of-fit test that complements numerical diagnostics.
+
+\section{The Conditional Explorer Application: A Practical Guide}
+
+The Conditional Explorer is implemented as a web-based application that runs entirely in the browser. No installation is required; no data leaves the user's computer. This section provides a practical guide to its use, focusing on Bayesian network learning tasks.
+
+\subsection{Getting Started}
+
+The application can be accessed at:
+\begin{center}
+    \href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/ConditionalExplorerFINAL.html}
+    {\textcolor{accentblue}{Access the interactive web application.}}
+\end{center}
+
+The main window (Figure~\ref{fig:explorer_main}) consists of three areas:
+
+\begin{itemize}
+    \item \textbf{Toolbar (top):} Controls for loading data (upload CSV or generate synthetic datasets), setting sample size, saving data, and toggling fullscreen mode.
+    \item \textbf{Plot area (center):} Displays the conditional distribution as a 2D or 3D scatter plot. Points are colored and their opacity follows the distance from the conditioning point.
+    \item \textbf{Control panel (right):} Contains variable selection lists, conditioning sliders, and the distance threshold control.
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.85\textwidth]{ConditionalExplorer.png}
+\caption{Main window of the Conditional Dimensional Explorer. The toolbar (top) controls data loading. The right panel selects represented variables (output) and conditioning variables (input). Sliders set the conditioning point. The plot shows the resulting conditional distribution.}
+\label{fig:explorer_main}
+\end{figure}
+
+\subsection{Step-by-Step: Learning a Conditional Distribution}
+
+We illustrate the typical workflow using the built-in ``Realistic ± corr'' dataset, which contains 10 economic and social variables with realistic correlation structures.
+
+\begin{enumerate}
+    \item \textbf{Load data:} Click the \textbf{Realistic ± corr (10 vars)} button. The dataset loads, and variable names appear in the selection panels.
+    \item \textbf{Define the output:} In the right panel, under ``Represented variables'', select two variables (e.g., \textbf{Income} and \textbf{Health}). These will be plotted on the x and y axes.
+    \item \textbf{Define the input:} Under ``Conditioning variables'', select one variable (e.g., \textbf{Debt}). A slider for Debt appears.
+    \item \textbf{Set the conditioning point:} Move the Debt slider to a low value (e.g., 0.2, meaning the 20th percentile of Debt). The scatter plot updates: points with low Debt are opaque; points with high Debt are faded.
+    \item \textbf{Interpret:} What is the relationship between Income and Health for low-debt individuals? Is there a positive correlation? A negative one? No correlation at all?
+    \item \textbf{Compare:} Move the Debt slider to a high value (e.g., 0.8). Does the relationship change? If the correlation flips sign or changes magnitude, then Debt is a \emph{moderator} variable—its inclusion as a parent is essential.
+    \item \textbf{Add a second parent:} Select \textbf{Education} as a second conditioning variable. Now two sliders appear. Set Debt to 0.2 (low) and Education to 0.2 (low). Observe. Then set Debt to 0.8 (high) and Education to 0.8 (high). Then try Debt low, Education high. You are now exploring a 2D conditional query: the distribution of (Income, Health) given (Debt, Education). The pattern of opaqueness reveals whether Debt and Education interact—whether their effects on the output are additive or multiplicative.
+\end{enumerate}
+
+\subsection{Three-Dimensional Conditional Distributions}
+
+When three represented variables are selected, the plot switches to a 3D scatter plot that can be rotated, panned, and zoomed. This mode is invaluable for understanding how three outputs co-vary given the inputs. For example, one might select \textbf{Income}, \textbf{Health}, and \textbf{Savings} as outputs, and \textbf{Debt} and \textbf{Education} as inputs. The 3D cloud reveals the joint conditional distribution: does the three-dimensional shape change as the inputs vary? Is the dependence structure linear or curved? Are there separate clusters that suggest multimodality?
+
+\subsection{The Distance Threshold: Balancing Precision and Sample Size}
+
+The distance threshold slider (labeled \textbf{distance threshold}) controls the effective sample size used to estimate the conditional distribution.
+
+\begin{itemize}
+    \item \textbf{Small \(\tau\) (e.g., 0.1–0.2):} Only points extremely close to the conditioning point remain visible. This gives a high-resolution, local view of the conditional distribution, but the number of visible points may be small, leading to high sampling variability.
+    \item \textbf{Moderate \(\tau\) (e.g., 0.5–0.8):} A balance between local precision and sample size. This is the recommended starting range.
+    \item \textbf{Large \(\tau\) (e.g., 1.5–2.0):} Many points remain visible, approximating the marginal distribution. Useful for checking whether conditioning actually changes the distribution.
+\end{itemize}
+
+A counter below the slider shows the number of points within the current threshold. The analyst can use this number to guide the choice of \(\tau\): if too few points are visible, increase \(\tau\); if the visible cloud is too diffuse to reveal structure, decrease \(\tau\).
+
+\section{What the Conditional Explorer Reveals (and What It Cannot)}
+
+Like any tool, the Conditional Explorer has strengths and limitations. Understanding both is essential for effective use.
+
+\subsection{Strengths}
+
+\begin{itemize}
+    \item \textbf{Direct visualization of conditional distributions:} No parametric assumptions. No density estimation. The raw data points themselves, appropriately filtered, show the conditional distribution directly.
+    \item \textbf{Real-time interaction:} Moving a slider updates the plot in milliseconds. This allows the analyst to \emph{animate} the conditioning process, watching how the distribution evolves as the input varies continuously.
+    \item \textbf{Intuitive discovery of interactions:} Interactions between conditioning variables are immediately visible as changes in the opaque cloud's shape when two sliders are moved together.
+    \item \textbf{No black box:} The analyst sees the actual data points, not a model's approximation. This builds trust and reveals anomalies that models might smooth over.
+    \item \textbf{Pedagogical power:} For students learning Bayesian networks, the Conditional Explorer makes abstract concepts tangible. Conditional independence, d-separation, and the Markov property can be demonstrated visually.
+\end{itemize}
+
+\subsection{Limitations}
+
+\begin{itemize}
+    \item \textbf{Sample size dependence:} With very small datasets, the conditional distribution may be poorly estimated regardless of \(\tau\). The tool works best with at least several hundred points.
+    \item \textbf{Curse of dimensionality (again):} As the number of conditioning variables grows, the space becomes sparse. For more than 3–4 conditioning variables, even a moderately large \(\tau\) may capture very few points. The tool is best suited for exploring low-dimensional conditional distributions (1–3 inputs).
+    \item \textbf{Quantile transformation:} The tool transforms all variables to quantiles (uniform margins). This is excellent for revealing dependence structure independent of marginal shapes, but it discards information about the original scales. For applications where absolute magnitudes matter, the analyst should interpret the quantile plots accordingly.
+    \item \textbf{No automatic structure learning:} The Conditional Explorer is a visual, interactive tool. It does not replace algorithmic structure learning for high-dimensional problems. Rather, it complements algorithms by allowing the analyst to validate and refine their outputs.
+\end{itemize}
+
+\section{Seeing the Conditional Forest}
+
+The Conditional Dimensional Explorer transforms the abstract concept of conditional probability into a tangible, interactive experience. By implementing the opacity technique introduced in Chapter~\ref{ch:Opacity}, it allows the analyst to see, directly and intuitively, how the distribution of one set of variables changes as another set of variables is varied.
+
+For Bayesian network learning, this capability is transformative. The two core tasks of structure learning and parameter estimation become visual, interactive, and guided by domain expertise. The analyst can test potential parent-child relationships by moving sliders and watching the response. She can characterize the shape, spread, and support of conditional distributions by adjusting the distance threshold. She can validate a learned network by comparing its implied conditional distributions to the opacity-filtered data.
+
+The tool is not a replacement for statistical algorithms. It is a \emph{companion}—a magnifying glass that brings into focus what the numbers alone cannot show. Used alongside the model comparison tables, information criteria, and goodness-of-fit tests described elsewhere in this book, the Conditional Explorer completes the picture: it tells the analyst not only which model is best among those considered, but whether even the best model is good enough, and where it is not.
+
+We invite the reader to use the Conditional Explorer alongside this book. Load your own data. Generate synthetic examples. Move the sliders. Watch the conditional distributions emerge from the cloud. The forest of data will become transparent, and the conditional relationships—the branches of the Bayesian network—will stand out as clearly as the trees in a sunlit grove.
+
+\begin{importantbox}
+    The Conditional Explorer is open source. The complete code accompanies this book and can be modified, extended, or embedded in other applications. The opacity-based conditional visualization technique is general and can be applied to any domain where understanding conditional distributions is essential—from epidemiology to econometrics, from quality control to climate science.
+\end{importantbox}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section*{Summary}
+% ─────────────────────────────────────────────────────────────────────────────
+
+The Conditional Dimensional Explorer is a web-based tool that implements opacity-based conditional visualization. It allows users to:
+
+\begin{itemize}
+    \item Load or generate datasets of continuous variables.
+    \item Select any set of represented variables (output) and any disjoint set of conditioning variables (input).
+    \item Set the conditioning point via sliders and adjust a distance threshold to control the effective sample size.
+    \item Observe the conditional distribution of the output given the input in real-time, in 2D or 3D.
+\end{itemize}
+
+For Bayesian network learning, the tool provides a visual, interactive method for discovering parent-child relationships, characterizing conditional distributions, and validating learned structures. It transforms abstract conditional probability into a tangible, exploratory experience, making Bayesian networks accessible to both beginners and experienced practitioners. 

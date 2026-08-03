@@ -1,0 +1,192 @@
+\startcontents[chapter]
+\chapter{Opacity as a Magnifying Glass for Seeing the Data Forest}\label{ch:Opacity}
+\minitocboxed
+
+\section*{Motivation and Introduction}
+\label{sec:opacity}
+
+In this chapter a new technique to learn the conditional distributions is presented. Apart from its visualization contribution, the user should center on the idea of conditioning on events of non-null probability and how these events must be chosen. The classical conditional CDF in continuous distributions is defined on an event of probability zero. Since conditional probability is the quotient of two probabilities, if the denominator one is zero one is in trouble. This book overcomes this limitation with two complementary innovations:
+
+\begin{itemize}
+\item An alternative conditioning operator \(F(x_1 || x_2,\dots,x_n)\) based on events of strictly positive probability.
+\item A distance function that quantifies how far each data point lies from the classical zero-probability conditioning event.
+\end{itemize}
+
+By mapping this distance to variable opacity, distant points are progressively hidden while the relevant ones remain visible. This ``opacity as a magnifying glass'' technique transforms the well-known problem of ``the forest that hides the trees'' into a powerful exploratory tool. Combined with the generalization of Sklar’s theorem for groups, it makes Bayesian-network inference both mathematically rigorous and visually intuitive, even in high-dimensional continuous spaces.
+
+\section{The Problem of Three-Dimensional Concealment}
+
+The Weibull--Hyperbola model lives in a three-dimensional space. Each specimen in a fatigue experiment is fully characterised by a triplet $(\sigma_m, \sigma_M, N)$: the minimum stress, the maximum stress, and the number of cycles to failure. The model posits that these three quantities are related through a latent variable $V$, which is a nonlinear function of the dimensionless coordinates $(\pi_1, \pi_2, \pi_3)$ derived from them:
+
+\begin{equation}
+  V = w_1\,\pi_1 + w_{12}\,\pi_1\pi_2 + w_{13}\,\pi_1\pi_3
+      + \pi_2\pi_3 + w_{123}\,\pi_1\pi_2\pi_3,
+  \label{eq:V}
+\end{equation}
+
+\noindent where $V$ follows a three-parameter Weibull distribution with location $\lambda$, scale $\delta$, and shape $\beta$. The model is thus a surface — indeed, a family of surfaces, one per probability level — embedded in three-dimensional space.
+
+When this surface is projected onto a two-dimensional plot, the projection necessarily destroys information. A scatter diagram of $\sigma_M$ versus $N$, for instance, superimposes specimens tested under very different values of $\sigma_m$. Each of those specimens is explained by a \emph{different} slice of the model surface, yet all of them appear as a single undifferentiated cloud of points. The structure of the model — its trunk, its branches, its leaves — is hidden inside that cloud the way the interior of a dense forest is hidden from a distant observer: everything is present, but nothing is visible.
+
+This concealment is not a defect of the data; it is an unavoidable consequence of dimensionality reduction. No matter how well the model fits the data in the full three-dimensional space $(\pi_1, \pi_2, \pi_3)$, its two-dimensional projections will always look noisier than they really are, because the projection is mixing together observations that the model keeps separate. A na\"ive reading of the residual scatter in a two-dimensional plot therefore systematically overestimates the true dispersion of the model and may lead the analyst to reject a good fit on purely visual grounds.
+
+\section{Opacity as a Selective Lens}
+
+The solution is not to abandon two-dimensional plots — they are too useful for communication and for comparison with classical S--N diagrams — but to \emph{read them more carefully}. The key insight is this: in a two-dimensional chart of $\sigma_M$ versus $N$, or equivalently of $\pi_2$ versus $\pi_3$, each percentile curve corresponds to a \emph{fixed value of $\sigma_m$} (or $\pi_1$). A data point is relevant to that curve only to the degree that its own $\sigma_m$ matches the $\sigma_m$ of the curve. Points with very different values of $\sigma_m$ are, strictly speaking, irrelevant to this particular curve: they belong to a different slice of the three-dimensional surface.
+
+Opacity modulation makes this distinction visible. Each data point is assigned a transparency that depends on the distance between its own $\sigma_m$ and the reference $\sigma_m$ of the curve being drawn. Points that are close to the reference level are rendered in full colour; points that are far from it fade toward invisibility. The result is a kind of selective lens: the cloud of data does not disappear, but it becomes organized. The analyst can now see, against a background of dimmed irrelevant points, the subset of specimens that genuinely tests the model at each stress level.
+
+Formally, let $\bar\sigma_m$ denote the median $\sigma_m$ value of the specimens assigned to a given panel or percentile-curve group, and let $d_i = |\sigma_m^{(i)} - \bar\sigma_m|$ be the absolute deviation of specimen $i$ from that median. The opacity of point $i$ is set to
+
+\begin{equation}
+  \alpha_i = \exp\!\left(-\,\frac{\gamma\, d_i}{\mathrm{IQR}(\sigma_m)}\right),
+  \label{eq:opacity}
+\end{equation}
+
+\noindent where $\gamma \geq 0$ is the \emph{decay parameter} controlled by the slider labeled \uifield{Opacity decay with distance in $\sigma_m$}, and $\mathrm{IQR}(\sigma_m)$ is the interquartile range of $\sigma_m$ in the full dataset, used to normalise the distance so that the decay rate is comparable across datasets of different scales. At $\gamma = 0$, all points have $\alpha_i = 1$ and the plot reduces to the standard uniform representation. As $\gamma$ increases, irrelevant points fade progressively, and the relevant data emerge from the background.
+
+\section{The Forest, Its Trees, and Its Fruits}
+
+The metaphor of a forest is not merely rhetorical. A three-dimensional fatigue dataset has a genuine hierarchical structure that opacity can reveal layer by layer.
+
+The \textbf{forest as a whole} is the full scatter of $(\sigma_m, \sigma_M, N)$ triplets. Viewed without any filtering, it presents itself as an intimidating cloud with no apparent organisation: the forest seen from the outside, opaque and impenetrable.
+
+The \textbf{trunks} are the main structural axes of the model: the reference parameters $\sigma_{ML}$ and $N_0$, which define the asymptotic limits of the fatigue surface, and the Weibull shape parameter $\beta$, which governs the overall slope of the S--N relationship. These are the load-bearing elements of the model; they are present in every slice and influence every data point.
+
+The \textbf{branches} are the interaction coefficients $w_1, w_{12}, w_{13}, w_{123}$ in Equation~\eqref{eq:V}. Each coefficient controls how the fatigue life changes as one of the dimensionless variables $\pi_1, \pi_2, \pi_3$ changes, and how the effect of one variable is modulated by the others. The term $w_{12}\,\pi_1\pi_2$, for instance, describes how the influence of the stress amplitude $\pi_1$ varies with the stress ratio $\pi_2$; the term $w_{123}\,\pi_1\pi_2\pi_3$ captures the three-way coupling between amplitude, ratio, and life.
+
+The \textbf{leaves} are the individual percentile curves: the 5th, 50th, and 95th percentile S--N curves drawn at a specific value of $\sigma_m$. Each leaf is a manifestation of the model at a particular operating condition. Without opacity, all leaves are superimposed and indistinguishable. With opacity, each leaf stands out against a background of faded points, and its agreement or disagreement with the relevant data can be assessed directly.
+
+The \textbf{fruits} are the consequences of model validity that are only visible once the structure has been revealed: the quantitative reliability predictions, the design allowables, the inspection intervals. A fruit cannot be trusted unless the branch that bears it is healthy, and the branch cannot be seen unless the forest is made transparent.
+
+\section{What Opacity Reveals and What It Cannot Hide}
+
+When the opacity slider is moved from zero to a moderate value (say, $\gamma \approx 5$--$10$), several diagnostic features become apparent that are invisible in the fully opaque representation.
+
+\textbf{Systematic bias} at a particular $\sigma_m$ level reveals itself as a consistent offset between the visible (fully opaque) data points and the percentile curve drawn for that level. If the model is correct, the opaque points should be centred on the median curve with approximately equal numbers above and below. A systematic departure indicates that the model, despite fitting the global cloud, is missing something at that specific stress level — perhaps because the relevant interaction coefficient is misspecified.
+
+\textbf{Heteroscedasticity} — a dependence of the scatter on the stress level — appears as a widening or narrowing of the visible data band as $\sigma_M$ changes. The Weibull--Hyperbola model assumes a specific relationship between the spread of $V$ and the Weibull parameters $\delta$ and $\beta$; if the empirical spread at low $\sigma_M$ is visibly different from the spread at high $\sigma_M$, the shape parameter $\beta$ may need to be re-examined, or a richer model (e.g., M0 rather than M7) may be required.
+
+\textbf{Outliers embedded in the cloud} become identifiable once irrelevant points are dimmed. In the fully opaque representation, a genuine outlier at a given $\sigma_m$ level is lost in the surrounding mass of points from other levels. Once those other points are made transparent, the outlier stands out clearly and can be investigated — is it a genuine anomaly, a data entry error, or a specimen that was tested under conditions different from those recorded?
+
+\textbf{Model discrimination} between competing specifications (e.g., M0 versus M5) also benefits from opacity. Two models may produce virtually indistinguishable curves when all data are shown at full opacity, yet differ noticeably in specific $\sigma_m$ slices. By examining each slice in turn — each time making the irrelevant data transparent — the analyst can identify the region of the parameter space where the models disagree and direct experimental effort toward that region.
+
+\section{Practical Use of the Opacity Slider}
+
+The opacity slider is located in a fixed bar above the chart panel in the \uitab{Percentile Curves} tab, so it remains accessible while scrolling through multiple charts. Its value runs from 0 to 20, corresponding to the decay parameter $\gamma$ in Equation~\eqref{eq:opacity}. Charts update in real time as the slider moves, so the analyst can watch the forest become transparent progressively, layer by layer.
+
+\begin{importantbox}
+  Begin with $\gamma = 0$ to obtain the standard representation and assess the global quality of the fit. Then increase $\gamma$ gradually. The transition from $\gamma = 0$ to $\gamma \approx 5$ typically provides the most diagnostic information: at this level, points more than one interquartile range away from the panel's reference $\sigma_m$ have already faded to less than $37\%$ of their original opacity, while closely relevant points remain at nearly full intensity. Values of $\gamma$ above $15$ are useful for very dense datasets where even a small number of irrelevant points would obscure the relevant ones, but they risk hiding genuine variability at adjacent $\sigma_m$ levels that could itself be informative.
+\end{importantbox}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.75\linewidth]{PortadaOpacidad.png}
+  \caption{The opacity slider in action on a three-dimensional fatigue dataset.
+    The left panel shows the standard representation ($\gamma = 0$): all data
+    points are rendered at full intensity and the relevant structure is hidden
+    inside the cloud. The right panel shows the same chart at $\gamma \approx 8$:
+    irrelevant points have faded, and the percentile curves stand out clearly
+    against the data most pertinent to each stress level.
+    \href{https://youtu.be/cnpmVNXvm3Y}{\textcolor{accentblue}{%
+      Click here to watch the video demonstration.}}
+    \href{https://raw.githubusercontent.com/EnriqueCastilloRon/mi-libro-interactivo/main/datos/ModeloFatigaAlfonsoDatos.zip}
+    {\textcolor{accentblue}{Click here to download the software.}}}
+  \label{fig:opacity_video}
+\end{figure}
+
+
+
+It is important to note that opacity modulation does \emph{not} change the fit itself: the estimated parameters, the log-likelihood, and the AIC are computed from the full three-dimensional dataset regardless of the slider position. Opacity is a \emph{visualization} tool, not an estimation tool. Its purpose is epistemic: to help the analyst see what the model has already found, and to reveal whether what the model has found is worth trusting.
+
+\section{Opacity and Model Validation}
+
+Model validation in fatigue analysis is traditionally conducted through residual plots, probability plots, and goodness-of-fit statistics. These tools are necessary but not sufficient: a model can pass all standard tests at the aggregate level while failing systematically at specific operating conditions that the aggregate tests dilute into insignificance.
+
+Opacity-modulated scatter plots complement these formal tests by providing a \emph{local} view of model adequacy. They are, in the language of exploratory data analysis, a conditional diagnostic: instead of asking ``does the model fit the data?'', they ask ``does the model fit the data \emph{here}, at this particular stress level?''. The answer can be yes for some levels and no for others, and the pattern of the discrepancies is itself a clue about which aspects of the model need refinement.
+
+Used in conjunction with the model comparison table (ranked by AIC and BIC in the \uitab{Model Comparison} tab), opacity plots provide a complete picture of model adequacy: the table tells you which model is best among those considered; the opacity plots tell you whether even the best model is good enough, and where it is not. Together, they constitute a magnifying glass — not a single lens, but a compound one, bringing into focus simultaneously the statistical structure of the model and the physical structure of the data that the model is meant to represent.
+
+\begin{importantbox}
+  The opacity technique described in this section is not specific to the Weibull--Hyperbola model. It applies, in principle, to any statistical model defined on a space of dimension greater than two whose results are displayed as two-dimensional projections. In the context of fatigue analysis, however, where the three variables $\sigma_m$, $\sigma_M$, and $N$ play fundamentally different physical roles, the choice of $\sigma_m$ as the conditioning variable is natural and well-motivated: it is the variable that is most directly controlled by the test engineer and most directly linked to the mean stress effect, which is the primary source of three-dimensional complexity in fatigue data.
+\end{importantbox}
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Summary}
+% ─────────────────────────────────────────────────────────────────────────────
+
+Three-dimensional fatigue data projected onto two-dimensional plots contain hidden structure that standard visualization obscures. Modulating the opacity of each data point as a function of its distance from the reference stress level $\sigma_m$ of the current percentile curve acts as a selective lens: it makes the forest transparent, revealing trunks (reference parameters), branches (interaction coefficients), leaves (individual percentile curves), and fruits (reliability predictions). The opacity slider in the \uitab{Percentile Curves} tab provides continuous, real-time control over this lens, allowing the analyst to progress from a global view of the data cloud to a local, slice-by-slice assessment of model validity — seeing, at last, what was always present but never visible.
+
+Can you imagine what the opacity idea can lead when extrapolated to more than three dimensions. We will explore this at the end of this book.
+
+\section{Opacity as a Lens for Conditional Learning: A Practical Guide}
+
+\subsection{Motivation: seeing the forest of conditional dependencies}
+
+In the preceding sections we introduced the opacity technique as a magnifying glass to reveal the hidden structure of three-dimensional surfaces. We now take that idea a decisive step further: opacity becomes our primary tool for learning conditional distributions directly from data, without parametric assumptions, and for making Bayesian network inference visually tangible.
+
+\paragraph{The Curse of Projection and the Need for Conditioning.}
+Consider a dataset with many variables. When we project it onto a two-dimensional scatter plot, we collapse all other dimensions into the background. The result is a dense cloud of points — a forest where we cannot distinguish the individual trees. In this forest, the relationship between two specific variables, say \(X\) (output) and \(Y\) (input), is completely obscured by the variation of all other variables \(Z_1,Z_2,\dots\).
+
+In Bayesian networks, the fundamental object of interest is the conditional distribution \(P(\text{output} \mid \text{input})\). For continuous variables, classical conditioning on an exact value \(\{Y = y\}\) is problematic (zero probability). But even if we condition on an interval \(\{Y \in [y-\delta, y+\delta]\}\), standard plots fail to show which data points actually satisfy that condition and how close they are to the specified input value.
+
+\paragraph{Opacity as a Solution: From Zero-Probability Events to Relative Relevance}
+The application introduced in this chapter solves this problem elegantly. Instead of hiding the irrelevant points or drawing artificial boundary boxes, it modulates opacity (alpha transparency) as a continuous function of the distance between each point and the user-defined conditioning point.
+
+For a chosen set of conditioning variables (the input) with values \(\mathbf{c} = (c_1,c_2,\dots,c_k)\), the opacity \(\alpha_i\) of data point \(i\) is defined as
+\[
+\alpha_i = \max\!\left(0.2,\; 1-\frac{d_i}{\tau}\right),
+\]
+where \(d_i\) is the Euclidean distance in the quantile space between the point’s conditioning values and \(\mathbf{c}\), and \(\tau\) is a distance threshold. Points very close to \(\mathbf{c}\) are fully opaque; points farther away fade smoothly into the background.
+
+This is not just a visualization trick. It implements a soft, probabilistic conditioning that mirrors the logic of Bayesian networks: the influence of a conditioning variable decays with distance. The user interacts directly with the conditional query: “Show me the distribution of the output variable(s) for inputs close to these values.”
+
+\paragraph{From Visualization to Learning: How Opacity Teaches Conditional Distributions}
+The magic of the method is that the user does not need to compute the conditional distribution. She sees it emerge in real time. By moving the sliders of the conditioning variables (the input), the cloud of points dynamically changes its transparency. Points that are compatible with the current input remain visible; incompatible points vanish.
+
+This provides an immediate, intuitive understanding of:
+\begin{itemize}
+\item \textbf{Sensitivity:} How fast does the output distribution change when we vary one input while keeping others fixed?
+\item \textbf{Interactions:} Does the effect of one input depend on the value of another input? (Visible as a change in the shape of the opaque cloud when two sliders are moved together.)
+\item \textbf{Non-linear dependencies:} The opaque region may form curves, clusters, or voids that no linear correlation could capture.
+\item \textbf{Heteroscedasticity:} The spread (variance) of the output may grow or shrink as we move the input sliders.
+\end{itemize}
+
+In a Bayesian network, each node’s conditional probability table (or conditional density) is exactly this: the distribution of the node given its parents. The opacity slider in the application makes this abstract concept concrete. The represented variables (output) are the child node; the conditioning variables (input) are its parents. By exploring the space of the parents, the user learns the shape of the conditional probability function—the very heart of the network’s local structure.
+
+\paragraph{Why This Changes the Game for Bayesian Network Education and Validation}
+\begin{enumerate}
+\item \textbf{No More Black Box:} The user sees how the output responds to inputs, validating whether the learned model (or the raw data) makes sense.
+\item \textbf{Interactive Sensitivity Analysis:} Move a slider; the plot updates instantly (typically \(<10\) ms). This is real-time “what-if” analysis.
+\item \textbf{Discovering Irrelevant Variables:} If changing a conditioning slider has no effect on the opacity pattern, that variable is likely independent of the output given the others.
+\item \textbf{Detecting Hidden Confounders:} If the opaque cloud shows surprising structure (e.g., two separate clusters), there may be a missing conditioning variable.
+\item \textbf{From Data to Distribution:} The user develops an intuition for how a joint distribution decomposes into conditional factors, which is the cornerstone of Bayesian network inference.
+\end{enumerate}
+
+The application transforms the abstract equation \(P(\text{output} \mid \text{input})\) into a visual, tactile experience. The forest of data becomes transparent, and the conditional relationships—the branches of the Bayesian network—stand out as clearly as the trees in a sunlit grove.
+
+
+\section{The Conditional Explorer Application}
+A web page has been implemented to illustrate the ideas in the previous sections.
+
+A view of the main window of the application is shown in Figures \ref{fig:app_main}, where the cases of bi-dimensonal and three-dimensional cases are shown.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.75\textwidth]{ConditionalExplorer.png}
+
+\includegraphics[width=0.75\textwidth]{ConditionalExplorer1.png}
+\caption{Main window of the Conditional Explorer. The toolbar (top) controls data loading/simulation. The right panel defines the output (represented variables) and input (conditioning variables). The sliders set the conditioning point. The plot area shows the conditional distribution. Examples of bi-dimensonal and three-dimensional cases are shown.
+}
+\label{fig:app_main}
+\end{figure}
+
+The application can be accessed using the following links.
+\href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/ConditionalExplorerFINAL.html}
+{\textcolor{accentblue}{Access the interactive web application.}}
+\href{https://raw.githubusercontent.com/EnriqueCastilloRon/mi-libro-interactivo/main/manuales/Manual_ConditionalDimensionalExplorer.pdf}
+{\textcolor{accentblue}{Download the user manual (PDF).}}
+
+\section{Conclusion}
+
+The Conditional Explorer is not merely a data visualization tool; it is a didactic instrument that makes the abstract concept of conditional probability tangible. By transforming the user into an active explorer who moves sliders and watches distributions emerge, it builds an intuitive understanding of Bayesian networks, sensitivity analysis, and interaction effects. The opacity technique, originally introduced to see through three-dimensional surfaces, proves to be the perfect lens for learning the conditional relationships that are the building blocks of any probabilistic graphical model. We invite the reader to use the application alongside this book, turning the theoretical equations of Chapter~7 and the graphical structures of Chapter~11 into a lived, visual experience. 

@@ -1,0 +1,947 @@
+% ============================================================
+%  Chapter: When Does φ(π₁,…,πₙ)=0 Qualify as a
+%           General Equation of Science?
+%
+%  PLACEMENT: after Chapter 8 (Form of Buckingham's Functions),
+%  before Part VI (Treating With Random Variables).
+%
+%  REVISION NOTES (relative to the original Chapter 1 draft):
+%  ─────────────────────────────────────────────────────────
+%  • Introduction rewritten as a synthesis of Parts I–V,
+%    not a preview of them.  Forward references to later
+%    chapters are kept only where strictly necessary.
+%  • A new opening section ("What we now know") grounds
+%    the abstract conditions in the four concrete tools
+%    the reader has already mastered.
+%  • Section on the pendulum example expanded with a
+%    side-by-side comparison table (model vs property-based).
+%  • Section 9u.4 (Condition C6) made self-contained:
+%    the additive form now references the result proved in
+%    Chapter 8 rather than announcing it.
+%  • Closing remarks reframed as a bridge toward the
+%    probabilistic Part VI, not as an epilogue.
+%  • All backward references use \ref{}; forward references
+%    to copulas/Bayesian networks kept minimal.
+% ============================================================
+\startcontents[chapter]
+\chapter{When \texorpdfstring{$\varphi(\ldots)=0$}{phi(pi)=0}
+         Qualifies as a General Scientific Representation?}
+\label{ch:universality_conditions}
+\minitocboxed
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section*{A Look Back Before Moving Forward}
+
+At this point in the book, four powerful tools are in hand.
+
+\begin{itemize}[leftmargin=2.5em]
+  \item The \textbf{Buckingham $\pi$ theorem}
+    (Chapter~\ref{ch:buckinghamPi}) guarantees that any
+    physically meaningful equation among $n$ variables and $k$
+    fundamental dimensions can be rewritten as a relation
+    $\varphi(\pi_1,\ldots,\pi_m)=0$ among $m = n-k$
+    dimensionless groups.  The theorem tells us the \emph{form}
+    of the equation, but not which $\varphi$ is the right one.
+
+  \item \textbf{Functional equations}
+    (Chapter~\ref{ch:functionalequations})
+    shows how to derive $\varphi$ from the structural
+    \emph{properties} the phenomenon must possess---additivity,
+    scale invariance, associativity, damage accumulation, and
+    so on---rather than guessing or fitting it.
+
+  \item The \textbf{ECDF transformation}
+    (Chapter~\ref{ch:cdftransformation}) provides a
+    non-parametric route to the same goal: by replacing every
+    observation with its empirical quantile, all variables
+    become dimensionless and bounded in $[0,1]$, with a
+    universal interpretability scale that works across every
+    domain without domain-specific knowledge.
+
+  \item The \textbf{general functional form}
+    (Chapter~\ref{ch:Piforms}) proves that, under our two natural
+    aggregation conditions, the function $\varphi$ is
+    \emph{forced} into the additive structure
+    $\varphi(\pi_1,\ldots,\pi_n) = p\!\bigl(\sum_i p_i(\pi_i)\bigr)$,
+    unifying generalized additive models, Archimedean copulas,
+    and Kolmogorov--Arnold networks as special cases of a
+    single axiomatically derived framework.
+\end{itemize}
+
+\noindent
+Each of these tools can be used in isolation.  But together they
+raise a question that is easy to overlook when one is immersed in
+the technical details of any single tool: \emph{what, exactly,
+does it mean for an equation to be general?}
+
+Though we could have dealt with this question at the very beginning of the book, we have delayed it to permit the reader to have some knowledge about previous concepts that are needed to understand in depth this relevant question.
+
+This chapter answers that question precisely.  Nine conditions are
+set out---organised into three tiers of increasing depth---that
+$\varphi(\pi_1,\ldots,\pi_n)=0$ must satisfy in order to deserve
+the name \emph{general representation framework for scientific models}.  Readers who have
+followed the development of Parts~I--V will recognise these
+conditions not as new impositions but as the natural codification
+of the principles that have guided every derivation in the book.
+
+The chapter also examines how the two principal routes to
+universality described above---the parametric route via functional
+equations and the non-parametric route via the ECDF
+transformation---satisfy the nine conditions, and where they
+differ.  This comparison sets the stage for Part~VI, where the
+same framework is extended to random variables and copulas.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{The Central Question and Why It Matters}
+\label{sec:ucq:question}
+
+Throughout the history of science, equations have been proposed,
+tested, abandoned, and revised.  Among this vast catalogue, a small
+number have proved genuinely universal: Newton's second law,
+Fourier's heat equation, Maxwell's equations, the Boltzmann entropy
+relation.  What distinguishes these from the countless empirical
+fits and domain-specific correlations that surround them?
+
+One might answer: \emph{generality of application}.  But this
+answer, while correct, is circular.  An equation that applies
+broadly does so \emph{for a reason}---and that reason is
+structural, not merely empirical.  Newton's second law applies
+universally not because someone tested it in enough situations, but
+because it is the necessary consequence of how force, mass, and
+acceleration are \emph{conceptually related}.  The equation encodes
+a logical constraint on the world, not merely a statistical
+regularity.
+
+The Buckingham $\pi$ theorem is already a major step toward
+universality: it guarantees the dimensionless form.  But it does
+not tell us which $\varphi$ is correct, nor whether a given
+$\varphi$ is truly general or merely convenient.  Functional
+equations narrow the field further: among all conceivable
+functions, only those consistent with the structural properties of
+the phenomenon are admissible.  The ECDF transformation opens a
+third path: universal representability without committing to any
+functional form at all.
+
+The conditions set out in the following sections address the
+remaining gap.  They answer the question:
+
+
+%\itshape
+Given a relation $\varphi(\pi_1,\ldots,\pi_n)=0$, what additional
+requirements must it satisfy for us to call it a
+\emph{general representation framework for scientific models} rather than a \emph{model}, a
+\emph{fit}, or a \emph{convenient approximation}?
+
+ Rather than constituting an arbitrary checklist, the nine conditions form a three-tier hierarchy that progressively transforms a dimensionless relation into a genuine scientific representation framework. Formal conditions establish mathematical legitimacy, structural conditions provide explanatory grounding, and epistemic conditions ensure interpretability and transferability. Only when all three levels are simultaneously satisfied can a relation of the form
+\[
+\varphi(\pi_1,\ldots,\pi_n)=0
+\]
+be regarded as a universal representation capable of organizing, explaining, and connecting scientific phenomena across different domains and scales.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Tier~1: Necessary Formal Conditions}
+\label{sec:ucq:tier1}
+
+The first tier contains conditions without which the equation
+cannot even be a candidate for generality.  These are logical
+prerequisites---the minimum price of admission---not marks of
+quality.
+
+\subsection{C1 --- unit invariance}
+
+\begin{condbox}
+\begin{condition}[Unit Invariance]\label{cond:ucq:unit}
+The equation $\varphi(\pi_1,\ldots,\pi_n)=0$ must hold
+independently of the choice of unit system: it must be invariant
+under any change of the fundamental units of measurement, see \cite{FalmagneD15}.
+\end{condition}
+\end{condbox}
+
+This is the foundational constraint established by Fourier and
+systematised by Buckingham (Chapter~\ref{ch:buckinghamPi}): a
+relation among physical quantities can be a law of nature only if
+it does not depend on the arbitrary conventions humans use to
+measure those quantities.  The requirement that the $\pi_i$ be
+dimensionless is the precise mathematical guarantee of this
+invariance.  Any equation that changes its form when one passes
+from SI to Imperial units, or from degrees Celsius to Fahrenheit,
+is an artifact of measurement convention, not a statement about
+reality.
+
+Condition~\ref{cond:ucq:unit} is non-negotiable.  An equation
+that fails it may be useful within a fixed measurement context, but
+it cannot be transferred to a new context, let alone claimed as
+general.  The ECDF transformation satisfies this condition
+automatically: quantiles are dimensionless order statistics,
+invariant under any monotone change of units.
+
+For example, KANs could be considered as general equations after demonstrating that they are the sets of solutions of a system of functional equations, but not because of an extremely good fit to an interpretable physical model. The reader should realize that the first condition is an step further.
+
+\subsection{C2 --- Completeness of the $\pi$ Set}
+
+\begin{condbox}
+\begin{condition}[Completeness of the $\pi$ Set]
+  \label{cond:ucq:complete}
+The set $\{\pi_1,\ldots,\pi_n\}$ must capture \emph{all}
+physically relevant variables of the phenomenon.  No variable
+that has a non-negligible influence on the quantity of interest
+may be absent from the set, and the set must be dimensionally
+independent.
+\end{condition}
+\end{condbox}
+
+An equation expressed in terms of an incomplete set of
+dimensionless groups may appear to describe a phenomenon, but will
+fail systematically outside the experimental region in which the
+missing variables happen to be approximately constant.
+
+As discussed in Chapter~\ref{ch:historicalFoundations}, this is
+perhaps the most critical practical limitation of dimensional
+analysis: dimensional algebra can identify all possible
+dimensionless combinations of a given variable set, but it cannot
+tell us whether the variable set itself is complete.  The
+investigator must supply that knowledge.
+
+Completeness also has a dual requirement: the $\pi$ set must not
+include \emph{spurious} variables---quantities that have no genuine
+influence on the phenomenon.  Spurious $\pi_i$ inflate the
+dimensionality of the equation, obscure its structure, and can
+produce numerical instabilities.  The ideal $\pi$ set is both
+\emph{complete} and \emph{minimal}.
+
+\subsection{C3 --- mathematical well-posedness}
+
+\begin{condbox}
+\begin{condition}[Mathematical Well-Posedness]
+  \label{cond:ucq:wellposed}
+The function $\varphi$ must be well-defined over the domain of
+interest and must possess a non-trivial zero set: there must exist
+points $(\pi_1,\ldots,\pi_n)$ at which $\varphi=0$ that are not
+isolated singularities or artifacts of the coordinate system.
+\end{condition}
+\end{condbox}
+
+This is a minimal mathematical sanity requirement.  It is rarely
+violated in practice, but it is worth stating explicitly: a
+relation that is identically zero, identically non-zero, or whose
+zero set consists entirely of measure-zero singularities carries no
+scientific content.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Tier~2: Structural Conditions}
+\label{sec:ucq:tier2}
+
+The second tier goes beyond formal correctness.  These conditions
+distinguish a \emph{general equation} from a \emph{mere model}:
+they ask not only whether the equation is formally valid, but
+whether its form is \emph{justified} by something deeper than
+convenience or fitting quality.
+
+\subsection{C4 --- Derivability of the Functional Form}
+
+\begin{condbox}
+\begin{condition}[Derivability of the Functional Form]
+  \label{cond:ucq:derive}
+The functional form of $\varphi$ must be \emph{derivable} from known
+structural properties of the phenomenon---properties such as
+additivity, scale invariance, translation invariance,
+associativity, order independence, or compatibility---by means of
+functional or equivalent equations, rather than freely assumed or chosen on
+grounds of mathematical convenience.
+\end{condition}
+\end{condbox}
+
+This is, in our view, the single most important condition for
+genuine universality.  It is precisely the condition that the
+framework of this book has pursued from Chapter~\ref{ch:functionalequations}
+onward, and it is useful to see it stated plainly. \textbf{A concrete contrast.}  Consider modelling the period $T$
+of a simple pendulum with length $L$ in a gravitational field $g$. In the first approach, the power-law assumption is an educated
+guess that happens to be consistent with the physics.  In the
+second, it is the \emph{only} possibility consistent with the
+stated properties.  These are fundamentally different epistemic
+situations.  Only the second approach yields an equation that can
+be called general in the deep sense: it could, in principle, be
+discovered by any reasoner who correctly identifies the relevant
+properties, regardless of prior knowledge of the answer.
+
+\begin{table}[ht]
+\centering
+\caption{Two approaches to the pendulum period: the difference
+  between a \emph{model} and a \emph{general equation}.}
+\label{tab:ucq:pendulum}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabularx}{\textwidth}{%
+  >{\raggedright\arraybackslash}p{3cm}
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}X}
+\toprule
+\rowcolor{headerbg}
+& \textbf{Model approach} & \textbf{Property-based approach} \\
+\midrule
+\textbf{Starting point}
+  & Assume $T = C\,L^a\,g^b$ (a power law).
+  & Ask: what symmetry must $T$ satisfy? \\
+\textbf{How the form is obtained}
+  & Exponents fixed by dimensional consistency.
+  & Functional equation from dimensional invariance
+    forces the form. \\
+\textbf{Result}
+  & $T = C\sqrt{L/g}$ --- consistent with physics,
+    but the power-law was an educated guess.
+  & $T \propto \sqrt{L/g}$ --- the \emph{only} form
+    compatible with the stated properties. \\
+\textbf{Epistemic status}
+  & The form is \emph{assumed}.
+    Dimensional analysis merely confirms it.
+  & The form is \emph{derived}.
+    Any reasoner who identifies the properties
+    reaches the same conclusion. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+
+\begin{remarkbox}
+It is not sufficient that the form \emph{happens} to be derivable
+after the fact.  The derivation must precede---or at least
+accompany---the adoption of the form.  An equation adopted on
+grounds of convenience and later shown to be derivable from
+properties acquires retrospective justification, which strengthens
+its claim to generality; but the derivation is what confers that
+status.
+\end{remarkbox}
+
+\subsection{C5 --- Completeness Under the Given Properties}
+
+\begin{condbox}
+\begin{condition}[Completeness Under the Given Properties]
+  \label{cond:ucq:unique}
+The functional form of $\varphi$ must be the \emph{general}
+solution (including free parameters and some arbitrary function) of the system of functional equations derived from the stated properties of the phenomenon.
+\end{condition}
+\end{condbox}
+
+If many different functional forms are consistent with the stated
+properties, the system of equations must contain them.
+
+This condition has an important corollary: it makes the family of
+admissible models \emph{explicit and complete}.  When the
+functional equation system has a multi-parameter family of
+solutions (including some arbitrary functions), we know the full set of models consistent with the
+stated properties---and we know that models outside this set
+violate at least one property.  This is the dual privilege
+described in Chapter~\ref{ch:functionalequations}: not only do we
+know what is \emph{possible}, we know what is \emph{excluded}.
+
+In practice, uniqueness is not required. One obtains the family of solutions not a single equation.  This is not a weakness but a strength, since we keep degrees of freedom of the phenomenon---not artifacts of the fitting procedure---and the
+family as a whole \emph{constitutes} the general solution, with each member corresponding to a specific instance of the phenomenon.
+
+\subsection{C6 --- Invariance Under the Relevant Symmetry Group}
+
+\begin{condbox}
+\begin{condition}[Invariance Under the Relevant Symmetry Group]
+  \label{cond:ucq:symm}
+The form of $\varphi$ must be invariant under all transformations
+that are physically irrelevant to the phenomenon: beyond unit
+changes, these include monotone relabellings of ordinal variables,
+permutations of equivalent components, and any other symmetry of
+the physical system.
+\end{condition}
+\end{condbox}
+
+Chapter~\ref{ch:Piforms} established one example of the most striking instance of
+this condition.  Under two natural aggregation requirements---that
+variables can be aggregated sequentially, and that the result must
+be independent of the aggregation order---$\varphi$ is forced into
+the additive form
+\begin{equation}
+  \varphi(\pi_1,\ldots,\pi_n)
+  \;=\; p\!\Bigl(\sum_{i=1}^n p_i(\pi_i)\Bigr),
+  \label{eq:ucq:additive}
+\end{equation}
+where $p$ is a monotone outer transformation.
+This single symmetry requirement---order independence---unifies
+generalized additive models, Archimedean copulas, and
+Kolmogorov--Arnold networks as special cases of the same axiomatic
+structure.  The result was proved in Chapter~\ref{ch:Piforms}; it
+is recalled here because it is perhaps the clearest illustration
+in the book of how a symmetry condition forces a functional form.
+
+A second important instance involves ordinal variables.  The ECDF
+transformation maps every variable to its quantile, and quantiles
+are invariant under strictly increasing transformations of the
+original scale.  This invariance property is the symmetry
+exploited by Sklar's theorem and the copula framework, which will
+be developed in Part~VI.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Tier~3: Epistemic and Interpretive Conditions}
+\label{sec:ucq:tier3}
+
+The third tier addresses questions of meaning and transferability.
+An equation may be formally correct and structurally derived, yet
+remain scientifically sterile if it cannot be interpreted or
+transferred.  The conditions in this tier are what make a general
+equation genuinely useful as a vehicle for scientific
+understanding.
+
+\subsection{C7 --- Physical Interpretability of the $\pi_i$}
+
+\begin{condbox}
+\begin{condition}[Physical Interpretability of the $\pi_i$]
+  \label{cond:ucq:interp_pi}
+The dimensionless groups $\pi_i$ must be interpretable in terms of
+the competing mechanisms, characteristic scales, or governing
+effects of the phenomenon.  They must not merely be algebraically
+valid combinations of the original variables; they must carry
+physical meaning that guides intuition, directs experimental
+design, and enables reasoning about new situations.
+\end{condition}
+\end{condbox}
+
+The classical dimensionless numbers of fluid mechanics illustrate
+this requirement vividly.  The Reynolds number
+$\mathrm{Re} = \rho V L/\mu$ is not merely a dimensionless ratio;
+it encodes the competition between inertial and viscous forces.
+The Mach number $\mathrm{Ma} = V/c$ encodes the ratio of flow
+speed to acoustic propagation speed.  These numbers are
+interpretable because they correspond to recognisable physical
+mechanisms, and that interpretability is what allows engineers to
+predict---qualitatively and quantitatively---how a system will
+behave as $\mathrm{Re}$ or $\mathrm{Ma}$ change.
+
+\begin{remarkbox}
+Interpretability is a graded, not a binary, property.  Some
+$\pi_i$ are immediately transparent; others become interpretable
+only after the surrounding theory is developed.  It is not
+required that every $\pi_i$ be interpretable at the moment the
+equation is first proposed.  What is required is that
+\emph{in principle} the groups admit interpretation in terms of
+competing mechanisms, and that this interpretation is actively
+sought and documented as the science matures.
+
+In the ECDF setting, the interpretation is universal: the quantile
+``0.02'' means ``only 2\% of observations lie below this value,''
+a statement that needs no further domain knowledge.  This is a
+different kind of interpretability---relative position rather than
+physical mechanism---but it is real, and in many application
+contexts it is exactly what is needed.
+\end{remarkbox}
+
+\subsection{C8 --- Interpretability of the Structure of $\varphi$}
+
+\begin{condbox}
+\begin{condition}[Interpretability of the Structure of $\varphi$]
+  \label{cond:ucq:interp_phi}
+Beyond the interpretability of the individual $\pi_i$, the
+structure of $\varphi$ itself must be physically meaningful: the
+equation must encode a \emph{constraint} that corresponds to
+something real about the phenomenon, not merely an algebraic
+identity or a curve-fitting device.
+\end{condition}
+\end{condbox}
+
+Consider the S--N curve for fatigue, developed in detail in
+Chapter~\ref{ch:weibull-hyperbola}.  When expressed in dimensionless
+form, the percentile curves emerge as confocal rectangular
+hyperbolas.  This is not a mathematical coincidence: the hyperbolic
+structure reflects the existence of two physical
+asymptotes---the endurance limit (stress below which no fatigue
+failure occurs, regardless of the number of cycles) and the static
+failure stress (stress above which failure occurs on the first
+cycle).  The asymptotes are real physical phenomena; the hyperbola
+is their natural geometric expression.  An investigator who
+understood only the data might fit a polynomial or a spline; an
+investigator who understands the physics recognises the hyperbola
+as the \emph{necessary} form.
+
+This example illustrates a general principle: when the structure
+of $\varphi$ mirrors the structure of the physics, the equation
+has predictive power \emph{beyond the data from which it was
+inferred}.  Its extrapolations are physically grounded; its
+singularities and asymptotes correspond to real phenomena; its
+free parameters can be given physical interpretations.  These are
+the marks of a genuinely general equation, as opposed to a
+sophisticated interpolation.
+
+\subsection{C9 --- Transferability Across Phenomena and Scales}
+
+\begin{condbox}
+\begin{condition}[Transferability Across Phenomena and Scales]
+  \label{cond:ucq:transfer}
+A general representation framework for scientific models must describe a \emph{class} of
+phenomena, not a single instance.  The same $\varphi$ must
+appear---possibly with different numerical values of its
+parameters---in different physical systems that share the same
+underlying structure.
+\end{condition}
+\end{condbox}
+
+This is the deepest criterion: \emph{transferability} is what
+separates a \emph{law} from a \emph{formula}.
+
+The functional equations
+\begin{equation}
+  f(x,\,y_1+y_2) = f(x,\,y_1)+f(x,\,y_2),
+  \qquad
+  f(x_1+x_2,\,y)  = f(x_1,\,y)+f(x_2,\,y),
+  \label{eq:ucq:bilinear}
+\end{equation}
+describe both the area of a rectangle and the amount of money
+received under simple interest---two phenomena that appear
+entirely unrelated.  The unique solution $f(x,y)=Cxy$ (Cauchy's
+bilinear form) is the general equation for any relationship in
+which two independently extensive quantities combine
+multiplicatively.  Its transferability across domains is not
+accidental; it follows from the fact that the underlying structural
+property---bilinearity---is common to many phenomena.
+
+The requirement of transferability has a practical consequence:
+when proposing a general equation, one should actively seek---and
+ideally demonstrate---that the same functional form appears in at
+least two different, independently motivated domains.  An equation
+that has been applied in one domain and claimed to be general, but
+has never been transferred to any other domain, has not yet earned
+the designation.
+
+
+
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Two Routes to Universality: Parametric and Non-Parametric}
+\label{sec:ucq:tworoutes}
+
+Having established the nine conditions, it is instructive to
+examine how the two routes studied in this book satisfy them, and
+where they differ.
+
+\subsection{The Parametric Route: Functional Equations and Derived Families}
+\label{ssec:ucq:parametric}
+
+The parametric route proceeds from \emph{properties to equations
+to families}.  Starting from physically motivated
+properties---additivity, max-stability, damage accumulation,
+reproductive behaviour---one formulates a system of functional
+equations and solves for the family of functions consistent with
+those properties.  The result is a \emph{parametric family}: the
+Weibull family, the generalised extreme value family, the gamma
+family, the family of Archimedean copulas.
+
+\begin{itemize}[leftmargin=2.5em]
+  \item \textbf{C1~Unit invariance}: enforced by working with
+    dimensionless $\pi_i$ from the outset.
+  \item \textbf{C2~Completeness}: the responsibility of the physical
+    analyst; the functional equation framework does not guarantee it
+    but makes the gap explicit.
+  \item \textbf{C3~Well-posedness}: ensured when the functional
+    equation system is non-trivially solvable.
+  \item \textbf{C4~Derivability}: the defining virtue of this route.
+    The form is forced by the properties, not assumed.
+  \item \textbf{C5~Completeness}: typically yields a parametric
+    family; the family as a whole is the general equation.
+  \item \textbf{C6~Symmetry}: verified by confirming that the derived
+    family is invariant under the relevant transformations.
+  \item \textbf{C7~Interpretability of $\pi_i$}: depends on the care
+    taken in variable identification; parameters of the family
+    typically carry physical interpretations.
+  \item \textbf{C8~Interpretability of $\varphi$}: the structure of
+    the derived family reflects the properties from which it was
+    derived.
+  \item \textbf{C9~Transferability}: demonstrated when the same
+    family arises from the same properties in different domains.
+\end{itemize}
+
+\medskip\noindent
+The strength of this route is its derivational rigour: one knows
+exactly \emph{why} the functional form is what it is, see \cite{krantz1971foundations} and \cite{Narens2007}.  Its
+limitation is that the free parameters and arbitrary functions of the family must be
+estimated from data, and the family may not fit all instances of
+the phenomenon if the underlying properties are not universally
+satisfied.
+
+\subsection{The Non-Parametric Route: The ECDF Transformation}
+\label{ssec:ucq:nonparametric}
+
+The non-parametric route achieves universality by committing to
+\emph{no} functional form at all.  The ECDF transformation maps
+every variable to $[0,1]$ by replacing each observation with its
+empirical quantile.  The resulting variables are dimensionless,
+bounded, and comparable across all domains without domain-specific
+knowledge.
+
+\begin{itemize}[leftmargin=2.5em]
+  \item \textbf{C1~Unit invariance}: achieved because quantiles are
+    dimensionless order statistics, invariant under any monotone
+    change of units.
+  \item \textbf{C6~Symmetry}: the relevant symmetry is invariance
+    under monotone marginal transformations; this is what the ECDF
+    transformation ensures, and it is the symmetry exploited by
+    Sklar's theorem, to be developed in
+    Chapter~\ref{ch:copulas}.
+\end{itemize}
+
+\medskip\noindent
+Where the non-parametric route differs most significantly from the
+parametric route is in Conditions~C4, C5, and C8.  The ECDF route
+does not derive a specific functional form; it offers instead a
+universal \emph{representation space}---the unit hypercube
+$[0,1]^n$---in which any joint distribution can be studied through
+its copula.  The functional form of the copula is not derived from
+first principles, but must be either estimated non-parametrically
+or chosen from a parametric family (at which point the parametric
+route re-enters).
+
+Condition~C7 takes a different character in the non-parametric
+setting.  Individual $\pi_i$ become quantiles: ``only 2\% of
+observations lie below this value.''  This is a universal
+interpretability scale---applicable in medicine, engineering,
+finance, and social science without modification---but it is a
+scale of \emph{relative position}, not of \emph{physical
+mechanism}.  Whether this constitutes genuine physical
+interpretability in the sense of~C7 depends on the application:
+in quality control, reliability assessment, and epidemiology,
+quantile interpretability is exactly what is needed; in
+fundamental physics and mechanism identification, it is one step
+removed from the desired physical understanding.
+
+\begin{remarkbox}
+The two routes are not competitors but \emph{complements}.  The
+parametric route provides deep structural understanding of specific
+phenomena; the non-parametric route provides a universal
+representation that works across all phenomena without requiring
+that understanding.
+
+A mature general representation framework for scientific models typically \emph{combines}
+both: a derived parametric structure for the marginals (from
+functional equations), and a copula-based description of the
+dependence (from the ECDF route and Sklar's theorem), working
+together within the Bayesian network framework of
+Chapter~\ref{ch:bayesiannetworks}.  The chapters that follow
+develop exactly this synthesis.
+\end{remarkbox}
+
+
+Figure \ref{fig:NineConditionsEnglish} Summarizes the nine conditions classified by the three indicated levels.
+
+\begin{figure}[h]FF
+\centering
+\includegraphics[width=0.5\textwidth]{NineConditionsEnglish.png}
+\caption{The nine conditions classified by levels.}
+\label{fig:NineConditionsEnglish}
+\end{figure}─────────────────────────────────────────────────────────────────────────────
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Summary: A Checklist for Universality}
+\label{sec:ucq:summary}
+
+Table~\ref{tab:ucq:conditions} collects the nine conditions in one
+place.
+
+\begin{table}[ht]
+\centering
+\caption{The nine conditions for $\varphi(\pi_1,\ldots,\pi_n)=0$
+to qualify as a general representation framework for scientific models.}
+\label{tab:ucq:conditions}
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\textwidth}{%
+  >{\centering\arraybackslash}p{0.6cm}
+  >{\raggedright\arraybackslash}p{4.0cm}
+  >{\raggedright\arraybackslash}p{2.2cm}
+  >{\raggedright\arraybackslash}X}
+\toprule
+\rowcolor{headerbg}
+\textbf{\#} & \textbf{Condition} & \textbf{Tier}
+            & \textbf{Fails if\ldots} \\
+\midrule
+C1 & Unit invariance
+   & Formal
+   & Form changes under unit transformation \\
+C2 & Completeness of $\pi_i$
+   & Formal
+   & A governing variable is absent from the set \\
+C3 & Mathematical well-posedness
+   & Formal
+   & $\varphi$ is trivially zero, undefined, or has no
+     valid zero set \\
+\midrule
+C4 & Derivability of the functional form
+   & Structural
+   & Form is assumed, not derived from physical properties \\
+C5 & Completeness under properties
+   & Structural
+   & Multiple incompatible forms satisfy the same stated
+     properties \\
+C6 & Relevant symmetry invariance
+   & Structural
+   & Form changes under physically irrelevant transformations \\
+\midrule
+C7 & Interpretability of individual $\pi_i$
+   & Epistemic
+   & Groups are algebraic artifacts with no physical meaning \\
+C8 & Interpretability of the structure of $\varphi$
+   & Epistemic
+   & Equation structure has no correspondence to physical
+     mechanisms \\
+C9 & Transferability across phenomena
+   & Epistemic
+   & Form applies only to the single phenomenon for which
+     it was derived \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Three observations deserve emphasis.
+
+\medskip
+
+\textbf{The conditions are cumulative in depth.}  An equation that
+satisfies only the formal conditions (C1--C3) is a \emph{valid
+model}: it can be used safely, but it encodes no structural insight
+and may fail outside its calibration range.  One that also
+satisfies the structural conditions (C4--C6) is a \emph{derived
+model}: its form is justified, and its parameters carry meaning.
+One that additionally satisfies the epistemic conditions (C7--C9)
+to be considered as a \emph{general representation framework for scientific models}: it encodes a logical
+constraint on the world, applies to a class of phenomena, and is
+interpretable at every level.  The progression is not binary but
+gradual, and partial satisfaction is scientifically meaningful: it
+locates the equation on a spectrum from purely empirical to
+genuinely universal.
+
+\medskip
+
+\textbf{Condition~C4 represents an epistemological inversion.}
+The usual procedure in science is to propose a functional form,
+fit it to data, and assess its quality by goodness-of-fit metrics.
+The programme advocated in this book inverts this order: one asks
+first what structural properties the phenomenon \emph{must}
+possess, derives the admissible functional forms from those
+properties, and only then asks which member of the admissible
+family best fits the data.  This inversion is not merely
+methodological preference.  It is what separates a general
+equation---which encodes a logical constraint on the world---from
+a sophisticated interpolation, which merely encodes a statistical
+regularity in the available data.
+
+\medskip
+
+\textbf{Black-box machine learning and Condition~C4.}  Neural
+networks and other flexible architectures can achieve extraordinary
+fitting quality, but they do so by implicitly assuming that any
+sufficiently flexible function is admissible.  This is the
+antithesis of the property-based approach.  The critique is not
+that machine learning is unhelpful---it is immensely powerful for
+prediction within the data distribution---but that it does not,
+by itself, yield general equations of science.  Kolmogorov--Arnold
+Networks (KANs), discussed in Chapter~\ref{ch:ArchimedeanCopulas},
+represent a partial exception: their architecture is justified by a
+structural theorem.  But even KANs require supplementation by the
+nine conditions before their outputs can be called general
+equations.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{A Worked Example: The Fatigue S--N Equation Through All Nine
+  Conditions}
+\label{sec:ucq:worked}
+
+To ground the abstract conditions in a concrete case already
+encountered in the book, we trace the S--N equation for fatigue
+through all nine conditions.
+
+\subsection{Setting Up the Dimensionless Groups}
+
+The phenomenon is the fatigue life, measured in cycles, $N$, of a material specimen
+subjected to a cyclic stress ranging from a minimum stress, $\sigma_m$, and a maximum stress, $\sigma_M$, assuming that there exist a limit number of cycles, $N_0$, and an endurance limit stress, $\sigma_0$, under which failure does not occur.
+
+The relevant dimensionless variables according to the Buckinham theorem are the three dimensionless groups:
+\[
+  \pi_1 = \log\left(\frac{N}{N_0}\right),
+  \qquad
+  \pi_2 = \frac{\sigma_M}{\sigma_0},
+  \qquad
+  \pi_3 = \frac{\sigma_m}{\sigma_0}.
+\]
+
+\begin{itemize}[leftmargin=2.5em]
+  \item \textbf{C1~Unit invariance}: satisfied by
+    construction---all three groups are dimensionless.
+  \item \textbf{C2~Completeness}: for the considered test and under the assumptions stress ranging from $\sigma_m$ and $\sigma_M$ it is satisfied. If other factors as frequency, temperature, etc. other dimensionless ratios must be incorporated.
+  \item \textbf{C7~Interpretability of $\pi_i$}: $\pi_1 =
+    N/N_0$ is the normalised life (fraction
+    of the number of cycles to failure); $\pi_2 =
+    \sigma_M/\sigma_0$ and $\pi_3 =
+    \sigma_m/\sigma_0$ are the normalised maximum and minimum stresses, respectively ---both are
+    physically transparent stress ratios.
+\end{itemize}
+
+\subsection{Deriving the Functional Form from Physical Constraints}
+
+To determine the form of $\varphi(\pi_1,\pi_2,\pi_3)=0$, we do
+not choose a convenient curve.  Instead, we use a property leading to a functional equation that is solved and
+physical constraints that must hold regardless of the material:
+
+\begin{enumerate}[label=(\roman*)]
+  \item \textbf{Limit number of cycles.} When the number of cycles $N$ tends to $N_0$ then $\sigma_M\to\infty$ i.e.\
+    $\pi_2\to\infty$:
+    \[
+      \pi_2=\infty \quad \text{ whenever } \pi_1=\log\left(\frac{N}{N_0}\right)\to 0.
+    \]
+  \item \textbf{Endurance limit condition.} When the maximum applied stress tends to the endurance limit ($\sigma_M\to \sigma_0$, i.e.\
+    $\pi_2\to 1$), no fatigue failure occurs:
+    \[
+      \pi_1\to \infty \quad \text{ whenever } \pi_2\to 1.
+    \]
+\end{enumerate}
+
+These two asymptotic conditions, combined with the requirement of
+strict monotonicity ($N$ decreasing in $\sigma_M$), force the
+percentile curves of $N$, in the dimensionless form required by the Buckingham theorem, to be hyperplanes or of the form:
+\begin{equation}
+\log\left(\frac{N}{N_0}\right)\left(\frac{\sigma_M}{\sigma_0}-1\right)\frac{\sigma_m}{\sigma_0}=C(p),
+  \label{eq:ucq:sn_physical}
+\end{equation}
+where $N_0$ and $\sigma_0$ are parameters depending on the material and the probability level $p$.
+
+\begin{itemize}[leftmargin=2.5em]
+  \item \textbf{C3~Mathematical well-posedness}: the $\varphi()$ function is defined, is not trivially zero, and has a
+     valid zero set.
+  \item \textbf{C4~Derivability}: the mathematical form (\ref{eq:ucq:sn_physical}) follows
+    \emph{necessarily} from the two asymptotic constraints and
+    monotonicity.  No assumption about the functional form was
+    made; it was the only possibility.
+  \item \textbf{C5~Completeness}: These solutions are the
+    only compatible forms with the asymptotic properties and strict monotonicity (up to the two parameters $N_0$ and $\sigma_0$).
+  \item \textbf{C6~Relevant symmetry invariance}: the equation does not depend on irrelevant (non-considered) variables.
+  \item \textbf{C8~Interpretability of $\varphi$}: the horizontal
+    asymptote at $\pi_2=1$ corresponds to the physical
+    endurance limit; the condition $\pi_1=0$ corresponds to limit number of cycles
+    failure.  The (\ref{eq:ucq:sn_physical}) structure is the geometric consequence
+    of two \emph{real} physical bounds, not a modelling choice.
+  \item \textbf{C9~Transferability across phenomena}: the model is applicable to other physical phenomena as demonstrated in the following section.
+\end{itemize}
+
+\subsection{Transferability: The Same Form in Three Different Domains}
+
+The hyperbolic structure~\eqref{eq:ucq:sn_physical} appears in
+physically distinct degradation mechanisms:
+
+\begin{itemize}[leftmargin=2.5em]
+  \item \textbf{Creep rupture}: time to failure as a function of
+    applied stress at elevated temperature, with the creep limit
+    playing the role of $\sigma_0$.
+  \item \textbf{Wear and corrosion fatigue}: cumulative damage as a
+    function of load cycles, where surface degradation introduces a
+    shifted endurance limit.
+  \item \textbf{Fracture mechanics}: the Paris--Erdogan law in
+    integrated form produces S--N curves that are asymptotically
+    hyperbolic in the $(\Delta K,N)$ plane.
+\end{itemize}
+
+\noindent
+The same two-asymptote hyperbolic structure arising from the same
+two physical constraints in three independently motivated domains
+satisfies Condition~C9 and is the hallmark of a genuinely general
+equation.
+
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Closing Remarks: A Bridge to the Probabilistic Framework}
+\label{sec:ucq:closing}
+
+The nine conditions set out in this chapter represent a
+standard---demanding but achievable---for what it means to call an
+equation general.  Together they constitute a
+\emph{checklist for universality}: an equation that passes all
+nine has earned the right to the designation ``general representation framework for scientific models''; one that fails some of them has been identified
+precisely where further work is needed.
+
+The deepest condition is~C4: the derivability of the functional
+form from structural properties of the phenomenon.  Fourier did
+not \emph{choose} the heat equation because it fit his data; he
+\emph{derived} it from the principle that heat flow must be
+proportional to the temperature gradient.  Buckingham did not
+\emph{assume} that dimensionless groups govern physical similarity;
+he \emph{derived} it from the requirement that physical laws be
+independent of measurement units.  The functional equations of
+Chapter~\ref{ch:functionalequations} do not \emph{assume} that areas
+are products of dimensions; they \emph{derive} that form from the
+additivity properties of area.  In each case, the derivation is
+what makes the equation a candidate to be considered as general.
+
+\medskip
+
+\noindent
+\textbf{What comes next.}  Up to this point, the framework has
+been deterministic: $\varphi(\pi_1,\ldots,\pi_n)=0$ is a
+relation among definite values.  But real phenomena are
+stochastic: every observation carries uncertainty, and the full
+information about a system is contained not in a single value but
+in a joint probability distribution over all variables.
+
+Part~VI extends the framework to this setting.  The key insight is
+that the same principles---dimensionlessness via the ECDF
+transformation, functional-equation-derived structure, and order
+independence---that forced the additive form in
+Chapter~\ref{ch:Piforms} also determine the structure of the joint
+distribution.  In particular:
+
+\begin{itemize}[leftmargin=2.5em]
+  \item The ECDF transformation produces uniform marginals on
+    $[0,1]^n$, directly connecting to the definition of a copula.
+  \item Sklar's theorem provides the probabilistic counterpart of
+    the factorisation principle: any joint distribution decomposes
+    uniquely into its marginals and a copula encoding the pure
+    dependence structure.
+  \item The additive form~\eqref{eq:ucq:additive} derived in
+    Chapter~\ref{ch:Piforms} is precisely the form of Archimedean
+    copulas, revealing that this family is not a modelling choice
+    but a structural necessity under order independence.
+\end{itemize}
+
+\noindent
+The general representation framework for scientific models is not discovered by searching for
+the best fit among all possible functions.  It is discovered by
+asking:
+
+\begin{center}
+%\itshape
+What must this equation be, given what we know the phenomenon must
+do?
+\end{center}
+
+\noindent
+The answer to that question---deterministic or probabilistic---is
+always an equation that satisfies all nine conditions.  That is,
+we believe, not a coincidence.
+
+
+\section{Scope and Limitations}
+The results presented in this book do not imply that every scientific
+law is intrinsically multilinear or can be reduced exactly to the
+proposed representations.
+
+Rather, the main claim is that a remarkably broad family of scientific,
+engineering, and probabilistic models can be expressed, approximated,
+or analysed within a common structural framework.
+
+In this sense, the proposed methodology should be interpreted as a
+representation language rather than as a replacement for existing
+physical theories.
+
+The role played by the proposed framework is analogous to that of
+Fourier expansions. Fourier analysis does not replace the original
+physical laws, yet it provides a common language for representing and
+studying them. Likewise, the representations developed in this book
+are intended as a unifying analytical framework rather than as a new
+physical theory.
+
+\bigskip
+
+% ── Epigraph ──────────────────────────────────────────────────────────────────
+\begin{flushright}
+%\itshape
+``The art of doing mathematics consists in finding\\
+that special case which contains all the germs\\
+of generality.''\\\medskip
+\upshape --- David Hilbert
+\end{flushright}

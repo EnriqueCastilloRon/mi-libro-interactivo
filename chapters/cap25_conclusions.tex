@@ -1,0 +1,256 @@
+%\startcontents[chapter]
+\chapter{Conclusions and a General Theory of Scientific Modelling}
+\label{ch:conclusions}
+
+\section{Conclusions}
+The journey that began with a simple question—whether a general equation of science exists—has led to a unified mathematical framework that bridges deterministic and probabilistic modeling across disciplines. The preceding chapters have transformed an abstract ideal into a practical toolkit, grounded in rigorous mathematics and illustrated with real-world applications. This concluding chapter synthesizes the main results, distils the philosophy that underlies them, and issues an invitation for cross-disciplinary collaboration. The main conclusions of this book are given in the following subsections.
+
+\subsection{From Dimensional Reduction to Structural Determination}
+
+The Buckingham \(\pi\) theorem provides the point of departure. It reduces any physically meaningful relationship among \(n\) dimensional variables to an equivalent relationship among \(p = n-k\) dimensionless groups \(\pi_1,\dots,\pi_p\). This reduction is not merely a simplification; it is an exact equivalence that eliminates redundancy and exposes the true degrees of freedom of the problem. However, the theorem alone leaves the functional form of \(\phi(\pi_1,\dots,\pi_p)\) unspecified.
+
+Functional equations close this gap. By translating fundamental properties of a system—additivity, translation invariance, associativity, compatibility—into mathematical constraints, they determine the complete family of admissible functions. The examples in Chapter~4 (from the area of a rectangle to damage accumulation and medical diagnosis) reveal a recurring pattern: multivariate complexity often collapses into simple combinations of univariate functions. This property-based modeling ensures that the chosen functional form is not an arbitrary convenience but a logical consequence of the phenomena being studied.
+
+\subsection{The Primacy of Order and the ECDF Transformation}
+
+A foundational insight of this book is that relative order carries more essential information than absolute magnitude. The empirical cumulative distribution function (ECDF) transformation maps every variable to the interval \([0,1]\), producing dimensionless quantiles. A value of \(0.02\) means that only \(2\%\) of the population lies below; \(0.98\) means that only \(2\%\) lies above. This universal interpretability scale applies across domains—medicine, finance, engineering, and artificial intelligence—without requiring domain-specific knowledge.
+
+The ECDF transformation is nonparametric, order-preserving, and invertible. It makes variables dimensionless, legitimizes the application of transcendental functions, and provides a common language for heterogeneous data. When applied to all variables simultaneously, it aligns their scales and interpretations, suggesting a paradigm change: what matters is not the absolute value of a measurement but the rank it occupies within its population.
+
+\subsection{The Universal Functional Form from Aggregation and Order Independence}
+
+Under the two natural conditions that variables can be aggregated sequentially (one by one or in groups) and that the final result must be independent of the aggregation order, the function \(\phi\) is forced into the form
+\[
+\phi(\pi_1,\pi_2,\dots,\pi_{n-k}) = p\Bigl(p_1(\pi_1)+p_2(\pi_2)+\cdots+p_{n-k}(\pi_{n-k})\Bigr),
+\]
+where \(p,p_1,\dots,p_{n-k}\) are strictly monotonic univariate functions. The entire complexity of a multivariate relation reduces to \(n-k+1\) functions of a single argument each—a dramatic reduction that scales linearly rather than exponentially with dimension.
+
+This structure is not only a mathematical curiosity. It underlies generalized additive models, Archimedean copulas, and the recently proposed Kolmogorov–Arnold networks, all of which appear as special cases of a single, axiomatically justified framework.
+
+\subsection{Probabilistic Extension: Copulas and Archimedean Families}
+
+Choosing the multivariate joint cumulative distribution function as the target of learning extends the framework from deterministic laws to stochastic reality. Sklar's theorem decomposes any joint distribution with continuous marginals into a copula (capturing pure dependence) and the marginal distributions. Copulas are invariant under strictly increasing transformations; they depend only on ranks, directly connecting with the ECDF transformation.
+
+When the universal functional form from Chapter~7 is combined with the copula framework, a strong result emerges: only Archimedean copulas are compatible with both the aggregation and order-independence properties. An Archimedean copula has the form
+\[
+C(u_1,\dots,u_n) = \phi^{[-1]}\bigl(\phi(u_1)+\cdots+\phi(u_n)\bigr),
+\]
+which is precisely the universal aggregation form with \(p_j = \phi\) and \(p = \phi^{[-1]}\). This provides an axiomatic derivation of Archimedean copulas—not as one convenient family among many, but as the necessary structure under reasonable assumptions.
+
+\subsection{Bayesian Networks as Universal Stochastic Models}
+
+Bayesian networks represent universal stochastic models that can be learned locally, factorizing the joint distribution as a product of conditional probabilities:
+\[
+P(X_1,\dots,X_n) = \prod_{i=1}^{n} P(X_i\mid \operatorname{Pa}(X_i)).
+\]
+This factorization is not a modeling assumption; it is a universal property that any multivariate distribution admits, given an appropriate ordering (the Rosenblatt transformation). The directed acyclic graph makes conditional independencies explicit, enabling efficient inference via variable elimination, belief propagation, and the junction tree algorithm.
+
+A crucial insight is that the output of Bayesian inference need not be a single probability. By retaining hidden variables parametrically (rather than marginalizing them), the output becomes a random variable—a distribution over distributions. This richer representation makes epistemic uncertainty explicit and actionable, turning Bayesian networks into a tool not just for prediction but for reasoning about what we do not yet know.
+
+\subsection{Bayesian Methods: Unifying Parameters and Variables}
+
+Treating model parameters as random variables is not a minor technical adjustment; it is a reconceptualization of inference. Bayes' theorem combines prior knowledge and observed evidence into a posterior distribution that summarizes everything we know after seeing the data. Conjugate families (Beta–Binomial, Gamma–Poisson, Dirichlet–Multinomial) provide elegant closed-form updates, but their limitation—the posterior remains confined to the same family as the prior—motivates the use of simulation-based methods.
+
+Monte Carlo integration, rejection sampling, importance sampling, and Markov Chain Monte Carlo (MCMC) make possible what analytical methods forbid. The capacity to generate synthetic data from the posterior predictive distribution is not a theoretical luxury: it is the core that feeds modern artificial intelligence methods. Once a model is learned, we can generate unlimited synthetic data, answer queries via ad-hoc simulations, and use data-alone methods for validation and prediction.
+
+The ``perfect sample'' (quasi-Monte Carlo) method, using deterministic quantile sequences, achieves \(O(M^{-2})\) convergence instead of the stochastic \(O(M^{-1/2})\), offering 10--15 times better accuracy at comparable cost.
+
+\subsection{Actions and Interactions Models}
+
+The functional structures associated with actions and interactions provide another source of universal models. For three dimensionless variables, the most general trilinear interaction model is
+\[
+V = w_0 + w_1\pi_1 + w_2\pi_2 + w_3\pi_3 + w_{12}\pi_1\pi_2 + w_{13}\pi_1\pi_3 + w_{23}\pi_2\pi_3 + w_{123}\pi_1\pi_2\pi_3 = 0,
+\]
+which yields rectangular hyperbolas when one variable is fixed. By treating \(V\) as a three-parameter Weibull random variable, the deterministic model becomes probabilistic. The resulting percentile curves are confocal hyperbolas sharing the same asymptotes—a structure that appears naturally in fatigue analysis, creep deformation, fracture mechanics, wear processes, and corrosion kinetics.
+
+\subsection{Opacity as a Magnifying Glass: Seeing the Forest Through the Data}
+
+Three-dimensional data projected onto two-dimensional plots contain hidden structure that standard visualization obscures. Modulating the opacity of each data point as a function of its distance from the reference value of the conditioning variable acts as a selective lens. Points that are far from the reference fade; points that are close remain visible. This ``opacity as a magnifying glass'' technique makes the forest transparent, revealing:
+
+\begin{itemize}
+  \item \textbf{Trunks}: reference parameters and asymptotic limits.
+  \item \textbf{Branches}: interaction coefficients that control how variables modulate each other.
+  \item \textbf{Leaves}: individual percentile curves at specific operating conditions.
+  \item \textbf{Fruits}: reliability predictions and design allowables.
+\end{itemize}
+
+Opacity is a visualization tool, not an estimation tool. Its purpose is epistemic: to help the analyst see what the model has already found, and to reveal whether what the model has found is worth trusting.
+
+\subsection{Redefining Input and Output: Learn Once, Query Arbitrarily}
+
+A fundamental shift introduced in this book is that input and output sets of variables can be freely chosen \emph{without retraining}. In conventional neural networks, variables are fixed as inputs, outputs, or hidden. Here, we treat all variables equivalently, learn the full joint relationship (via the Bayesian network factorization), and then designate any subset as input and any subset as output at query time. Reassigning these roles does not require retraining, leading to significant computational savings and unprecedented flexibility.
+
+This proposal differs from the usual paradigm of neural networks, where variables are fixed as inputs or outputs. It offers an interesting alternative for certain problems, especially when multiple queries need to be answered without retraining, as shown in Chapter~19).
+
+\subsection{Conditioning on Positive-Probability Events}
+
+The classical conditional CDF \(F(x_1\mid x_2,\dots,x_n)\) in continuous distributions is defined on an event of probability zero, creating both theoretical difficulties and numerical instability. To overcome this limitation, we introduced an alternative definition using events of strictly positive probability:
+\[
+F(x_1\|x_2,\dots,x_n) := P(X_1\le x_1\mid X_2\le x_2,\dots,X_n\le x_n) = \frac{F(x_1,x_2,\dots,x_n)}{F(\infty,x_2,\dots,x_n)}.
+\]
+The double vertical bar distinguishes this operator from the classical single bar. Combined with the generalization of Sklar's theorem for groups, this new conditioning makes the entire Bayesian network machinery (propagation algorithms, factor learning, etc.) directly valid for continuous variables, eliminating the well-known pathologies of classical conditioning.
+
+\subsection{Generalized Sklar Theorem for Groups}
+
+Classical copulas separate only univariate marginals from the dependence structure. The generalization of Sklar's theorem for groups, developed in Chapter~17, allows copula decomposition to apply to arbitrary multivariate marginals. For a group partition \(\mathcal{G} = \{G_1,\dots,G_k\}\) of the variables, there exists a unique group copula \(C_{\mathcal{G}}\) such that
+\[
+F_X(x) = C_{\mathcal{G}}\bigl(T_{G_1}(x_{G_1}),\dots,T_{G_k}(x_{G_k})\bigr),
+\]
+where \(T_{G_i}\) are group-wise Rosenblatt transformations. This result shows that Bayesian networks are strictly more powerful than classical copulas: copulas separate univariate marginals, while Bayesian networks—via the generalized Sklar theorem—extend this separation property to multivariate marginals of arbitrary size.
+
+\subsection{Synthetic Data and Data-Driven AI}
+
+Bayesian methods, especially when implemented via networks, provide a natural and robust mechanism for generating synthetic data from the posterior predictive distribution. Once the models have been learned, the answer to queries can be based on ad-hoc simulations of synthetic data, especially designed to answer particular queries using data-alone methods. This capability is crucial for modern applications, including simulation studies, validation, and artificial intelligence, where large amounts of data are often required but not always available.
+
+The web-based interactive application described in Chapter~19 allows users to select input ranges via sliders on parallel coordinate plots and immediately see the conditional CDF of any output variable. The application updates in real time, enabling sensitivity analysis in milliseconds and making complex multivariate relationships accessible to practitioners across diverse fields.
+
+\subsection{Final Synthesis: The General Equation of Science}
+
+The journey from the Buckingham theorem to the final goal has shown that a general equation of science is not only possible but already here, ready to be used. The universal equation
+\[
+\phi(\pi_1,\pi_2,\dots,\pi_{n-k}) = 0
+\]
+is not an empty formality. Under the conditions developed throughout this book—dimensional reduction, functional constraints, ECDF normalization, aggregation and order independence, probabilistic extension via copulas and Bayesian networks, Bayesian treatment of parameters, actions-and-interactions structure, free choice of input and output, positive-probability conditioning, and group-wise Sklar generalization—this equation becomes a concrete, learnable, and interpretable model.
+
+What one ultimately seeks is the conditional probability of the approximated output set given the approximated input set. This changes completely the traditional idea of input and output: inputs and outputs are not fixed properties of the model but are chosen at query time, and the answer is a full conditional distribution, not a point estimate.
+
+\section{Statistical Universality of CDFs, Copulas, and Bayesian Networks}
+\label{subsec:universality-clarified}
+
+\subsection{Correcting Two Common Misconceptions}
+
+Before discussing statistical universality, we must correct two frequent misunderstandings that arise from the preceding chapters.
+
+\begin{enumerate}
+    \item \textbf{The Bayesian network factorisation applies to densities, not directly to CDFs.}
+    The standard chain rule for Bayesian networks is written for probability density functions (or probability mass functions):
+    \[
+    f(x_1,\ldots,x_n) = \prod_{i=1}^n f(x_i \mid \operatorname{Pa}(X_i)).
+    \]
+    This factorisation holds for absolutely continuous (or discrete) variables. For cumulative distribution functions, direct multiplication of conditional CDFs is not generally valid because conditioning on exact values $\{X_i = x_i\}$ has zero probability. The book overcomes this by introducing the double‑bar conditional operator $\|$ (Chapter~22), which conditions on events of strictly positive probability (e.g., half‑lines or intervals). With this operator, a factorisation of the CDF becomes exact:
+    \[
+    F(x_1,\ldots,x_n) = \prod_{i=1}^n F_i(x_i \mid\mid x_1,\ldots,x_{i-1}),
+    \]
+    where $F_i(x_i \mid\mid x_1,\ldots,x_{i-1}) = P(X_i \le x_i \mid X_1 \le x_1, \ldots, X_{i-1} \le x_{i-1})$. Thus, while the classical Bayesian network literature emphasises densities, the conceptual framework extends to CDFs via positive‑probability conditioning.
+
+    \item \textbf{The aggregation/order‑independent model is not representationally universal.}
+    The form derived in Chapter~7,
+    \[
+    \phi(\pi_1,\ldots,\pi_n) = p\!\left(\sum_{i=1}^n p_i(\pi_i)\right),
+    \]
+    is the \emph{necessary} structure when both sequential aggregation and order independence are imposed. However, not every multivariate function satisfies these properties. Hence this class is \textbf{not representationally universal} – it does not cover all possible continuous functions. It is a structurally universal family \emph{within the class of problems that obey the aggregation axioms}. In contrast, Bayesian networks (with arbitrary conditional distributions) are representationally universal: any joint distribution (density or CDF, with the appropriate conditioning operator) can be written as a product of conditional densities (or conditional CDFs) along some ordering. This is the content of the Rosenblatt transformation and the chain rule.
+
+    \item \textbf{The actions‑and‑interactions model (Chapters~16–17) is not representationally universal.}
+    The multilinear interaction model
+    \[
+    V = w_0 + \sum_i w_i\pi_i + \sum_{i<j} w_{ij}\pi_i\pi_j + \cdots + w_{12\ldots n}\prod_i\pi_i,
+    \]
+    the probabilistic extension of the Weibull‑hyperbola model, is derived from the assumption that the latent response $V$ can be expressed as a sum (or any associative operation) of actions and interactions up to a certain order. This structure generates rectangular hyperbolas when all but two variables are fixed and yields confocal percentile curves. However, not every multivariate relation can be written in this multilinear product form. Hence this family is \textbf{not representationally universal}. It is a structurally universal family only for phenomena where the underlying physics or economics justifies an additive (or multiplicative) decomposition of actions and interactions. When such justification is absent, the Bayesian network framework remains the appropriate choice.
+
+\end{enumerate}
+
+\subsection{Three Levels of Universality}
+
+To avoid confusion, we distinguish three levels:
+
+\begin{description}
+    \item[Level 1: Representational universality.] A framework is representationally universal if it can represent \emph{any} member of a broad class (e.g., any continuous multivariate distribution). Examples: the joint CDF (trivially), the set of all copulas, the set of all Bayesian networks (with arbitrary conditional distributions).
+
+    \item[Level 2: Structural universality under axioms.] A specific functional form is structurally universal if it is forced by a small set of natural axioms (additivity, order independence, translation invariance, associativity, etc.) and therefore appears across diverse scientific domains. Examples: the additive aggregation form, Archimedean copulas, the Weibull family from max‑stability. These families are \emph{not} representationally universal; they are the necessary forms \emph{given the axioms}.
+
+    \item[Level 3: Universal learning architecture.] A modelling framework is a universal learning architecture if it can be learned from data in a scalable way and then used to answer arbitrary conditional queries without retraining. Bayesian networks, with their local factorisation and efficient inference algorithms (variable elimination, belief propagation, junction tree), possess this property to a high degree. The free choice of input and output variables after learning (Chapter~21) is a distinguishing feature.
+\end{description}
+
+\subsection{The Book’s Conclusion: Bayesian Networks as the Universal General Model}
+
+After comparing the three objects – joint CDF, copula, Bayesian network – the book concludes that the Bayesian network is the most practical and flexible \emph{universal general model} for the following reasons:
+
+\begin{enumerate}
+    \item It is representationally universal: any joint distribution (continuous, discrete, or mixed) admits a factorisation into conditional densities (or conditional CDFs using the $\|$ operator) for some ordering and graph.
+    \item It is learnable: the graph structure encodes conditional independencies, and each local conditional distribution can be estimated separately (e.g., using ECDF transformations, copulas, or parametric families).
+    \item It supports arbitrary queries: after learning, any subset of variables can be designated as input (evidence) and any disjoint subset as output (query) without retraining. This is achieved by running inference algorithms on the fixed network.
+    \item It subsumes both the additive aggregation model (Chapter~7) and the actions‑and‑interactions model (Chapters~16–17) as special cases (when the graph has a particular structure or when the conditional distributions obey additional constraints), but is not limited by them.
+\end{enumerate}Fcontin
+
+Thus, while the additive aggregation form and the hyperbolic actions‑and‑interactions models are valuable for specific problems where their axioms hold, they are \textbf{not} claimed to be universal general models. The book’s universal claim is reserved for the Bayesian network framework itself, combined with the ECDF transformation (Chapter~6) and the generalised Sklar theorem for groups (Chapter~18).
+
+\subsection{Practical Recommendations}
+
+Based on the clarified distinctions, we offer the following recommendations for readers:
+
+\begin{enumerate}
+    \item \textbf{Use the joint CDF as the conceptual gold standard} – it contains all information. But do not attempt to learn it directly in high dimensions.
+    \item \textbf{Preprocess all variables via the ECDF transformation} (Chapter~6) to obtain uniform marginals. Then the problem reduces to learning a copula (the dependence structure).
+    \item \textbf{If the phenomenon satisfies aggregation or order‑independence properties}, derive the additive form $\phi = p(\sum p_i(\pi_i))$ via functional equations. This gives a parametric family that is structurally forced and interpretable. However, be aware that this family is not representationally universal; use it only when the axioms are justified.
+    \item \textbf{For general, unrestricted problems, adopt a Bayesian network as the universal learning architecture}. Learn the graph structure (using score‑based or constraint‑based methods) and the conditional distributions (using non‑parametric estimators, copulas, or parametric families as appropriate). Use the network to answer any conditional query by designating inputs and outputs at query time.
+    \item \textbf{Remember that the same joint distribution can be represented by many different Bayesian networks} (different orderings, different graphs). The art of Bayesian network modelling lies in finding a graph that is both sparse (computationally efficient) and causally/interpretably meaningful.
+\end{enumerate}
+
+\subsection{Closing Remark}
+
+In summary, representational universality is shared by the joint CDF, the copula concept, and the Bayesian network factorisation. However, when we ask ``what single framework should I use to model, learn, and query complex multivariate systems?'', the book’s answer is clear: the Bayesian network, enriched by the ECDF transformation and the generalised Sklar theorem for groups, provides the most powerful and flexible universal general model. The additive aggregation form and the actions‑and‑interactions model are valuable special cases, not competitors. This hierarchy – from the universal CDF to the practical Bayesian network – is the path the book has travelled, and the destination it recommends.
+
+\section{Toward a General Theory of Scientific Modelling}
+\label{ch:manifesto}
+
+The results above answer the technical question of \emph{what} the book has built. It remains to ask a different kind of question: \emph{why} does this construction work, and what does it teach us about scientific modelling in general? Traditionally, modelling follows a familiar sequence: observation, hypothesis, mathematical model, parameter estimation, validation. Although enormously successful, this process often contains an element of creativity that cannot easily be formalized, for the mathematical expression is frequently chosen because it appears to fit the observations. The philosophy developed throughout this book proposes a different route: instead of asking ``Which equation fits these data?'', we ask ``Which mathematical structures are compatible with the properties that the phenomenon must satisfy?'' This apparently small change has profound consequences, because the equation is no longer guessed; it is derived. The Buckingham theorem derives the dimensionless form; functional equations derive the functional form; the ECDF transformation derives the universal scale; the aggregation and order-independence conditions derive the additive structure; Sklar's theorem derives the copula decomposition; and the Rosenblatt transformation derives the Bayesian network factorization. The scientist who adopts this perspective no longer asks what function might fit the data; she asks what form the function must take, given what she knows about the system.
+
+\subsection{Four Universal Principles}
+
+Throughout the book, four principles have repeatedly appeared, and they are not independent observations but a hierarchy that progresses from the most basic constraint to the most comprehensive one.
+
+\begin{enumerate}
+
+\item \textbf{Invariance:} Scientific laws cannot depend on arbitrary human conventions such as the choice of units, and dimensional analysis expresses this requirement mathematically. This is the foundational principle, without which no equation can be a candidate for a law of nature, and it is the principle that gave us the Buckingham \(\pi\) theorem and the dimensionless groups that appear throughout this book. Any equation that changes its form when one passes from SI to Imperial units, or from degrees Celsius to Fahrenheit, is an artifact of measurement convention, not a statement about reality, and it cannot be considered a general scientific law.
+
+\item \textbf{Structural Consistency:} Physical properties are not freely postulated mathematical conveniences but impose precise constraints on the form an equation may take; once a property of the phenomenon is identified, it becomes a functional equation, and functional equations in turn determine the family of admissible models. The mathematics is no longer chosen for its elegance; it is forced by the physics—the principle that forced the additive structure of Chapter~\ref{ch:Piforms}, the bilinear forms of Chapter~\ref{ch:fatigue_foundations}, and the multilinear interactions of Chapter~\ref{ch:trajectory_models}. Empirical fitting should be regarded as the last step of model construction, not the first: whenever physical properties can be identified, the mathematical structure should emerge from those properties, while empirical fitting estimates the remaining parameters rather than the architecture itself.
+
+\item \textbf{Uncertainty:} Nature is deterministic only in an idealized sense, and measurements, variability, and incomplete information require probabilistic descriptions; probability is therefore not an alternative to physics but its natural extension. This is the principle that extends the framework from deterministic laws to stochastic reality, giving us copulas, Bayesian networks, and the Bayesian treatment of parameters is the principle that makes the framework applicable to real-world problems where uncertainty is not an exception but the rule.
+
+\item \textbf{Interaction:} Scientific phenomena are systems of interacting variables, and equations, networks, copulas, and Bayesian graphs are different mathematical representations of these interactions. The multilinear forms of Chapter~\ref{ch:trajectory_models}, the conditional dependencies of Bayesian networks, and the copula structures of Chapters~\ref{ch:copulas} and \ref{ch:ArchimedeanCopulas} are all expressions of this principle: the structure of interactions—how changes in one variable propagate through the system—is often the very phenomenon we seek to understand.
+
+\end{enumerate}
+
+Together, these four principles form a complete methodology: invariance determines what is possible, structural consistency determines what is admissible, uncertainty determines what is probable, and interaction determines what is connected. A model that respects all four principles is not merely a convenient fit to data; it is a genuine scientific representation that captures the essential structure of the phenomenon. This is also why artificial intelligence, discussed above in the context of synthetic data and posterior simulation, benefits from incorporating these principles rather than relying on data alone: scientific constraints reduce the hypothesis space, improve extrapolation, increase interpretability, and dramatically reduce the amount of data required. The functional network architectures of Chapter~\ref{ch:Piforms}, the copula-based models of Chapter~\ref{ch:copula-models}, and the Bayesian networks of Chapter~\ref{ch:bayesiannetworks} are not black boxes; they are transparent, interpretable, and grounded in first principles—an augmentation of scientific reasoning, not a replacement for it.
+
+\subsection{A Manifesto for Scientific Modelling}
+
+The ideas developed in this book may be summarized in ten statements, not as a random list but as a progression from the most fundamental to the most far-reaching.
+
+\begin{enumerate}
+
+\item \textbf{Scientific equations should be derived whenever possible, not guessed.} The modeller's task is not to search through an infinite space of possible functions, but to identify the structural properties of the phenomenon and let those properties force the functional form.
+
+\item \textbf{Physical properties are more fundamental than mathematical expressions.} A functional form chosen for mathematical convenience, without regard to the underlying physics, may fit the data but will fail when extrapolated beyond the observed range; a form derived from physical properties carries its own justification and its own limits.
+
+\item \textbf{Dimensional invariance is a necessary condition for scientific validity.} The Buckingham \(\pi\) theorem is the precise mathematical expression of this requirement, and it is the first filter through which any candidate equation must pass.
+
+\item \textbf{Functional equations provide the natural bridge between physical properties and mathematical models.} The examples in Chapter~\ref{ch:functionalequations}—from the area of a rectangle to damage accumulation—demonstrate that functional equations are the most direct way to encode what we know about a system.
+
+\item \textbf{Deterministic and probabilistic models are complementary rather than competing descriptions.} The copula framework and Bayesian networks show that the same structural principles that govern deterministic equations also govern probabilistic dependence.
+
+\item \textbf{Dependence structures contain scientific information that should not be discarded.} The multilinear forms of Chapter~\ref{ch:trajectory_models}, the copula decompositions of Chapter~\ref{ch:copulas}, and the conditional dependencies of Bayesian networks all demonstrate that dependence is not noise but signal.
+
+\item \textbf{Bayesian reasoning provides the natural language for learning from uncertainty.} Treating parameters as random variables unifies parameters and observables in a single probabilistic framework.
+
+\item \textbf{Artificial intelligence should incorporate scientific principles instead of replacing them.} The most promising path forward is not purely data-driven learning but a synthesis of data and structure.
+
+\item \textbf{The ultimate objective of modelling is understanding rather than merely prediction.} A model that predicts well but cannot be interpreted or connected to physical principles is a tool for engineering but not a contribution to science.
+
+\item \textbf{Searching for general modelling principles may be as important as searching for new scientific laws.} This book has been an attempt to articulate such principles—invariance, structural consistency, uncertainty, interaction—and to show that they can guide the construction of models across disciplines, from fatigue to artificial intelligence.
+
+\end{enumerate}
+
+These ten statements are the logical conclusion of the arguments developed throughout this book, supported by the theorems, proofs, and applications of the preceding chapters.
+
+\subsection{A Call for Collaboration}
+
+The results presented in this book are not the final word but a foundation. The framework unifies dimensional analysis, functional equations, ECDF transformations, copulas, Bayesian networks, Bayesian methods, actions-and-interactions models, opacity visualization, and generalized Sklar theorems. Its multidisciplinary nature means that genuine progress requires collaboration across mathematics, statistics, engineering, artificial intelligence, and domain sciences.
+
+We call for shared data, open-source code, refereeing work, and—above all—a willingness to see multivariate problems not as collections of isolated variables but as ordered structures that admit a universal representation. Is the general equation of science here? Can Bayesian networks and copulas represented by KANs be considered universal, because they can represent multidimensional sets of variables? It is now up to the community to use it, extend it, and prove its value across the vast landscape of scientific and engineering challenges.
+
+Scientific revolutions rarely occur because a new equation is discovered; more often they occur because an old problem is viewed from a different perspective. The present work makes no claim to belong to the historical sequence of Copernicus, Newton, Maxwell, or Einstein, for its ambition is considerably more modest: it proposes that scientific modelling itself possesses an underlying structure that transcends individual disciplines. Whether this hypothesis proves correct will not be decided by the arguments presented in these pages; it will be decided by future applications. We have travelled from the Buckingham theorem to the generalized Sklar theorem, from dimensional analysis to Bayesian networks, from empirical fitting to structural derivation; the journey has been long, but the destination is clear: a unified methodology for scientific modelling that is rigorous, flexible, and grounded in first principles. The framework we have developed is not the final word but an invitation to derive rather than guess, to understand rather than merely predict, to seek the principles that make knowledge coherent rather than the equations that fit the data.
+
+\vspace{1em}
+\noindent\textit{``The most beautiful thing we can experience is the mysterious. It is the source of all true art and science.''} \\
+\hfill --- Albert Einstein 

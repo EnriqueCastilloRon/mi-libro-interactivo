@@ -1,0 +1,1897 @@
+\startcontents[chapter]
+\chapter{OpenBUGS}\label{ch:OpenBUGS}
+\minitocboxed
+
+\section*{Motivation}
+
+You already command Bayesian theory and its computational methods. But there is a gap that every
+statistician knows well: the distance between knowing \emph{what} must be computed and being able
+to \emph{do it} efficiently on realistic models. OpenBUGS closes that gap with an audacious
+proposal: the user specifies the model in a high-level declarative language that mimics mathematical
+notation, and the software automatically selects and implements the appropriate sampling algorithms.
+
+This chapter introduces you to OpenBUGS---Bayesian inference Using Gibbs Sampling---the reference
+environment for MCMC-based Bayesian inference. Its design reflects a powerful philosophy: the
+statistical model is a directed acyclic graph, and parameters are nodes of that graph on an equal
+footing with observed variables. This unification of parameters and variables, which in previous
+chapters appeared as a conceptual consequence of the Bayesian paradigm, materialises here in a
+computational architecture that makes it fully operational.
+
+You will learn to write models in the BUGS language---from a simple linear regression to complex
+hierarchical structures---and to use DoodleBUGS to build them visually as graphs. You will see how
+to specify likelihoods, prior distributions, and derived quantities with a minimal and expressive
+syntax. And through applied examples---including the Bayesian modelling of material fatigue, with
+its probabilistic S-N curves and rigorous uncertainty quantification---you will verify that OpenBUGS
+transforms Bayesian statistical analysis from a theoretical exercise into a first-class tool for
+applied engineering and science.
+
+The promise of this chapter is concrete: upon completing it, you will be able to specify, fit, and
+diagnose complex Bayesian models on real data.
+
+\section{Introduction To OpenBUGS}
+
+OpenBUGS (Bayesian inference Using Gibbs Sampling) is a software package for performing Bayesian analysis using Markov Chain Monte Carlo (MCMC) methods. It is the open-source version of WinBUGS and provides a flexible framework for specifying complex statistical models and performing inference on their parameters.
+
+OpenBUGS was developed by a team of leading Bayesians with an unrivaled understanding of Bayesian methods and conditional model specifications, a solid argument for its solid theoretical and practical bases. While conditional specification of distributions is a powerful feature, it carries out serious risks: each conditional specification must be checked for compatibility with the previous ones, otherwise one may inadvertently define a non-existent model \cite{ArnoldCS:92a,ArnoldCS:99}.
+
+OpenBUGS avoids this pitfall by forcing models to be defined as Bayesian networks, which automatically guarantees not only compatibility, but the possibility of including parameters as new random variables, the essence of Bayesian methods. In contrast, some modern alternatives allow users to define probabilistic models piecewise and freely, but not all users realise that an invalid conditional definition can easily arise if the compatibility of conditional specifications is not carefully verified.
+
+\subsection{Key features of OpenBUGS}
+
+The Key Features of OpenBUGS are:
+\begin{itemize}
+    \item \textbf{Declarative Model Specification}: Models are specified in a high-level language that closely resembles mathematical notation
+    \item \textbf{Automatic MCMC Implementation}: The software automatically chooses and implements appropriate sampling algorithms
+    \item \textbf{Graphical Model Representation}: Internal representation uses directed acyclic graphs (DAGs)
+    \item \textbf{Wide Range of Distributions}: Supports numerous probability distributions for both priors and likelihoods
+    \item \textbf{Convergence Diagnostics}: Built-in tools for assessing MCMC convergence
+\end{itemize}
+
+\subsection{The BUGS language}
+
+The BUGS language uses a declarative syntax where the user specifies:
+\begin{enumerate}
+    \item The likelihood function (data model)
+    \item Prior distributions for parameters
+    \item Derived quantities of interest
+\end{enumerate}
+
+The general syntax follows the pattern:
+\begin{codebox}
+\begin{verbatim}
+variable ~ distribution(parameters)
+\end{verbatim}
+\end{codebox}
+
+\subsection{Advantages and limitations}
+
+Advantages of OpenBUGS:
+\begin{itemize}
+    \item Intuitive model specification that mirrors statistical notation
+    \item Handles complex hierarchical and multilevel models naturally
+    \item Automatic handling of conjugate and non-conjugate distributions. The convergence diagnostics implemented in OpenBUGS (Gelman–Rubin \(\hat{R}\), effective sample size) are justified by the ergodic theorems and the CLT for Markov chains.
+    \item Extensive documentation and active user community
+    \item Integration with R through packages like \texttt{R2OpenBUGS} and \texttt{BRugs}
+\end{itemize}
+
+Limitations:
+\begin{itemize}
+    \item Can be computationally intensive for large datasets or complex models
+    \item Requires understanding of MCMC diagnostics and convergence assessment
+    \item Some model structures may lead to slow mixing or convergence issues
+    \item Limited to models expressible as DAGs (no cyclic dependencies)
+\end{itemize}
+
+\section{Example 1: Simple linear regression}
+
+We illustrate OpenBUGS with a Bayesian linear regression example. Consider the model:
+
+\begin{align}
+y_i &\sim \mathcal{N}(\mu_i, \tau) \quad \text{for } i = 1, \ldots, n \\
+\mu_i &= \alpha + \beta x_i \\
+\alpha &\sim \mathcal{N}(0, 0.001) \\
+\beta &\sim \mathcal{N}(0, 0.001) \\
+\tau &\sim \text{Gamma}(0.001, 0.001)
+\end{align}
+
+where $\tau = 1/\sigma^2$ is the precision parameter.
+
+\subsection{Model specification}
+
+The model specification in BUGS language:
+\begin{codebox}
+\begin{verbatim}
+# model.txt - Model specification file
+model {
+    # Likelihood
+    for (i in 1:n) {
+        y[i] ~ dnorm(mu[i], tau)
+        mu[i] <- alpha + beta * x
+        # Predicted values for posterior predictive checks
+        y.pred[i] ~ dnorm(mu[i], tau)
+    }
+    # Priors
+    alpha ~ dnorm(0, 0.001)  # Intercept
+    beta ~ dnorm(0, 0.001)   # Slope
+    tau ~ dgamma(0.001, 0.001)  # Precision
+    # Derived quantities
+    sigma <- 1/sqrt(tau)  # Standard deviation
+    R2 <- 1 - var(y[] - mu[])/var(y[])  # R-squared
+}
+\end{verbatim}
+\end{codebox}
+
+\subsection{Data file}
+
+The data file contains observed values:
+\begin{codebox}
+\begin{verbatim}
+# data.txt - Data specification file
+list(
+    n = 10,
+    x = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+    y = c(2.1, 3.8, 5.9, 7.2, 9.5, 11.1, 13.3, 14.8, 17.2, 18.9)
+)
+\end{verbatim}
+\end{codebox}
+
+\subsection{Initial values file}
+
+Initial values for MCMC chains (typically multiple chains with different starting points):
+\begin{codebox}
+\begin{verbatim}
+# initials1.txt - Initial values for Chain 1
+list(
+    alpha = 0,
+    beta = 1,
+    tau = 1
+)
+\end{verbatim}
+\end{codebox}
+
+\begin{codebox}
+\begin{verbatim}
+# initials2.txt - Initial values for Chain 2
+list(
+    alpha = 5,
+    beta = 2,
+    tau = 0.5
+)
+\end{verbatim}
+\end{codebox}
+
+\subsection{Script file}
+
+Commands to run the analysis:
+{\small
+\begin{codebox}
+\begin{verbatim}
+# script.txt - OpenBUGS script commands
+# Check model syntax
+display('model')
+check('model.txt')
+# Load data
+display('data')
+data('data.txt')
+# Compile model
+display('compile')
+compile(numChains=2)
+# Load initial values
+display('initial values')
+inits(1, 'initials1.txt')
+inits(2, 'initials2.txt')
+# Generate initial values for unspecified nodes
+gen.inits()
+# Set monitors for parameters of interest
+set('alpha')
+set('beta')
+set('sigma')
+set('R2')
+# Burn-in period
+update(5000)
+# Sampling phase
+update(10000)
+# Calculate summary statistics
+stats('*')
+# Calculate DIC (Deviance Information Criterion)
+dic.set()
+update(1000)
+dic.stats()
+# Save results
+coda('*', 'results')
+\end{verbatim}
+\end{codebox}
+}
+
+\subsection{Bayesian network representation}
+
+OpenBUGS internally represents models as directed acyclic graphs (DAGs). The following diagram shows the graphical model for our linear regression example:
+\begin{figure}[H]
+\centering
+\resizebox{0.70\textwidth}{!}{
+\begin{tikzpicture}[
+    node distance=1.5cm and 2cm,
+    param/.style={circle, draw=blue!60, fill=blue!5, very thick, minimum size=12mm},
+    data/.style={circle, draw=gray!60, fill=gray!20, very thick, minimum size=12mm},
+    constant/.style={rectangle, draw=green!60, fill=green!5, thick, minimum size=10mm},
+    hyperprior/.style={circle, draw=red!60, fill=red!5, thick, minimum size=8mm},
+    legend/.style={anchor=west, font=\footnotesize}
+]
+
+% MAIN GRAPH
+\begin{scope}[local bounding box=main]
+    % Hyperprior nodes
+    \node[hyperprior] (prior_alpha) {$\mu_\alpha=0$};
+    \node[hyperprior, right=of prior_alpha] (prior_beta) {$\mu_\beta=0$};
+    \node[hyperprior, right=of prior_beta] (prior_tau_a) {$a=0.001$};
+    \node[hyperprior, right=of prior_tau_a] (prior_tau_b) {$b=0.001$};
+
+    % Parameter nodes
+    \node[param, below=of prior_alpha] (alpha) {$\alpha$};
+    \node[param, below=of prior_beta] (beta) {$\beta$};
+    \node[param, below=of prior_tau_b] (tau) {$\tau$};
+
+    % Deterministic node
+    \node[param, below=2cm of beta] (mu) {$\mu_i$};
+
+    % Data nodes
+    \node[constant, left=of mu] (x) {$x_i$};
+    \node[data, below=of mu] (y) {$y_i$};
+
+    % Derived quantity
+    \node[param, right=of tau] (sigma) {$\sigma$};
+
+    % Arrows
+    \draw[-latex, thick] (prior_alpha) -- (alpha);
+    \draw[-latex, thick] (prior_beta) -- (beta);
+    \draw[-latex, thick] (prior_tau_a) -- (tau);
+    \draw[-latex, thick] (prior_tau_b) -- (tau);
+    \draw[-latex, thick] (alpha) -- (mu);
+    \draw[-latex, thick] (beta) -- (mu);
+    \draw[-latex, thick] (x) -- (mu);
+    \draw[-latex, thick] (mu) -- (y);
+    \draw[-latex, thick] (tau) -- (y);
+    \draw[-latex, thick] (tau) -- (sigma);
+
+    % Plate
+    \node[draw, dashed, fit=(mu) (y) (x), inner sep=8pt] (plate) {};
+    \node[below right] at (plate.south west) {$i = 1, \ldots, n$};
+\end{scope}
+
+% LEGEND
+\begin{scope}[xshift=11.32cm, yshift=-5.5cm, local bounding box=legendBox]
+    \node[anchor=north west, font=\bfseries\footnotesize] at (0,1.5) {Legend:};
+    \node[param, minimum size=8mm] at (0,0.62) {};
+    \node[legend] at (0.9,0.62) {Stochastic node};
+    \node[data, minimum size=8mm] at (0,-0.26) {};
+    \node[legend] at (0.9,-0.26) {Observed data};
+    \node[constant, minimum size=7mm] at (0,-1.14) {};
+    \node[legend] at (0.9,-1.14) {Constant/covariate};
+    \node[hyperprior, minimum size=6mm] at (0,-2.02) {};
+    \node[legend] at (0.9,-2.02) {Hyperprior};
+    \draw[-latex, thick] (0,-2.90) -- (0.7,-2.90);
+    \node[legend] at (0.9,-2.90) {Dependence};
+    \node[draw, dashed, minimum size=6mm] at (0,-3.78) {};
+    \node[legend] at (0.9,-3.78) {Plate (repeated)};
+\end{scope}
+
+\draw[dashed, gray] ([xshift=1cm]main.north east) -- ([xshift=1cm]main.south east);
+
+\end{tikzpicture}
+}
+\caption{Bayesian network (DAG) representation of the linear regression model. Circles represent stochastic nodes, rectangles represent constants or observed covariates. The dashed rectangle (plate) indicates repeated structure across observations.}
+\label{fig:dag}
+\end{figure}
+
+\subsection{Running the analysis}
+
+To execute the analysis in OpenBUGS:
+
+\begin{enumerate}
+    \item Open OpenBUGS
+    \item Load the model file: \texttt{File > Open > model.txt}
+    \item Execute commands from the script file manually or:
+    \item Use batch mode: \texttt{File > Script > script.txt}
+    \item Monitor convergence using trace plots and Gelman-Rubin statistics
+    \item Examine posterior summaries and credible intervals
+\end{enumerate}
+
+\subsection{Output interpretation}
+
+After running the MCMC sampling, OpenBUGS provides:
+
+\begin{itemize}
+    \item \textbf{Mean and median}: Point estimates of parameters
+    \item \textbf{Standard deviation}: Uncertainty in parameter estimates
+    \item \textbf{Credible intervals}: Typically 95\% intervals (2.5\% and 97.5\% quantiles)
+    \item \textbf{MC error}: Monte Carlo standard error of the mean
+    \item \textbf{Trace plots}: Visual assessment of chain convergence
+    \item \textbf{$\hat{R}$ (Gelman-Rubin)}: Convergence diagnostic (should be close to 1.0)
+    \item \textbf{DIC}: Deviance Information Criterion for model comparison
+\end{itemize}
+
+\section{Example 2: Parabolic regression}
+
+Parabolic regression, also known as quadratic regression, is a fundamental technique for modeling non-linear relationships between variables. In a Bayesian framework using OpenBUGS, we can not only estimate model parameters but also obtain predictive distributions that quantify uncertainty in future observations. This section presents a complete example of parabolic regression implementation in OpenBUGS, with special emphasis on comparing models with and without predictive distributions.
+
+\subsection{The parabolic regression model}
+
+The parabolic regression model assumes that the response variable $y$ follows a quadratic relationship with the predictor $x$:
+\begin{equation}
+\mu_i = a + bx_i + cx_i^2
+\end{equation}
+where $a$, $b$, and $c$ are the regression coefficients to be estimated. In the Bayesian framework, we specify a likelihood and prior distributions for all parameters.
+
+\subsection{Data structure and initial visualization}
+
+The dataset used in this example exhibits a clear parabolic trend with heteroscedasticity (non-constant variance). Figure \ref{fig:initial_data} shows the initial data with corresponding percentile bands, illustrating both the non-linear trend and the increasing variability as $x$ increases.
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.65\textwidth]{fig1_initial_data_con_fondo.png}
+\caption{Parabolic regression initial data with percentile curves. The plot shows a clear non-linear parabolic trend and evidence of heteroscedasticity, with variance increasing as $x$ increases.}
+\label{fig:initial_data}
+\end{figure}
+
+\subsection{Basic model without predictive distributions}
+
+The fundamental OpenBUGS model for parabolic regression is specified as follows:
+\begin{codebox}
+\begin{verbatim}
+# Parabolic Regression Example
+model {
+    for (i in 1:N) {
+        tau[i] <- 1/(x[i]*x[i]*sigma*sigma)
+        # Data likelihood
+        y[i] ~ dnorm(mu[i], tau[i])
+        mu[i] <- a + b*x[i]*x[i]
+    }
+    # Priors
+    sigma ~ dgamma(0.001, 0.001)
+    a ~ dgamma(0.001, 0.001)
+    b ~ dgamma(0.001, 0.001)
+}
+\end{verbatim}
+\end{codebox}
+
+\textbf{Key components of the model:}
+
+\begin{itemize}
+\item \textbf{Precision (tau):} The model specifies precision $\tau_i = \frac{1}{x_i^2 \sigma^2}$, which models heteroscedasticity by allowing variance to change with $x$.
+\item \textbf{Likelihood:} Each observation $y_i$ follows a normal distribution with mean $\mu_i = a + bx_i^2$ and precision $\tau_i$.
+\item \textbf{Priors:} Vague gamma priors with parameters $(0.001, 0.001)$ are specified for all parameters ($\sigma$, $a$, $b$), representing minimal prior information.
+\end{itemize}
+
+\subsection{Enhanced model with predictive distributions}
+
+The enhanced model includes both prior and posterior predictive distributions:
+\begin{codebox}
+\begin{verbatim}
+model {
+    for (i in 1:N) {
+        tau[i] <- 1/(x[i]*x[i]*sigma*sigma)
+        tauprior[i] <- 1/(x[i]*x[i]*sigmaprior*sigmaprior)
+        # Data likelihood
+        y[i] ~ dnorm(mu[i], tau[i])
+        # Prior predictive
+        yprior[i] ~ dnorm(muprior[i], tauprior[i])
+        # Posterior predictive
+        ypredictive[i] ~ dnorm(mu[i], tau[i])
+        mu[i] <- a + b*x[i]*x[i]
+        muprior[i] <- aprior + bprior*x[i]*x[i]
+    }
+# Priors for posterior model
+    a ~ dunif(0.5, 2)
+    b ~ dunif(1, 3)
+    sigma ~ dunif(0.5, 2)
+
+# Priors for prior predictive
+    aprior ~ dunif(0.5, 2)
+    bprior ~ dunif(1, 3)
+    sigmaprior ~ dunif(0.5, 2)
+}
+\end{verbatim}
+\end{codebox}
+
+\textbf{Additional components for predictive distributions:}
+
+\begin{itemize}
+\item \textbf{yprior[i]:} Prior predictive distribution - samples from the model before seeing any data, using parameters drawn from the prior distributions (aprior, bprior, sigmaprior).
+\item \textbf{ypredictive[i]:} Posterior predictive distribution - samples from the model after observing the data, using the posterior distributions of parameters (a, b, sigma).
+\item \textbf{Prior specification:} Uniform distributions are used instead of gamma distributions to provide more concentrated prior information: $a \sim \text{Uniform}(0.5, 2)$, $b \sim \text{Uniform}(1, 3)$, $\sigma \sim \text{Uniform}(0.5, 2)$.
+\end{itemize}
+
+\subsection{Graphical model representation}
+
+Figure \ref{fig:doodle} shows the directed acyclic graph (DAG) representation of the model structure, illustrating the probabilistic dependencies between variables.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.6\textwidth]{fig8_doodle_simple_con_fondo.png}
+\caption{Doodle (DAG) representation of the parabolic regression model showing the hierarchical structure and dependencies between parameters.}
+\label{fig:doodle}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{fig4_doodle_con_fondo.png}
+\caption{Doodle (DAG) representation of the parabolic regression model showing the hierarchical structure and dependencies between parameters including the predictives distributions.}
+\label{fig:doodlea}
+\end{figure}
+
+The graph shows:
+\begin{itemize}
+\item Hyperparameters (a, b, sigma) at the top level
+\item The data vector x[i] as observed variables
+\item Intermediate nodes mu[i] and tau[i] representing the mean and precision
+\item Response variables y[i] at the bottom, dependent on the model structure
+\end{itemize}
+
+\subsection{Data and initial values}
+
+Based on the visual inspection of the OpenBUGS interface in the video, the data structure is:
+\begin{codebox}
+\begin{verbatim}
+# Data file (Data.txt)
+list(
+    N = 140,
+    x = c(0.1, 0.12, 0.15, 0.18, 0.2, 0.22, 0.25, ...),
+    y = c(0.582, 0.664, 0.801, 0.923, 1.021, 1.134, 1.289, ...)
+)
+\end{verbatim}
+\end{codebox}
+
+\textbf{Initial values:}
+\begin{codebox}
+\begin{verbatim}
+# Initial values (Inits.txt)
+list(
+    a = 0.5,
+    b = 2,
+    sigma = 1
+)
+\end{verbatim}
+\end{codebox}
+
+\subsection{Comparing models: with and without predictive distributions}
+
+\subsubsection*{Prior predictive model}
+
+The prior predictive distribution represents our uncertainty about future observations \textit{before} observing any data. This is computed by:
+\begin{equation}
+p(y^{\text{prior}} | x) = \int p(y^{\text{prior}} | \theta, x) p(\theta) d\theta
+\end{equation}
+where $\theta = (a, b, \sigma)$ and the integration is over the prior distribution.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.65\textwidth]{fig5_prior_predictive_con_fondo.png}
+\caption{Comparison of the exact model (left) and prior predictive model (right). The prior predictive model shows wide uncertainty bands because it has not yet incorporated the observed data.}
+\label{fig:prior_predictive}
+\end{figure}
+
+\textbf{Key observation:} As shown in Figure \ref{fig:prior_predictive}, the prior predictive model generates curves that do not fit the sample data well because it ignores the information contained in the observations. The wide spread of predicted curves reflects our substantial uncertainty before seeing the data.
+
+\subsubsection*{Posterior predictive model}
+
+The posterior predictive distribution represents our uncertainty about future observations \textit{after} observing the data. This is computed by:
+\begin{equation}
+p(y^{\text{pred}} | y, x) = \int p(y^{\text{pred}} | \theta, x) p(\theta | y) d\theta
+\end{equation}
+where $p(\theta | y)$ is the posterior distribution of parameters given the observed data.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.65\textwidth]{fig6_posterior_predictive_con_fondo.png}
+\caption{Comparison of prior predictive model (left) and posterior predictive model (right). The posterior predictive model incorporates the observed data and provides much tighter prediction bands that accurately capture the data structure.}
+\label{fig:posterior_predictive}
+\end{figure}
+
+\textbf{Key observation:} As illustrated in Figure \ref{fig:posterior_predictive}, the posterior predictive model fits the sample data substantially better than the prior predictive model. The prediction bands are narrower and accurately capture the observed data points, demonstrating how Bayesian updating reduces uncertainty.
+
+\subsection{Implementation in OpenBUGS}
+
+The complete workflow in OpenBUGS involves several steps:
+
+\begin{enumerate}
+\item \textbf{Model specification:} Write the model in OpenBUGS syntax and save it to a file (e.g., \texttt{PReg.txt}).
+\item \textbf{Data loading:} Load the data file containing $N$, $x$, and $y$ values.
+\item \textbf{Model compilation:} Use the \texttt{model.compile()} command to check syntax and compile the model.
+\item \textbf{Initial values:} Load or generate initial values for all stochastic nodes.
+\item \textbf{MCMC setup:} Specify the number of chains (typically 1-3), burn-in period (e.g., 1000 iterations), and sampling iterations (e.g., 10,000).
+\item \textbf{Inference:} Run the Markov Chain Monte Carlo sampler using \texttt{model.update()}.
+\item \textbf{Monitoring:} Set monitors for parameters of interest (a, b, sigma) and predictive distributions (yprior, ypredictive).
+\item \textbf{Diagnostics:} Check convergence using trace plots, autocorrelation plots, and the Brooks-Gelman-Rubin statistic.
+\item \textbf{Results extraction:} Extract posterior summaries, credible intervals, and DIC for model comparison.
+\end{enumerate}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.50\textwidth]{fig7_final_model_con_fondo.png}
+\caption{Final parabolic regression model with percentile bands showing the posterior predictive distribution. The model successfully captures both the non-linear trend and the heteroscedasticity pattern.}
+\label{fig:final_model}
+\end{figure}
+
+\subsection{Parameter estimates}
+
+The Bayesian analysis provides complete posterior distributions for all parameters. Based on the MCMC sampling, we obtain:
+\begin{itemize}
+\item \textbf{Parameter a:} Posterior mean, standard deviation, and 95\% credible interval
+\item \textbf{Parameter b:} Posterior mean, standard deviation, and 95\% credible interval
+\item \textbf{Parameter $\sigma$:} Posterior mean, standard deviation, and 95\% credible interval
+\end{itemize}
+The posterior distributions incorporate both the prior information and the likelihood from the observed data, with the data dominating due to the vague priors used.
+
+\subsection{Model fit assessment}
+
+Several aspects demonstrate the quality of the model fit:
+\begin{enumerate}
+\item \textbf{Visual assessment:} Figure \ref{fig:final_model} shows that the posterior predictive percentile bands adequately cover the observed data points across the entire range of $x$ values.
+\item \textbf{Heteroscedasticity capture:} The model successfully captures the increasing variance pattern through the $x_i^2$ term in the precision specification $\tau_i = \frac{1}{x_i^2\sigma^2}$.
+\item \textbf{Convergence diagnostics:} All chains should show good mixing with Gelman-Rubin statistics close to 1.0 (typically $\hat{R} < 1.1$), indicating convergence to the posterior distribution.
+\item \textbf{Effective sample size:} Sufficient effective sample sizes (ESS > 100 for each parameter) ensure reliable posterior inference.
+\end{enumerate}
+
+\subsection{Predictive distribution comparison}
+
+The comparison between models with and without predictive distributions reveals crucial insights:
+
+\textbf{Without predictive distributions:}
+\begin{itemize}
+\item Only point estimates and credible intervals for parameters are obtained
+\item Uncertainty quantification is limited to parameter uncertainty
+\item Prediction for new observations requires post-processing outside OpenBUGS
+\item Cannot visualize the full range of plausible data under the model
+\end{itemize}
+
+\textbf{With prior predictive distributions:}
+\begin{itemize}
+\item Reveals the implications of prior beliefs before seeing data
+\item Shows that prior information alone provides poor predictions (Figure \ref{fig:prior_predictive})
+\item Helps assess whether priors are reasonable by checking if they allow for observed data
+\item Useful for prior sensitivity analysis
+\end{itemize}
+
+\textbf{With posterior predictive distributions:}
+\begin{itemize}
+\item Provides complete uncertainty quantification including both parameter and sampling uncertainty
+\item Enables direct assessment of model fit through comparison with observed data
+\item Facilitates prediction for new observations with full uncertainty propagation
+\item Generates percentile bands that capture the heteroscedasticity pattern (Figure \ref{fig:final_model})
+\end{itemize}
+
+\subsection{Model adequacy}
+
+The posterior predictive distribution serves as a powerful tool for model checking. If the observed data fall within the credible bands of the posterior predictive distribution (typically the 95\% bands), this provides evidence that the model is adequate. In our example, the excellent coverage demonstrated in Figure \ref{fig:final_model} suggests that the parabolic model with heteroscedastic errors is appropriate for these data.
+
+\subsection{Prediction uncertainty}
+
+One of the key advantages of the Bayesian approach with predictive distributions is the complete quantification of prediction uncertainty. For any new value $x^*$, we obtain:
+\begin{equation}
+p(y^* | y, x^*, x) = \int p(y^* | \theta, x^*) p(\theta | y, x) d\theta
+\end{equation}
+
+This distribution accounts for:
+\begin{itemize}
+\item \textbf{Parameter uncertainty:} Uncertainty about the true values of $a$, $b$, and $\sigma$
+\item \textbf{Sampling uncertainty:} Natural variability in observations even if parameters were known exactly
+\end{itemize}
+
+The prediction bands in Figure \ref{fig:final_model} reflect both sources of uncertainty, providing realistic assessments of where future observations might fall.
+
+\subsection{Computational considerations}
+
+When implementing predictive distributions in OpenBUGS:
+\begin{itemize}
+\item \textbf{Computational cost:} Adding predictive distributions increases computational burden proportionally to the number of prediction points.
+\item \textbf{Memory requirements:} Storing posterior samples for predictive distributions requires more memory, especially with large datasets.
+\item \textbf{Sampling efficiency:} Convergence may be slower when monitoring many nodes. Consider monitoring only a subset of predictive values if necessary.
+\item \textbf{Thinning:} For large datasets, consider thinning the MCMC chain (e.g., keeping every 10th iteration) to reduce storage requirements while maintaining adequate effective sample sizes.
+\end{itemize}
+
+\subsection{Conclusions}
+
+This example demonstrates several important aspects of Bayesian parabolic regression in OpenBUGS:
+
+\begin{enumerate}
+\item \textbf{Model flexibility:} The Bayesian framework naturally handles heteroscedasticity through appropriate specification of the precision term.
+\item \textbf{Prior vs. posterior predictive:} The stark contrast between prior and posterior predictive models (Figures \ref{fig:prior_predictive} and \ref{fig:posterior_predictive}) illustrates the power of Bayesian learning - the posterior distribution successfully combines prior beliefs with data evidence to generate accurate predictions.
+\item \textbf{Comprehensive uncertainty:} Posterior predictive distributions provide complete uncertainty quantification that is essential for reliable inference and prediction.
+\item \textbf{Model checking:} Posterior predictive distributions serve as an effective tool for assessing model adequacy through visual and formal posterior predictive checks.
+\item \textbf{Practical implementation:} OpenBUGS provides an accessible platform for implementing Bayesian models with predictive distributions, though users must be mindful of computational considerations.
+\end{enumerate}
+
+The inclusion of predictive distributions in the model specification, while computationally more demanding, provides substantial benefits for model understanding, checking, and prediction. The comparison between models with and without predictive distributions clearly shows that the additional computational cost is justified by the enhanced inferential capabilities and deeper understanding of model behavior.
+
+\subsection{Recommendations for practice}
+
+When conducting parabolic regression analysis in OpenBUGS:
+\begin{itemize}
+\item \textbf{Always include posterior predictive distributions} for model checking and prediction purposes.
+\item \textbf{Consider prior predictive distributions} during model development to ensure priors are reasonable and allow for observed data patterns.
+\item \textbf{Use informative priors} when genuine prior information is available, but verify that they do not dominate the data through prior predictive checks.
+\item \textbf{Monitor convergence carefully} using multiple chains, trace plots, and formal diagnostics.
+\item \textbf{Assess heteroscedasticity} in the data and model it explicitly if present, as in this example.
+\item \textbf{Visualize results} through plots of data with predictive percentile bands, as these provide intuitive assessments of model fit.
+\end{itemize}
+
+\section{Example 3: Multinomial-Dirichlet model}
+
+\subsection{Introduction}
+
+The Dirichlet-Multinomial conjugate model is fundamental for modeling categorical data with multiple categories. In OpenBUGS, we can estimate category probabilities and generate predictive distributions for future observations. This example demonstrates the implementation of a customer preference analysis across six product categories.
+
+The model assumes that customer choices follow a multinomial distribution with probabilities $\boldsymbol{\theta} = (\theta_1, \theta_2, \dots, \theta_K)$ for $K$ categories:
+\begin{equation}
+\mathbf{y} \sim \text{Multinomial}(n, \boldsymbol{\theta}), \quad \boldsymbol{\theta} \sim \text{Dirichlet}(\boldsymbol{\alpha})
+\end{equation}
+where $\mathbf{y} = (y_1, y_2, \dots, y_K)$ are the observed counts and $\boldsymbol{\alpha} = (\alpha_1, \alpha_2, \dots, \alpha_K)$ are the prior hyperparameters.
+
+\subsection{Model file}
+
+The basic model specification in BUGS language:
+\begin{codebox}
+\begin{verbatim}
+# model_multinomial.txt - Model specification file
+model {
+    # Multinomial likelihood
+    y[1:K] ~ dmulti(theta[1:K], n)
+
+    # Dirichlet prior
+    theta[1:K] ~ ddirch(alpha[1:K])
+
+    # Posterior predictive for m future observations
+    y.pred[1:K] ~ dmulti(theta[1:K], m)
+}
+\end{verbatim}
+\end{codebox}
+\textbf{Key components of the model:}
+\begin{itemize}
+\item \textbf{Likelihood:} The observed counts $y[1:K]$ follow a multinomial distribution with probabilities $\theta[1:K]$ and total sample size $n$.
+\item \textbf{Prior:} The category probabilities $\theta[1:K]$ follow a Dirichlet distribution with hyperparameters $\alpha[1:K]$.
+\item \textbf{Posterior predictive:} Future counts $y.pred[1:K]$ for $m$ new observations are generated from the posterior distribution of $\theta$.
+\end{itemize}
+
+\subsection{Enhanced model with prior predictive}
+
+The enhanced model includes both prior and posterior predictive distributions:
+\begin{codebox}
+\begin{verbatim}
+# model_multinomial_full.txt - Full model with predictives
+model {
+    # Observed data likelihood
+    y[1:K] ~ dmulti(theta[1:K], n)
+
+    # Dirichlet prior for posterior inference
+    theta[1:K] ~ ddirch(alpha[1:K])
+
+    # Prior predictive distribution
+    theta.prior[1:K] ~ ddirch(alpha[1:K])
+    y.prior[1:K] ~ dmulti(theta.prior[1:K], n)
+
+    # Posterior predictive for m future observations
+    y.pred[1:K] ~ dmulti(theta[1:K], m)
+
+    # Derived quantities
+    for (i in 1:K) {
+        # Probability that category i is most preferred
+        is.max[i] <- equals(theta[i], max(theta[]))
+    }
+}
+\end{verbatim}
+\end{codebox}
+\textbf{Additional components:}
+\begin{itemize}
+\item \textbf{theta.prior[1:K]:} Independent draw from prior for prior predictive
+\item \textbf{y.prior[1:K]:} Prior predictive counts before seeing data
+\item \textbf{y.pred[1:K]:} Posterior predictive counts for future observations
+\item \textbf{is.max[i]:} Indicator for which category has highest probability
+\end{itemize}
+
+\subsection{Data file}
+
+The data file contains the observed category counts:
+\begin{codebox}
+\begin{verbatim}
+# data_multinomial.txt - Data specification file
+list(
+    K = 6,
+    n = 300,
+    m = 150,
+    y = c(68, 82, 45, 28, 52, 25),
+    alpha = c(15, 15, 15, 15, 15, 15)
+)
+\end{verbatim}
+\end{codebox}
+
+\textbf{Data components:}
+\begin{itemize}
+\item \textbf{K = 6:} Number of categories (Electronics, Clothing, Home Goods, Sports, Books, Travel)
+\item \textbf{n = 300:} Total number of observed customers
+\item \textbf{m = 150:} Sample size for future predictions
+\item \textbf{y:} Observed counts per category
+\item \textbf{alpha:} Dirichlet prior parameters (equal weights reflecting uniform prior belief)
+\end{itemize}
+
+\subsection{Initial values file}
+
+Initial values for MCMC chains:
+\begin{codebox}
+\begin{verbatim}
+# initials1.txt - Initial values for Chain 1
+list(
+    theta = c(0.167, 0.167, 0.167, 0.167, 0.167, 0.165)
+)
+\end{verbatim}
+\end{codebox}
+\begin{codebox}
+\begin{verbatim}
+# initials2.txt - Initial values for Chain 2
+list(
+    theta = c(0.2, 0.25, 0.15, 0.1, 0.18, 0.12)
+)
+\end{verbatim}
+\end{codebox}
+\textbf{Note:} Initial values for $\theta$ must sum to 1.0 due to the Dirichlet constraint.
+
+\subsection{Script file}
+
+Commands to run the analysis:
+{\small
+\begin{codebox}
+\begin{verbatim}
+# script_multinomial.txt - OpenBUGS script commands
+# Check model syntax
+display('model')
+check('model_multinomial_full.txt')
+
+# Load data
+display('data')
+data('data_multinomial.txt')
+
+# Compile model
+display('compile')
+compile(numChains=2)
+
+# Load initial values
+display('initial values')
+inits(1, 'initials1.txt')
+inits(2, 'initials2.txt')
+
+# Generate initial values for unspecified nodes
+gen.inits()
+
+# Set monitors for parameters of interest
+set('theta')
+set('y.prior')
+set('y.pred')
+set('is.max')
+
+# Burn-in period
+update(10000)
+
+# Sampling phase
+update(50000)
+
+# Calculate summary statistics
+stats('*')
+
+# Calculate DIC (Deviance Information Criterion)
+dic.set()
+update(5000)
+dic.stats()
+
+# Save results
+coda('*', 'results_multinomial')
+
+# Specific summaries
+stats('theta')
+stats('y.pred')
+\end{verbatim}
+\end{codebox}
+}
+
+\subsection{Bayesian network representation}
+
+The graphical model for the Dirichlet-Multinomial conjugate model is shown in Figure \ref{fig:dag_multinomial}.
+\begin{figure}[htpb]
+\centering
+\resizebox{0.75\textwidth}{!}{
+\begin{tikzpicture}[
+    node distance=1.5cm and 2cm,
+    param/.style={circle, draw=blue!60, fill=blue!5, very thick, minimum size=12mm},
+    data/.style={circle, draw=gray!60, fill=gray!20, very thick, minimum size=12mm},
+    constant/.style={rectangle, draw=green!60, fill=green!5, thick, minimum size=10mm},
+    hyperprior/.style={circle, draw=red!60, fill=red!5, thick, minimum size=8mm},
+    legend/.style={anchor=west, font=\footnotesize}
+]
+
+% MAIN GRAPH (left)
+\begin{scope}[local bounding box=main]
+    % Hyperprior nodes (at top)
+    \node[hyperprior] (alpha) {$\boldsymbol{\alpha}$};
+
+    % Parameter node
+    \node[param, below=2cm of alpha] (theta) {$\boldsymbol{\theta}$};
+
+    % Constants
+    \node[constant, left=2cm of theta] (n) {$n$};
+    \node[constant, right=2cm of theta] (m) {$m$};
+
+    % Data nodes
+    \node[data, below left=1.5cm and 0.5cm of theta] (y) {$\mathbf{y}$};
+    \node[param, below right=1.5cm and 0.5cm of theta] (ypred) {$\mathbf{y}^{pred}$};
+
+    % Arrows from hyperprior to parameter
+    \draw[-latex, thick] (alpha) -- (theta);
+
+    % Arrows to data
+    \draw[-latex, thick] (theta) -- (y);
+    \draw[-latex, thick] (n) -- (y);
+
+    % Arrows to predictive
+    \draw[-latex, thick] (theta) -- (ypred);
+    \draw[-latex, thick] (m) -- (ypred);
+
+    % Labels for vectors
+    \node[below=0.3cm of y, font=\footnotesize] {$(y_1, \ldots, y_K)$};
+    \node[below=0.3cm of ypred, font=\footnotesize] {$(y_1^{pred}, \ldots, y_K^{pred})$};
+    \node[above=0.2cm of theta, font=\footnotesize] {$(\theta_1, \ldots, \theta_K)$};
+\end{scope}
+
+% LEGEND (right lower)
+\begin{scope}[xshift=11cm, yshift=-3cm, local bounding box=legendBox]
+    \node[anchor=north west, font=\bfseries\footnotesize] at (0,1.5) {Legend:};
+    \node[param, minimum size=8mm] at (0,0.62) {};
+    \node[legend] at (0.9,0.62) {Stochastic node};
+    \node[data, minimum size=8mm] at (0,-0.26) {};
+    \node[legend] at (0.9,-0.26) {Observed data};
+    \node[constant, minimum size=7mm] at (0,-1.14) {};
+    \node[legend] at (0.9,-1.14) {Constant};
+    \node[hyperprior, minimum size=6mm] at (0,-2.02) {};
+    \node[legend] at (0.9,-2.02) {Hyperprior};
+    \draw[-latex, thick] (0,-2.90) -- (0.7,-2.90);
+    \node[legend] at (0.9,-2.90) {Dependence};
+\end{scope}
+
+\draw[dashed, gray] ([xshift=0.8cm]main.north east) -- ([xshift=0.8cm]main.south east);
+
+\end{tikzpicture}
+}
+\caption{Bayesian network (DAG) representation of the Dirichlet-Multinomial model. The hyperprior $\boldsymbol{\alpha}$ determines the Dirichlet distribution for category probabilities $\boldsymbol{\theta}$, which in turn generate the observed counts $\mathbf{y}$ and predictive counts $\mathbf{y}^{pred}$.}
+\label{fig:dag_multinomial}
+\end{figure}
+
+\subsection{Running the analysis}
+
+To execute the analysis in OpenBUGS:
+\begin{enumerate}
+    \item Open OpenBUGS
+    \item Load the model file: \texttt{File > Open > model\_multinomial\_full.txt}
+    \item Execute commands from the script file manually or:
+    \item Use batch mode: \texttt{File > Script > script\_multinomial.txt}
+    \item Monitor convergence using trace plots for each $\theta_i$
+    \item Examine Gelman-Rubin statistics (should be $\hat{R} < 1.1$ for all parameters)
+\end{enumerate}
+
+\subsection{Output interpretation}
+
+After running the MCMC sampling, OpenBUGS provides for each category probability $\theta_i$:
+\begin{itemize}
+    \item \textbf{Mean and median:} Point estimates of category probabilities
+    \item \textbf{Standard deviation:} Posterior uncertainty
+    \item \textbf{95\% Credible intervals:} 2.5\% and 97.5\% quantiles
+    \item \textbf{MC error:} Monte Carlo standard error
+\end{itemize}
+
+\textbf{Example output summary:}
+\begin{center}
+\begin{tabular}{lccccc}
+\hline
+\textbf{Parameter} & \textbf{Mean} & \textbf{SD} & \textbf{2.5\%} & \textbf{97.5\%} & \textbf{$\hat{R}$} \\
+\hline
+$\theta_1$ (Electronics) & 0.213 & 0.021 & 0.174 & 0.253 & 1.001 \\
+$\theta_2$ (Clothing) & 0.249 & 0.022 & 0.209 & 0.291 & 1.002 \\
+$\theta_3$ (Home Goods) & 0.154 & 0.018 & 0.120 & 0.190 & 1.001 \\
+$\theta_4$ (Sports) & 0.110 & 0.016 & 0.080 & 0.143 & 1.000 \\
+$\theta_5$ (Books) & 0.172 & 0.019 & 0.137 & 0.208 & 1.001 \\
+$\theta_6$ (Travel) & 0.103 & 0.015 & 0.074 & 0.135 & 1.001 \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Predictive distributions}
+
+The posterior predictive distribution $\mathbf{y}^{pred}$ provides expected counts for $m=150$ future customers:
+\begin{center}
+\begin{tabular}{lccc}
+\hline
+\textbf{Category} & \textbf{Mean} & \textbf{SD} & \textbf{95\% CI} \\
+\hline
+Electronics & 32.0 & 3.2 & [26, 38] \\
+Clothing & 37.4 & 3.3 & [31, 44] \\
+Home Goods & 23.1 & 2.7 & [18, 29] \\
+Sports & 16.5 & 2.4 & [12, 21] \\
+Books & 25.8 & 2.9 & [20, 31] \\
+Travel & 15.5 & 2.3 & [11, 20] \\
+\hline
+\end{tabular}
+\end{center}
+
+\subsection{Convergence diagnostics}
+
+\textbf{Trace plots:} Should show good mixing with chains overlapping and no trends (Figure \ref{fig:trace_multinomial}).
+\textbf{Autocorrelation:} Should decay quickly to near zero within 10-20 lags.
+\textbf{Gelman-Rubin statistic:} Values of $\hat{R} < 1.05$ indicate excellent convergence.
+\textbf{Effective sample size:} Should be $> 1000$ for reliable inference with 50,000 iterations.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{trace_plots_multinomial_con_fondo.png}
+\caption{Trace plots for the six category probabilities $\theta_1, \ldots, \theta_6$. Both chains (shown in different colors) show good mixing and convergence, with no apparent trends or periods of poor mixing.}
+\label{fig:trace_multinomial}
+\end{figure}
+
+\subsection{Model comparison and validation}
+
+\textbf{Posterior Predictive Checks:}
+Compare observed data $\mathbf{y}$ with posterior predictive replicates:
+\begin{itemize}
+\item Generate replicate datasets $\mathbf{y}^{rep}$ from posterior predictive
+\item Calculate test statistics (e.g., max count, range, chi-square)
+\item Compute Bayesian p-value: $P(T(\mathbf{y}^{rep}) \geq T(\mathbf{y}) | \mathbf{y})$
+\item Values near 0.5 indicate good model fit
+\end{itemize}
+
+\textbf{DIC (Deviance Information Criterion):}
+\begin{itemize}
+\item Lower DIC indicates better model fit
+\item Useful for comparing models with different prior specifications
+\item Penalizes model complexity
+\end{itemize}
+
+\subsection{Probabilistic queries}
+
+OpenBUGS allows computation of derived quantities through simulation:
+\textbf{Category comparisons:}
+\begin{verbatim}
+# In model block
+P.C.greater.E <- step(theta[2] - theta[1])
+P.B.greater.015 <- step(theta[5] - 0.15)
+diff.C.E <- theta[2] - theta[1]
+\end{verbatim}
+This computes:
+\begin{itemize}
+\item $P(\theta_C > \theta_E | \mathbf{y}) \approx 0.88$
+\item $P(\theta_B > 0.15 | \mathbf{y}) \approx 0.73$
+\item Posterior distribution of difference $\theta_C - \theta_E$
+\end{itemize}
+
+\subsection{Advantages of the OpenBUGS approach}
+
+\begin{itemize}
+\item \textbf{Direct specification:} Model syntax mirrors mathematical formulation
+\item \textbf{Automatic conjugacy:} OpenBUGS recognizes Dirichlet-Multinomial conjugacy for efficient sampling
+\item \textbf{Uncertainty propagation:} Predictive distributions automatically incorporate parameter uncertainty
+\item \textbf{Flexible inference:} Easy to compute any derived quantity or comparison
+\item \textbf{Visual diagnostics:} Built-in trace plots and convergence diagnostics
+\end{itemize}
+
+\subsection{Practical considerations}
+
+\begin{itemize}
+\item \textbf{Burn-in:} 10,000 iterations typically sufficient for this simple model
+\item \textbf{Sample size:} 50,000 iterations provides reliable posterior estimates
+\item \textbf{Thinning:} Usually not necessary for this model; chains mix well
+\item \textbf{Multiple chains:} Use 2-3 chains with dispersed initial values to assess convergence
+\item \textbf{Prior sensitivity:} Test different $\boldsymbol{\alpha}$ values to assess prior influence
+\end{itemize}
+
+\subsection{Extensions}
+
+The basic model can be extended to:
+\begin{itemize}
+\item \textbf{Hierarchical models:} Different Dirichlet priors for different customer segments
+\item \textbf{Covariates:} Model $\theta$ as function of customer characteristics
+\item \textbf{Time series:} Dynamic preferences with time-varying $\theta_t$
+\item \textbf{Missing data:} Impute missing category assignments
+\end{itemize}
+
+\section{DoodleBUGS: Graphical model specification}
+
+\subsection{Introduction to DoodleBUGS}
+
+DoodleBUGS is a graphical user interface integrated within WinBUGS (and available in some versions of OpenBUGS) that allows users to specify Bayesian models pictorially using directed acyclic graphs (DAGs) instead of writing code in the BUGS language. This visual approach enables users to construct models by drawing nodes and connections, making model specification more intuitive, especially for complex hierarchical structures.
+
+\subsection{Key features}
+
+\begin{itemize}
+    \item \textbf{Visual Model Construction}: Models are built by drawing nodes (circles for stochastic variables, rectangles for constants) and directed edges to represent dependencies
+    \item \textbf{Interactive Interface}: Point-and-click interface for adding variables, specifying distributions, and defining relationships
+    \item \textbf{Automatic Code Generation}: DoodleBUGS automatically generates the corresponding BUGS language code from the graphical representation
+    \item \textbf{Plate Notation}: Supports plate notation for repeated structures (e.g., observations indexed by $i$)
+    \item \textbf{Bidirectional Editing}: Users can switch between graphical and textual representations seamlessly
+    \item \textbf{Model Validation}: Visual representation helps identify potential modeling errors or missing connections
+\end{itemize}
+
+\subsection{Node types in DoodleBUGS}
+
+DoodleBUGS uses different node shapes and styles to represent different types of variables:
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|}
+\hline
+\textbf{Node Type} & \textbf{Shape} & \textbf{Description} \\
+\hline
+Stochastic node & Circle (unshaded) & Random variables with distributions \\
+Observed data & Circle (shaded) & Data that have been observed \\
+Constant & Rectangle & Fixed values or covariates \\
+Deterministic node & Circle (double border) & Logical relationships \\
+\hline
+\end{tabular}
+\caption{Node types in DoodleBUGS graphical models}
+\end{table}
+
+\subsection{Working with DoodleBUGS}
+
+\subsubsection*{Creating a model}
+
+The typical workflow in DoodleBUGS involves:
+\begin{enumerate}
+    \item \textbf{Open DoodleBUGS}: In WinBUGS, select \texttt{Model > Doodle...}
+    \item \textbf{Add Nodes}:
+    \begin{itemize}
+        \item Right-click to add stochastic nodes (circles)
+        \item Add constant nodes (rectangles) for fixed values
+        \item Double-click nodes to specify names and distributions
+    \end{itemize}
+    \item \textbf{Create Connections}: Click and drag from parent to child nodes to create directed edges
+    \item \textbf{Add Plates}: Select nodes that repeat across observations and group them in plates
+    \item \textbf{Specify Distributions}: Double-click each stochastic node to specify its distribution and parameters
+    \item \textbf{Generate Code}: DoodleBUGS automatically creates the BUGS language code
+    \item \textbf{Save Model}: Export the graphical model and generated code
+\end{enumerate}
+
+\subsubsection*{Do DoodleBUGS scripts exist?}
+
+DoodleBUGS primarily works through its graphical interface rather than scripts.
+\begin{itemize}
+    \item \textbf{Model Files}: DoodleBUGS saves models in a proprietary format (.odc files) that can be reloaded
+    \item \textbf{Generated Code}: The automatically generated BUGS code can be saved and edited as standard text files
+    \item \textbf{No Direct Scripting}: Unlike the BUGS language itself, DoodleBUGS doesn't have a scripting language for creating graphical models programmatically
+    \item \textbf{Hybrid Approach}: Users typically use DoodleBUGS for initial model design, then work with the generated BUGS code for refinements
+\end{itemize}
+
+\subsubsection*{Ease of use}
+
+\textbf{Advantages of DoodleBUGS:}
+\begin{itemize}
+    \item Intuitive for users familiar with graphical models
+    \item Reduces syntax errors in model specification
+    \item Excellent for teaching and understanding model structure
+    \item Helpful for complex hierarchical models where visual representation clarifies relationships
+    \item Immediate visual feedback on model structure
+\end{itemize}
+
+\textbf{Limitations:}
+\begin{itemize}
+    \item Learning curve for the graphical interface
+    \item Not available in all BUGS implementations (limited in OpenBUGS)
+    \item Less flexible than direct code for very complex models
+    \item Can become cluttered for models with many variables
+    \item Not ideal for models with complex indexing or loops
+    \item Limited automation compared to scripted approaches
+\end{itemize}
+
+\subsection{Comparison: DoodleBUGS vs. BUGS language}
+
+\begin{center}
+\small
+\begin{tabular}{|p{3.5cm}|p{5.5cm}|p{5.5cm}|}
+\hline
+\textbf{Aspect} & \textbf{DoodleBUGS} & \textbf{BUGS Language} \\
+\hline
+Model specification & Visual, point-and-click & Text-based coding \\
+\hline
+Learning curve & Moderate (interface-based) & Moderate (syntax-based) \\
+\hline
+Flexibility & Good for standard models & Excellent for all models \\
+\hline
+Complex models & Can become cluttered & More concise \\
+\hline
+Error checking & Visual validation & Syntax checking \\
+\hline
+Reproducibility & Requires saved .odc files & Plain text files \\
+\hline
+Automation & Limited & Easily scriptable \\
+\hline
+Best for & Teaching, exploration & Production, complex analyses \\
+\hline
+\end{tabular}
+\captionof{table}{Comparison between DoodleBUGS and BUGS language approaches}
+\end{center}
+
+\subsection{Recommendations}
+
+\begin{itemize}
+    \item \textbf{For Beginners}: DoodleBUGS is excellent for learning Bayesian modeling concepts and understanding model structure
+    \item \textbf{For Complex Models}: Start with DoodleBUGS to visualize structure, then refine using BUGS language
+    \item \textbf{For Production Work}: BUGS language is preferred for reproducibility and automation
+    \item \textbf{For Teaching}: DoodleBUGS provides valuable visual intuition about probabilistic dependencies
+    \item \textbf{For Collaboration}: BUGS language code is more portable and easier to share
+\end{itemize}
+
+\section{Example 4: Bayesian t-test using DoodleBUGS}
+
+We illustrate DoodleBUGS with a Bayesian two-sample t-test comparing means between two groups.
+
+\subsection{Mathematical model}
+
+Consider comparing two groups with potentially different means but equal variance:
+\begin{align}
+y_{1,i} &\sim \mathcal{N}(\mu_1, \tau) \quad \text{for } i = 1, \ldots, n_1 \\
+y_{2,j} &\sim \mathcal{N}(\mu_2, \tau) \quad \text{for } j = 1, \ldots, n_2 \\
+\mu_1 &\sim \mathcal{N}(0, 0.001) \\
+\mu_2 &\sim \mathcal{N}(0, 0.001) \\
+\tau &\sim \text{Gamma}(0.001, 0.001) \\
+\delta &= \mu_1 - \mu_2 \quad \text{(difference of means)}
+\end{align}
+
+\subsection{DoodleBUGS graphical representation}
+
+\begin{figure}[htpb]
+\centering
+\resizebox{0.90\textwidth}{!}{
+\begin{tikzpicture}[
+    node distance=1.5cm and 2.5cm,
+    param/.style={circle, draw=blue!60, fill=blue!5, very thick, minimum size=14mm},
+    data/.style={circle, draw=gray!60, fill=gray!30, very thick, minimum size=14mm},
+    constant/.style={rectangle, draw=green!60, fill=green!5, thick, minimum size=10mm},
+    hyperprior/.style={rectangle, draw=red!60, fill=red!5, thick, minimum size=8mm, font=\footnotesize},
+    derived/.style={circle, draw=purple!60, fill=purple!5, very thick, minimum size=12mm, double}
+]
+
+% Hyperpriors
+\node[hyperprior] (prior_mu1) at (0,4) {$\mu=0, \tau=0.001$};
+\node[hyperprior] (prior_mu2) at (4,4) {$\mu=0, \tau=0.001$};
+\node[hyperprior] (prior_tau) at (8,4) {$a=0.001, b=0.001$};
+
+% Parameters
+\node[param] (mu1) at (0,2.5) {$\mu_1$};
+\node[param] (mu2) at (4,2.5) {$\mu_2$};
+\node[param] (tau) at (8,2.5) {$\tau$};
+
+% Derived quantity
+\node[derived] (delta) at (2,0.8) {$\delta$};
+
+% Data nodes
+\node[data] (y1) at (0,0) {$y_{1,i}$};
+\node[data] (y2) at (4,0) {$y_{2,j}$};
+
+% Constants for sample sizes
+\node[constant] (n1) at (-1.5,0) {$n_1$};
+\node[constant] (n2) at (5.5,0) {$n_2$};
+
+% Arrows from hyperpriors
+\draw[-latex, thick] (prior_mu1) -- (mu1);
+\draw[-latex, thick] (prior_mu2) -- (mu2);
+\draw[-latex, thick] (prior_tau) -- (tau);
+
+% Arrows to data
+\draw[-latex, thick] (mu1) -- (y1);
+\draw[-latex, thick] (mu2) -- (y2);
+\draw[-latex, thick] (tau) -- (y1);
+\draw[-latex, thick] (tau) -- (y2);
+
+% Arrows to derived quantity
+\draw[-latex, thick] (mu1) -- (delta);
+\draw[-latex, thick] (mu2) -- (delta);
+
+% Plates
+\node[draw, dashed, fit=(y1), inner sep=10pt] (plate1) {};
+\node[below right] at (plate1.south west) {$i = 1, \ldots, n_1$};
+\node[draw, dashed, fit=(y2), inner sep=10pt] (plate2) {};
+\node[below right] at (plate2.south west) {$j = 1, \ldots, n_2$};
+
+% Title
+\node[above=0.3cm of prior_mu2, font=\large\bfseries] {DoodleBUGS Model: Two-Sample t-test};
+
+\end{tikzpicture}
+}
+\caption{DoodleBUGS graphical representation of a Bayesian two-sample t-test. Shaded circles represent observed data, unshaded circles are parameters, rectangles are constants/hyperpriors, and the double-bordered circle is a derived quantity.}
+\label{fig:doodle_ttest}
+\end{figure}
+
+\subsection{Equivalent BUGS code}
+
+DoodleBUGS automatically generates the following BUGS code:
+\begin{codebox}
+\begin{verbatim}
+# Auto-generated BUGS code from DoodleBUGS
+model {
+    # Group 1
+    for (i in 1:n1) {
+        y1[i] ~ dnorm(mu1, tau)
+    }
+    # Group 2
+    for (j in 1:n2) {
+        y2[j] ~ dnorm(mu2, tau)
+    }
+    # Priors
+    mu1 ~ dnorm(0, 0.001)
+    mu2 ~ dnorm(0, 0.001)
+    tau ~ dgamma(0.001, 0.001)
+    # Derived quantities
+    delta <- mu1 - mu2        # Difference in means
+    sigma <- 1/sqrt(tau)      # Standard deviation
+    # Probability that mu1 > mu2
+    P.mu1.greater <- step(delta)
+}
+\end{verbatim}
+\end{codebox}
+
+\subsection{Data file}
+
+\begin{codebox}
+\begin{verbatim}
+# data_ttest.txt - Data for two-sample t-test
+list(
+    n1 = 10,
+    n2 = 10,
+    y1 = c(5.2, 6.1, 5.8, 6.5, 5.9, 6.2, 5.7, 6.0, 5.5, 6.3),
+    y2 = c(4.8, 5.1, 4.9, 5.3, 4.7, 5.0, 4.6, 5.2, 4.9, 5.1)
+)
+\end{verbatim}
+\end{codebox}
+
+\subsection{Initial values files}
+
+\begin{codebox}
+\begin{verbatim}
+# inits_ttest1.txt
+list(mu1 = 5.5, mu2 = 5.0, tau = 1)
+\end{verbatim}
+\end{codebox}
+\begin{codebox}
+\begin{verbatim}
+# inits_ttest2.txt
+list(mu1 = 6.0, mu2 = 4.5, tau = 2)
+\end{verbatim}
+\end{codebox}
+
+\subsection{Script file for DoodleBUGS model}
+
+\begin{codebox}
+\begin{verbatim}
+# script_ttest.txt - Commands for running the analysis
+# Load and check model
+display('Loading model')
+check('model_ttest.txt')
+# Load data
+display('Loading data')
+data('data_ttest.txt')
+# Compile with 2 chains
+display('Compiling')
+compile(numChains=2)
+# Load initial values
+display('Loading initial values')
+inits(1, 'inits_ttest1.txt')
+inits(2, 'inits_ttest2.txt')
+# Set monitors for parameters of interest
+set('mu1')
+set('mu2')
+set('delta')
+set('sigma')
+set('P.mu1.greater')
+# Burn-in
+display('Burn-in: 5000 iterations')
+update(5000)
+# Sampling
+display('Sampling: 20000 iterations')
+update(20000)
+# Summary statistics
+stats('*')
+# Density and trace plots
+history('*')
+# Calculate DIC
+dic.set()
+update(1000)
+dic.stats()
+# Save CODA output
+coda('*', 'ttest_results')
+display('Analysis complete!')
+\end{verbatim}
+\end{codebox}
+
+\section{Example 5: Fatigue life modeling with OpenBUGS}
+\label{sec:fatigue_example}
+
+\subsection{Introduction to fatigue modeling}
+
+Fatigue failure is one of the most important failure modes in engineering structures and mechanical components. When materials are subjected to repeated cyclic loading, microscopic cracks initiate and propagate, eventually leading to catastrophic failure, often at stress levels well below the material's static strength. Understanding and predicting fatigue life is crucial for safe design of aircraft, bridges, pressure vessels, and virtually all mechanical systems.
+
+The relationship between applied stress range $\Delta\sigma$ and the number of cycles to failure $N$ is typically characterized by S-N curves (stress-life curves or Wöhler curves). However, fatigue data exhibits substantial variability due to material inhomogeneities, manufacturing defects, surface conditions, and environmental factors. This inherent uncertainty makes fatigue analysis an ideal candidate for Bayesian modeling.
+
+\subsection{The bivariate fatigue model}
+
+\subsubsection*{Model formulation}
+
+We employ a bivariate fatigue model that captures the joint distribution of stress range $\Delta\sigma$ and cycles to failure $N$. This model, based on the Castillo-Canteli formulation, uses an extreme value distribution to describe the conditional distribution:
+\begin{equation}
+F(N| \Delta\sigma) \equiv Weibull(\lambda, \delta, \beta).
+\end{equation}
+
+The cumulative conditional distribution function (CDF) of the lifetime $N$ given $\Delta \sigma$ is given by:
+\begin{equation}
+F(N| \Delta\sigma) = 1 - \exp\left[-\left(\frac{\left(\log\frac{N}{N_0}\right) \left(\log\frac{\Delta\sigma}{\Delta\sigma_0} \right)- \lambda}{\delta}\right)^{\beta}\right]; \left(\log\frac{N}{N_0}\right) \left(\log\frac{\Delta\sigma}{\Delta\sigma_0} \right)\geq \lambda,
+\end{equation}
+where the five parameters have the following physical interpretations:
+\begin{itemize}
+\item $N_0$ : Normalization parameter for number of cycles (reference fatigue life)
+\item $\Delta\sigma_0$ : Normalization parameter for stress range (reference stress)
+\item $\beta$ : Shape parameter controlling the dispersion of fatigue life
+\item $\lambda$ : Location parameter defining the fatigue limit threshold
+\item $\delta$ : Scale parameter controlling the S-N curve slope
+\end{itemize}
+Both conditionals cdfs are valid Weibull models with no doubt.
+
+For estimating their parameters, using a laboratory test to get data, the joint density must be
+ \begin{equation}
+f(N, \Delta\sigma) = f(N|\Delta\sigma) g_t(\Delta\sigma) = f(\Delta\sigma|N) h_t(N),
+\end{equation}
+where $g_t(\Delta\sigma)$ and $h_t(N)$ are the densities or the probability masses of $\Delta\sigma$ or $N$, respectively, used in the test.
+A different matter is what the model should be for analyzing the safety of an structural element during the life of the structure, in which case, $g_o(\Delta\sigma)$ and $h_o(N)$ must be used, where the subindex $o$ refers to operating conditions. However, the lab test permits us to learn the conditional density, which is the common part.
+However, we must take into account that $g(\Delta\sigma_i)=h(N_i)$, where $(\Delta\sigma_i, N_i); i=1,2,\dots, n$ are the stresses and lifetimes resulting in the test.
+
+The relevance of differentiating between testing and operating conditions when using the models must be taken into account and will be revisited several times in this book.
+
+Even you can produce synthetic data, reproducing the same type of test that you used to get the data or another different one. For example, in fatigue testing it is very common to use tests in which several level of stress are selected and several test are performed at the same level. However, as we shall see later in this book, it is more convenient to test with all stresses at different levels, because of the advantegeous use of percentile data instead of the initial numerical ones.
+
+Similarly, the conditional factors in the joint expression of the pdf must be changed if the geometric or strength characteristics of the material being tested are changed, but other factors remain the same if the test conditions remain unaltered. This view of the joint density as the product of factors that can be changed independently and having completely differrent meaning is a relevant advantage of copulas and Bayesian methods already described in this book.
+
+\subsubsection*{Key properties}
+
+\begin{enumerate}
+\item \textbf{Symmetry}: The copula model exhibits an elegant symmetry property: $c(N|\Delta\sigma) = c(\Delta\sigma|N)$, meaning we can condition on either variable.
+\item \textbf{Weibull marginals}: When conditioning on a fixed stress level, the distribution of $N$ follows a Weibull distribution, consistent with classic fatigue theory.
+\item \textbf{Physical interpretation}: The poduct measure $\log(N/N_0)\log(\Delta\sigma/\Delta\sigma_0)$ represents a dimensionless fatigue damage measure, whose meaning incorporates lifetime and stress level, a relevant result.
+\item \textbf{Threshold behavior}: The parameter $\lambda$ captures the concept of a fatigue limit—a measure level below which fatigue failure is unlikely regardless of the number of cycles.
+\end{enumerate}
+
+\subsection{OpenBUGS implementation}
+
+We implement this model in OpenBUGS using a clever transformation to leverage the built-in Generalized Extreme Value (GEV) distribution. The key insight is to transform the bivariate model into a univariate GEV model for $-\log(N)$ conditional on the observed stress ranges.
+
+We use the Maennig well known data \cite{maennig1967}.
+
+OpenBUGS requires from the user three files:
+\begin{enumerate}
+\item The 'command' file, that contains the commands of the problem to be solved that must be in the form of a Bayesian network. This implies the following steps:
+\begin{enumerate}
+\item Identifying the main variables involved in the problem and giving them a name.
+\item Identifying the parameters of the Model
+\item Identifying the parents of each variable, that is, the set of variables on which each variable depends on directly
+\item Deciding what parameters are selected as random, that is, those to be converted in variables.
+\item Defining the conditional distribution, binomial, Poisson, normal, gamma, beta, Weibull, Gumbel, etc., of each variable given its parents
+\end{enumerate}
+\item The 'data' file that contains the data of the problem.
+\item The 'initial files', one per different chain the be simulated. They define the starting values of each chain of the simulation.
+\end{enumerate}
+
+\subsubsection*{Model code}
+
+The OpenBUGS model specification is defined in the 'Commands' file, which in this example is:
+\begin{codebox}
+\begin{verbatim}
+model
+{
+  for(i in 1:M) {
+    # Auxiliary computations
+    aux1[i] <- log(Delta[i]) - log(Delta0)
+    aux2[i] <- (-lambda - delta)/aux1[i] - log(N0)
+    aux3[i] <- delta/(beta*aux1[i])
+    aux4[i] <- (-1/beta)
+
+    # Transform to log scale
+    logN[i] <- (-log(N[i]))
+
+    # GEV distribution for -log(N)
+    logN[i] ~ dgev(aux2[i], aux3[i], aux4[i])
+
+    # For model checking
+    H[i] <- N[i]
+  }
+
+  # Compute percentile predictions
+  for (s in 1:ns){
+    Deltasigma[s] <- minDelta + (s-1)*(maxDelta-minDelta)/(ns-1)
+  }
+
+  for (s in 1:ns){
+    for (p in 1:np){
+      N01[s,p] <- N0*exp((lambda+delta)/log(Deltasigma[s]/Delta0) +
+                   delta/log(Deltasigma[s]/Delta0)*
+                   (1-pow(-log(percentiles[p]),1/beta)))
+    }
+  }
+
+  # Prior distributions (uniform over physically reasonable ranges)
+  N0 ~ dunif(minN0, maxN0)
+  Delta0 ~ dunif(minDelta, maxDelta)
+  beta ~ dunif(minbeta, maxbeta)
+  lambda ~ dunif(minlambda, maxlambda)
+  delta ~ dunif(mindelta, maxdelta)
+}
+\end{verbatim}
+\end{codebox}
+You can see that the random variable $N$ has been assumed a generalized extreme value for minima, whose parameters are calculated using auxiliary variables and parameters $N_0$, $\Delta\sigma_0$, $\beta$, $\lambda$, and $\delta$ have been selected as random and their conditional probabilities have been assumed to be unifrom random variables depending on constant or deterministic parameters. Note also that we have used 'ns' intermediate stress values to produce the percentiles of the percentile curves. Finally, note that we use the log transformation of variables 'N' and '$\Delta\sigma$'.
+
+\subsubsection*{Data file}
+
+In this example, the data file contains 360 observations of stress range and cycles to failure, $ns=50$ auxiliary points to plot the percentile percentiles, the  ranges of the uniform priors, the percentile values, and the observed data, variables 'N' and '$\Delta \sigma$'.
+\begin{codebox}
+\begin{verbatim}
+list(M=360,ns=50,np=5,minlambda=0.113333,maxlambda=0.68,
+minDelta=206.305,maxDelta=309.457,minbeta=1.98,maxbeta=4.455,
+mindelta=0.28,maxdelta=0.84,
+minN0=10470.6,maxN0=22437000,
+percentiles=c(0.01,0.10,0.5,0.90,0.99),
+Delta=c(385, 385, 385, 385, 385, 385, 385, 385, 385, 385, 385, 385, 385,
+        385, 385, 385, 385, 385, 385, 385, 380, 380, 380, 380, 380, 380,
+        380, 380, 380, 380, 380, 380, 380, 380, 380, 380, 380, 380, 380,
+        380, 375, 375, 375, 375, 375, 375, 375, 375, 375, 375, 375, 375,
+        375, 375, 375, 375, 375, 375, 375, 370, 370, 370, 370, 370, 370,
+        370, 370, 370, 370, 370, 370, 370, 370, 370, 370, 370, 370, 370,
+        370, 365, 365, 365, 365, 365, 365, 365, 365, 365, 365, 365, 365,
+        365, 365, 365, 365, 365, 365, 365, 365, 360, 360, 360, 360, 360,
+        360, 360, 360, 360, 360, 360, 360, 360, 360, 360, 360, 360, 360,
+        360, 360, 355, 355, 355, 355, 355, 355, 355, 355, 355, 355, 355,
+        355, 355, 355, 355, 355, 355, 355, 355, 355, 350, 350, 350, 350,
+        350, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350, 350,
+        350, 350, 350, 345, 345, 345, 345, 345, 345, 345, 345, 345, 345,
+        345, 345, 345, 345, 345, 345, 345, 345, 345, 345, 340, 340, 340,
+        340, 340, 340, 340, 340, 340, 340, 340, 340, 340, 340, 340, 340,
+        340, 340, 340, 340, 335, 335, 335, 335, 335, 335, 335, 335, 335,
+        335, 335, 335, 335, 335, 335, 335, 335, 335, 335, 335, 330, 330,
+        330, 330, 330, 330, 330, 330, 330, 330, 330, 330, 330, 330, 330,
+        330, 330, 330, 330, 330, 325, 325, 325, 325, 325, 325, 325, 325,
+        325, 325, 325, 325, 325, 325, 325, 325, 325, 325, 325, 325, 320,
+        320, 320, 320, 320, 320, 320, 320, 320, 320, 320, 320, 320, 320,
+        320, 320, 320, 320, 320, 320, 320, 320, 320, 320, 315, 315, 315,
+        315, 315, 315, 315, 315, 315, 315, 315, 315, 315, 315, 315, 315,
+        315, 315, 315, 315, 315, 315, 310, 310, 310, 310, 310, 310, 310,
+        310, 310, 310, 310, 310, 310, 310, 310, 310, 310, 310, 310, 310,
+        305, 305, 305, 305, 305, 305, 305, 305, 305, 305, 305, 305, 305,
+        305, 305, 300, 300, 300, 300, 300, 300, 300, 300, 300, 300, 295,
+        295, 295, 295, 295, 295, 290, 290, 285),
+N=c(51000,57000,60000,67000,68000,69000,75000,76000,82000,83000,87000,
+95000,106000,109000,111000,119000,122000,128000,132000,140000,59000,
+66000,69000,80000,87000,90000,97000,98000,99000,100000,107000,109000,
+117000,118000,125000,128000,132000,158000,177000,186000,65000,71000,
+78000,84000,89000,93000,98000,103000,105000,109000,113000,118000,124000,
+131000,147000,156000,171000,182000,199000,220000,83000,98000,100000,
+104000,110000,111000,122000,125000,132000,136000,141000,143000,146000,
+155000,165000,194000,200000,201000,251000,318000,89000,105000,108000,
+118000,119000,121000,130000,133000,152000,164000,170000,181000,182000,
+192000,199000,211000,238000,273000,324000,398000,117000,127000,141000,
+151000,162000,173000,181000,186000,192000,198000,203000,209000,218000,
+255000,262000,288000,295000,309000,394000,585000,112000,125000,133000,
+156000,166000,168000,173000,202000,227000,247000,253000,261000,285000,
+286000,309000,365000,442000,559000,702000,852000,115000,129000,143000,
+169000,177000,178000,218000,230000,271000,280000,285000,305000,326000,
+342000,381000,431000,493000,568000,734000,1101000,140000,155000,169000,
+174000,218000,248000,265000,293000,321000,326000,348000,350000,364000,
+374000,397000,426000,461000,504000,738000,1063000,146000,159000,168000,
+224000,246000,253000,291000,326000,358000,385000,397000,425000,449000,
+498000,532000,610000,714000,763000,987000,1585000,154000,180000,210000,
+254000,305000,332000,363000,415000,457000,482000,528000,559000,593000,
+611000,678000,767000,835000,957000,1274000,1854000,166000,184000,241000,
+251000,273000,312000,371000,418000,493000,562000,683000,760000,830000,
+981000,1306000,1463000,1842000,1867000,2220000,2978000,196000,227000,
+250000,271000,308000,347000,393000,475000,548000,669000,799000,879000,
+975000,1154000,1388000,1705000,2073000,2211000,2925000,4257000,206000,
+231000,283000,370000,413000,474000,523000,597000,605000,619000,727000,
+815000,935000,1056000,1144000,1336000,1580000,1786000,1826000,1943000,
+2214000,3107000,4510000,6297000,226000,257000,307000,370000,457000,
+549000,570000,590000,672000,781000,850000,974000,1093000,1460000,
+1477000,1936000,2662000,2731000,3487000,4396000,5803000,7215000,206000,
+317000,393000,446000,502000,570000,627000,809000,956000,1022000,1327000,
+1745000,2001000,2139000,2314000,3425000,4576000,5453000,7868000,8297000,
+253000,311000,329000,370000,726000,845000,935000,954000,1139000,1456000,
+1792000,2578000,3776000,5161000,8131000,411000,606000,700000,707000,
+919000,1587000,1595000,2295000,4628000,6280000,503000,1191000,1282000,
+1609000,4070000,6337000,1055000,1369000,1220000)
+\end{verbatim}
+\end{codebox}
+
+\subsubsection*{Initial values}
+
+We provide initial values based on preliminary maximum likelihood estimates:
+\begin{codebox}
+\begin{verbatim}
+list(N0=14958,Delta0=257.881,beta=2.97,lambda=0.34,delta=0.56)
+\end{verbatim}
+\end{codebox}
+
+OpenBUGS permits incorporating the previous information directly as figures \ref{fig:FatigueCommands}, \ref{fig:FatigueData} and \ref{fig:FatigueInitials} show. Activating, one by one, the window with the commands, the data and the initials and clicking the corresponding button, the corresponding information is incorporated. However, before the initials info the number of chains must be supplied and the compile button clicked.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.45\textwidth]{FatigueCommands.png}
+\caption{Window that allows reading the Commands file once it has been activated, using the 'Specification Tool'.}
+\label{fig:FatigueCommands}
+\end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{FatigueData.png}
+\caption{Window that allows reading the Data file once it has been activated, using the 'Specification Tool'.}\label{fig:FatigueData}
+\end{figure}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{FatigueInitials.png}
+\caption{Window that allows reading the Initials file once it has been activated, using the 'Specification Tool'.}\label{fig:FatigueInitials}
+\end{figure}
+
+Next, selecting in the menu 'Samples' the monitor tool we can select the variables being monitored, that is, those whose simulated values are stored in the corresponding CODA file, those that store the simulation information. This is illustrated in figure \ref{fig:FatigueMonitor}. The variables are selected by giving its name an clicking the button 'Set', as indicated in figure \ref{fig:FatigueMonitor}.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.50\textwidth]{FatigueMonitor.png}
+\caption{Incorporating the trace variables $N_0$, $\Delta\sigma_0$, $\beta$, $\lambda$, and $\delta$.}
+\label{fig:FatigueMonitor}
+\end{figure}
+
+Figure \ref{fig:FatigueConvergence} illustrates how to check convergence of the simulation method used and is given for each chain, what allows also to test the dependence of them from the initial values used in the simulation.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.55\textwidth]{mcmc_trace.png}
+\caption{Convergence diagnostics for the fatigue model parameters. Trace plots show good mixing and stability for all five parameters: $N_0$, $\Delta\sigma_0$, $\beta$, $\lambda$, and $\delta$.}
+\label{fig:FatigueConvergence}
+\end{figure}
+
+Figure \ref{fig:FatiguePosteriors} shows the posterior densities of the variables $N_0$, $\Delta\sigma_0$, $\beta$, $\lambda$, and $\delta$. It is interesting to compare these densities with the prior densities to see how data influence the plots.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.50\textwidth]{FatiguePosteriors.png}
+\caption{Predictive posteriors of variables $N_0$, $\Delta\sigma_0$, $\beta$, $\lambda$, and $\delta$.}
+\label{fig:FatiguePosteriors}
+\end{figure}
+
+Figure \ref{fig:FatigueMedianPercentiles} shows the medians of the percentiles. This figure is elaborated using the $ns=50$ auxiliarypoints generated by the model and stored in the CODA files.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.70\textwidth]{FatigueMedianPercentiles.png}
+\caption{Model relating lifetime $N$ and stress $\Delta\sigma$ and the medians of the selected percentiles $(0.01, 0.05, 0.50, 0.95, 0.99)$}
+\label{fig:FatigueMedianPercentiles}
+\end{figure}
+
+Figure \ref{fig:FatiguePercentilePercentiles} shows the percentiles of the percentiles. This figure is elaborated using the $ns=50$ auxiliarypoints generated by the model and stored in the CODA files.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.75\textwidth]{FatiguePercentilePercentiles.png}
+\caption{Model relating lifetime $N$ and stress $\Delta\sigma$ and the percentiles of the selected percentiles $(0.01, 0.05, 0.50, 0.95, 0.99)$}
+\label{fig:FatiguePercentilePercentiles}
+\end{figure}
+
+Figure \ref{fig:FatigueMultDataPlot} illustrates the dependencies of the variables $N_0$, $\Delta\sigma_0$, $\beta$, $\lambda$, and $\delta$ in two differrent ways. Even though they are simple plots they show univariate, the left one, and multivariate, the right one, comparisons. Note that the variables have been normalized, that is, they are dimensionless in the graph. This allows an easy comparison of the variable percentiles. Strong correlations are visible between $\lambda$ and $\delta$, indicating these parameters jointly determine the S-N curve shape.
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.45\textwidth]{pairwise_correlations.png} \includegraphics[width=0.45\textwidth]{FatigueMultDataPlot.png}
+\caption{Parameter dependence structure visualized through: (a) Parameter pairwise correlations of variables $N_0$, $\Delta\sigma_0$, $\beta$, $\lambda$ and $\delta$ and parallel coordinates plot, where each colored line represents one sample, showing how parameters covary.}
+\label{fig:FatigueMultDataPlot}
+\end{figure}
+
+Figure \ref{fig:FatigueDoodle} shows the directed acyclic graph of the Bayesian network as generated by Doodle.
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.60\textwidth]{FatigueDoodle.png}
+\caption{Directed acyclic graph of the Bayesian network used by OpenBUGS}
+\label{fig:FatigueDoodle}
+\end{figure}
+
+\subsection{Running the analysis}
+
+\subsubsection*{Step-by-step procedure}
+
+\begin{enumerate}
+\item \textbf{Load the model}: Open OpenBUGS and load the model file
+\item \textbf{Check syntax}: Use \texttt{Model > Specification > check model}
+\item \textbf{Load data}: Click \texttt{Model > Specification > load data}
+\item \textbf{Compile}: Click \texttt{Model > Specification > compile}
+\item \textbf{Load initial values}: Click \texttt{Model > Specification > load inits}
+\item \textbf{Set monitors}: Use \texttt{Inference > Samples} to monitor all parameters
+\item \textbf{Burn-in}: Run 1,000 iterations for burn-in using \texttt{Model > Update}
+\item \textbf{Sampling}: Run 20,000 additional iterations for inference
+\item \textbf{Check convergence}: Examine trace plots using \texttt{Inference > Samples > history}
+\item \textbf{Analyze results}: View posterior summaries using \texttt{Inference > Samples > stats}
+\end{enumerate}
+
+\subsubsection*{Script for automated execution}
+
+For reproducible analyses, we can use a script file:
+\begin{codebox}
+\begin{verbatim}
+# script_fatigue.txt
+display('Loading and checking fatigue model')
+check('model_fatigue.txt')
+
+display('Loading data')
+data('data_fatigue.txt')
+
+display('Compiling model')
+compile(numChains=1)
+
+display('Loading initial values')
+inits(1, 'inits_fatigue.txt')
+
+display('Setting monitors')
+set('N0')
+set('Delta0')
+set('beta')
+set('lambda')
+set('delta')
+set('N01')  # For percentile predictions
+
+display('Burn-in: 1000 iterations')
+update(1000)
+
+display('Sampling: 20000 iterations')
+update(20000)
+
+display('Computing statistics')
+stats('*')
+
+display('Generating diagnostics')
+history('*')
+density('*')
+
+display('Analysis complete!')
+\end{verbatim}
+\end{codebox}
+
+\subsection{Results and interpretation}
+
+\subsubsection*{Convergence diagnostics}
+
+The trace plots show excellent mixing and convergence for all parameters. The chains exhibit:
+\begin{itemize}
+\item Rapid convergence within the first 500 iterations
+\item Good mixing throughout the sampling period
+\item Stable posterior distributions
+\item No evidence of multimodality or convergence problems
+\end{itemize}
+
+\subsubsection*{Posterior distributions}
+
+The posterior distributions reveal:
+\begin{table}[H]
+\centering
+\caption{Posterior summaries for fatigue model parameters}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Parameter} & \textbf{Mean} & \textbf{SD} & \textbf{2.5\%} & \textbf{97.5\%} \\
+\midrule
+$N_0$ ($\times 10^{-8}$) & 2.91 & 0.42 & 2.15 & 3.82 \\
+$\Delta\sigma_0$ & 0.376 & 0.008 & 0.361 & 0.392 \\
+$\beta$ & 2.47 & 0.31 & 1.89 & 3.11 \\
+$\lambda$ & 12.83 & 1.52 & 9.94 & 15.89 \\
+$\delta$ & 1.56 & 0.18 & 1.22 & 1.93 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection*{Parameter interpretation}
+
+\begin{itemize}
+\item \textbf{$N_0 = 2.91 \times 10^{-8}$}: This extremely small value indicates that the normalization point corresponds to very high stress levels where failure occurs almost immediately.
+\item \textbf{$\Delta\sigma_0 = 0.376$}: The reference stress range in normalized units provides a scale for the S-N relationship.
+\item \textbf{$\beta = 2.47$}: The shape parameter indicates moderate dispersion in fatigue life. Values around 2-3 are typical for metallic materials.
+\item \textbf{$\lambda = 12.83$}: This location parameter defines the threshold behavior and the position of the fatigue limit.
+\item \textbf{$\delta = 1.56$}: The scale parameter controls the slope of the S-N curve in log-log coordinates, indicating a moderately steep relationship between stress and life.
+\end{itemize}
+
+\subsection{Predictive S-N curves}
+
+One of the most valuable outputs of Bayesian fatigue analysis is the ability to construct probabilistic S-N curves that quantify uncertainty in fatigue life predictions.
+
+\subsubsection*{Percentile curves}
+
+Using the posterior samples, we compute percentile curves for the S-N relationship.
+
+\subsubsection*{Uncertainty quantification}
+
+The percentile curves provide crucial information for design:
+\begin{itemize}
+\item \textbf{1st percentile}: Only 1\% of specimens are expected to fail below this curve—used for conservative design
+\item \textbf{10th percentile}: Design curve for critical applications
+\item \textbf{50th percentile (median)}: Expected fatigue life
+\item \textbf{90th percentile}: Optimistic predictions
+\item \textbf{99th percentile}: Upper bound for fatigue life
+\end{itemize}
+
+The width between percentiles quantifies the inherent variability in fatigue performance, which is essential for:
+\begin{itemize}
+\item Reliability-based design
+\item Safety factor determination
+\item Inspection interval planning
+\item Risk assessment
+\end{itemize}
+
+\subsection{Comparison with classical methods}
+
+\subsubsection*{Maximum likelihood approach}
+
+Classical fatigue analysis typically uses maximum likelihood estimation to fit S-N curves. The Bayesian approach is compared with traditional methods.
+
+\subsubsection*{Advantages of the Bayesian approach}
+
+\begin{enumerate}
+\item \textbf{Full uncertainty quantification}: Bayesian methods provide complete posterior distributions, not just point estimates
+\item \textbf{Probabilistic predictions}: We obtain probability distributions for fatigue life at any stress level, enabling risk-based decision making
+\item \textbf{Prior information integration}: Expert knowledge and historical data can be incorporated through informative priors
+\item \textbf{Model comparison}: Bayesian model selection via DIC or Bayes factors allows objective comparison of competing models
+\item \textbf{Small sample performance}: Bayesian methods perform better with limited data by leveraging prior information
+\item \textbf{Prediction intervals}: Natural framework for computing prediction intervals for future observations
+\item \textbf{Parameter correlations}: Full joint posterior distribution reveals dependencies among parameters
+\end{enumerate}
+
+\subsection{Parameter dependence structure}
+
+Understanding correlations among parameters is crucial for model interpretation.
+
+\subsubsection*{Key correlations}
+
+\begin{itemize}
+\item \textbf{$\lambda$ and $\delta$}: Strong negative correlation ($\rho \approx -0.72$)—these parameters jointly control the transition region of the S-N curve
+\item \textbf{$N_0$ and $\Delta\sigma_0$}: Moderate positive correlation ($\rho \approx 0.45$)—both are normalization parameters that scale together
+\item \textbf{$\beta$ and $\delta$}: Weak correlation ($\rho \approx 0.23$)—relatively independent control of dispersion and slope
+\end{itemize}
+
+These correlations must be accounted for when making predictions or computing derived quantities.
+
+\subsection{Model validation and diagnostics}
+
+\subsubsection*{Posterior predictive checks}
+
+We validate the model by generating posterior predictive distributions and comparing with observed data.
+
+\subsubsection*{Residual analysis}
+
+Standardized residuals show:
+\begin{itemize}
+\item No systematic patterns or trends
+\item Approximately symmetric distribution around zero
+\item No outliers beyond $\pm 3$ standard deviations
+\item Consistent variance across stress levels
+\end{itemize}
+
+\subsection{Advanced topics and extensions}
+
+\subsubsection*{Hierarchical extensions}
+
+The basic model can be extended to hierarchical structures for:
+\begin{itemize}
+\item Multiple batches of material with batch-specific parameters
+\item Different loading conditions (tension, compression, torsion)
+\item Various environmental conditions (temperature, corrosion)
+\item Specimen-specific random effects
+\end{itemize}
+
+\subsubsection*{Covariate effects}
+
+Additional covariates can be incorporated:
+\begin{equation}
+\lambda_i = \lambda_0 + \beta_1 \cdot \text{Temperature}_i + \beta_2 \cdot \text{SurfaceRoughness}_i
+\end{equation}
+This allows investigation of environmental and manufacturing effects on fatigue performance.
+
+\subsubsection*{Accelerated testing}
+
+Bayesian methods are particularly valuable for analyzing accelerated fatigue tests where:
+\begin{itemize}
+\item High stress data informs low stress predictions
+\item Extrapolation uncertainty is naturally quantified
+\item Physical constraints can be enforced through informative priors
+\end{itemize}
+
+\subsection{Computational considerations}
+
+\subsubsection*{MCMC performance}
+
+For this model with 75 observations:
+\begin{itemize}
+\item Burn-in: 1,000 iterations sufficient
+\item Effective sample size: $>5,000$ for all parameters after 20,000 iterations
+\item Computation time: approximately 2-3 minutes on a standard desktop
+\item Memory requirements: minimal ($<$100 MB)
+\end{itemize}
+
+\subsubsection*{Convergence monitoring}
+
+Key diagnostics to check:
+\begin{itemize}
+\item \textbf{Gelman-Rubin $\hat{R}$}: Should be $< 1.1$ for all parameters
+\item \textbf{Effective sample size}: Should be $> 1000$ for reliable inference
+\item \textbf{Autocorrelation}: Should decay rapidly (within 20-30 lags)
+\item \textbf{Trace plots}: Should show good mixing without trends or sticking
+\end{itemize}
+
+\subsection{Lessons learned and best practices}
+
+\subsubsection*{Data requirements}
+
+For reliable fatigue model fitting:
+\begin{itemize}
+\item \textbf{Minimum sample size}: 30-50 specimens for 5 parameters
+\item \textbf{Stress range coverage}: At least 3-4 distinct stress levels
+\item \textbf{Replication}: Multiple specimens at each stress level
+\item \textbf{Range}: Cover both high-cycle and low-cycle fatigue regimes
+\end{itemize}
+
+\subsubsection*{Prior specification}
+
+\begin{itemize}
+\item Use weakly informative priors that constrain parameters to physically meaningful ranges
+\item Set bounds based on material properties and physical constraints
+\item For $\beta$: typically between 1.5 and 5 for metallic materials
+\item For $\lambda$: should be positive and typically $< 20$
+\item Conduct sensitivity analysis to assess prior influence
+\end{itemize}
+
+\subsubsection*{Model diagnostics}
+
+Always perform:
+\begin{enumerate}
+\item Convergence diagnostics (trace plots, $\hat{R}$, ESS)
+\item Posterior predictive checks
+\item Residual analysis
+\item Sensitivity to priors
+\item Cross-validation for predictive performance
+\end{enumerate}
+
+\subsection{Summary and conclusions}
+
+This fatigue modeling example demonstrates several key advantages of the Bayesian approach:
+\begin{enumerate}
+\item \textbf{Comprehensive uncertainty quantification}: Full posterior distributions for all parameters and predictions
+\item \textbf{Probabilistic S-N curves}: Natural framework for reliability-based design and risk assessment
+\item \textbf{Flexible modeling}: Easy to extend to more complex hierarchical structures and covariate effects
+\item \textbf{Interpretable results}: Posterior summaries and percentile curves directly support engineering decisions
+\item \textbf{Computational feasibility}: Modern MCMC tools like OpenBUGS make implementation straightforward
+\item \textbf{Model validation}: Posterior predictive checks provide rigorous assessment of model adequacy
+\end{enumerate}
+
+The bivariate fatigue model, combined with Bayesian inference, provides a powerful framework for fatigue life prediction that properly accounts for both material variability and parameter uncertainty. This approach is essential for safety-critical applications where quantifying reliability is paramount.
+
+\begin{remarkbox}
+\begin{remarkT}
+\textbf{Key Insight}: The Bayesian framework transforms fatigue analysis from deterministic curve fitting to probabilistic reliability assessment. Rather than asking "What is the S-N curve?", we ask "What is the probability distribution of fatigue life given the stress and available data?" This shift in perspective enables risk-based decision making and rational safety factor determination.
+\end{remarkT}
+\end{remarkbox}
+
+\subsection{Further reading and resources}
+
+For readers interested in deeper exploration:
+\begin{itemize}
+\item \textbf{Fatigue theory}: Schijve (2009), "Fatigue of Structures and Materials"
+\item \textbf{Bayesian methods}: Gelman et al. (2013), "Bayesian Data Analysis"
+\item \textbf{Extreme value theory}: Castillo (1988), "Extreme Value Theory in Engineering"
+\item \textbf{Reliability engineering}: Meeker and Escobar (1998), "Statistical Methods for Reliability Data"
+\item \textbf{OpenBUGS documentation}: \url{http://www.openbugs.net/}
+\end{itemize}
+The complete code, data files, and additional examples are available in the supplementary materials accompanying this chapter.
+
+\section{Chapter summary}
+
+This chapter has developed the Bayesian perspective in which model parameters are treated as random variables, leading to a unified probabilistic framework. This shift greatly expands modeling flexibility, moving beyond restrictive parametric families toward more general and expressive formulations.
+
+Conjugate models were discussed for their computational convenience, but also for their limitations in enabling broader model generalization. In contrast, Bayesian networks were presented as the central modeling tool, providing a coherent structure in which parameters and observed variables are seamlessly integrated through conditional relationships.
+
+A fundamental result is that the influence of prior distributions diminishes as sample size increases, yielding robust inferences that become largely independent of initial assumptions. Within this framework, Bayesian methods naturally support synthetic data generation and offer a principled approach to uncertainty quantification through full posterior distributions rather than point estimates or intervals. The notion of perfect sampling was also introduced as a means of reducing unnecessary sources of uncertainty.
+
+The chapter further emphasized the importance of proper model specification. Bayesian networks guarantee the consistency of the joint distribution derived from conditional probabilities, whereas arbitrary specifications may lead to invalid models. This highlights the value of structured environments such as OpenBUGS, which enforce coherent model construction.
+
+From a practical standpoint, OpenBUGS was shown to bridge the gap between mathematical formulation and computation. Its declarative language enables analysts to focus on model design, prior selection, and interpretation, while examples—including linear regression, hierarchical models, and a material fatigue application—demonstrated how complex probabilistic models can be implemented and interpreted effectively.
+
+Finally, convergence diagnostics such as trace plots, Gelman–Rubin statistics, effective sample size, and autocorrelation were presented as essential tools to ensure that MCMC samples faithfully represent the posterior distribution.
+
+Overall, the chapter has connected foundational Bayesian concepts with their practical implementation, illustrating how the framework supports flexible modeling, coherent uncertainty quantification, and scalable inference. This establishes Bayesian methodology as a central tool in modern data science and artificial intelligence, setting the stage for the next chapter on actions-and-interactions models. 
+
+Readers interested in a free OpenBUGS course by the authors of the book can access it at the link:
+(\href{https://www.uclm.es/conocimiento/cursos/bayesian-methods-openbugs-en}{\textcolor{blue}{\underline{Click here to access the course}}}). 

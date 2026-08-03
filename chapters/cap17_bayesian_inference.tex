@@ -1,0 +1,686 @@
+\startcontents[chapter]
+\chapter{Bayesian models and inference}\label{ch:bayesian_models}
+\minitocboxed
+
+\section*{Motivation}
+Bayesian methods, see \cite{Gelman2004}, treat parameters as new random variables, extending candidate models from particular families to mixtures of those families. This approaches non-parametric methods, where data and prior knowledge are combined via Bayes' theorem:
+\[
+P(\theta\mid y)=\frac{P(y\mid\theta)P(\theta)}{P(y)}.
+\]
+The posterior distribution represents our updated beliefs after seeing the data. This chapter introduces prior and posterior distributions, predictive distributions, conjugate families (Beta-Binomial, Gamma-Poisson, Dirichlet-Multinomial), and compares Bayesian inference with maximum likelihood.
+
+An additional crucial step is the inclusion of model parameters as new random variables that accompany the transformed variables in Bayesian networks. This implies a substantial way of handling jointly Bayesian networks and Bayesian methods: parameters become nodes in the graph, and prior distributions become part of the network specification. This unification blurs the traditional distinction between parameters and observables, allowing hierarchical models and principled uncertainty propagation.
+
+\section{Introduction}
+
+What happens when you stop viewing model parameters as fixed, immutable constants and start treating them as what they really are — random variables that express your uncertainty about the world? This seemingly technical question conceals one of the deepest revolutions in modern statistical thinking. In this chapter you will cross that threshold.
+
+The Bayesian paradigm is not a minor correction to classical methods: it is a reconceptualization of what it means to \emph{infer} from data. By assigning probability distributions to parameters, you stop looking for a single true value and start reasoning with the full richness of uncertainty. Bayes' theorem — a deceptively simple result — becomes the instrument that combines what you knew before observing the data with what the data teach you, producing a posterior distribution that integrates everything.
+
+You will discover that this perspective transforms parametric models into something much more flexible: random mixtures of plausible models that naturally border on the world of non-parametric modelling. You will learn to choose prior distributions that encode prior knowledge — or honest ignorance — and to derive predictive distributions that not only estimate parameters but also generate new observations with uncertainty properly propagated.
+
+You will study conjugate families, which offer unmatched mathematical elegance by allowing the passage from prior to posterior through simple algebraic operations — without a single difficult integral. But you will also learn to recognise their limitations: the convenience of staying within a single distributional family comes at the price of modelling flexibility. By the end of this chapter you will have acquired the language and intuition that open the door to a new way of modelling the world.
+
+With Bayesian methods you move to random or stochastic models, leaving deterministic ones behind. From the AI perspective this is a drastic change, because you move from concrete inputs and outputs to random variables. Therefore, you must get used to dealing not with concrete or univariate data, but with random distributions and complete samples. The expected outputs are not concrete values but random variables, that is, probability distributions.
+
+\section{Bayes' theorem}
+
+\subsection{The fundamental theorem of Bayes}
+
+Bayes' theorem establishes the relationship between two relevant conditional probabilities:
+\begin{theorem}[Bayes' theorem]
+Given events $A$ and $B$ with $P(B) > 0$, the following relation holds:
+\begin{equation}\label{eq:bayes_basic}
+\boxed{P(A|B) = \frac{P(B|A) \cdot P(A)}{P(B)}}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+From the definition of conditional probability:
+\begin{align*}
+P(A|B) &= \frac{P(A \cap B)}{P(B)} \\
+P(B|A) &= \frac{P(A \cap B)}{P(A)}
+\end{align*}
+
+Since $P(A \cap B) = P(B \cap A)$, we have:
+$$P(A \cap B) = P(B|A) \cdot P(A) = P(A|B) \cdot P(B)$$
+and solving for $P(A|B)$ yields relation (\ref{eq:bayes_basic}).
+\end{proof}
+
+The main and practically relevant idea of the theorem is how to update the probability $P(A)$ when event $B$ is already known. In other words, $P(A)$ and $P(A|B)$ are the prior and posterior probabilities of event $A$, respectively.
+
+\subsection{Some notation and physical meaning}
+In statistical inference, Bayes' theorem relates the parameters $\theta$ and the data $\mathbf{y}$:
+\begin{equation}\label{eq:bayes_inference}
+\boxed{P(\theta|\mathbf{y}) = \frac{P(\mathbf{y}|\theta) \cdot P(\theta)}{P(\mathbf{y})}}
+\end{equation}
+where:
+\begin{itemize}
+\item $\theta$ represents the parameters of interest (e.g., mean, variance, standard deviation, regression coefficients, etc.)
+\item $\mathbf{y} = (y_1, y_2, \dots, y_n)$ represents the observed data
+\item $P(\theta)$ is the \textbf{prior distribution} — our beliefs about $\theta$ before seeing the data
+\item $P(\mathbf{y}|\theta)$ is the \textbf{likelihood function} — the probability of observing the data $\mathbf{y}$ given the parameters $\theta$
+\item $P(\mathbf{y})$ is the \textbf{marginal likelihood} or \textbf{evidence} — the probability of the data $\mathbf{y}$
+\item $P(\theta|\mathbf{y})$ is the \textbf{posterior distribution} — our updated beliefs about $\theta$ after seeing the data $\mathbf{y}$
+\end{itemize}
+The marginal likelihood is given by:
+\begin{equation}\label{eq:marginal_likelihood}
+P(\mathbf{y}) = \int P(\mathbf{y}|\theta) \cdot P(\theta) \, d\theta,
+\end{equation}
+which is often a normalising constant and, consequently, can be written in proportional form:
+\begin{equation}\label{eq:bayes_proportional}
+\boxed{P(\theta|\mathbf{y}) \propto P(\mathbf{y}|\theta) \cdot P(\theta)}
+\end{equation}
+which reads: "\textit{the posterior is proportional to the likelihood times the prior}."
+
+\section{Prior and posterior distributions}
+
+\subsection{The prior distribution}
+The prior distribution $P(\theta)$ encodes our beliefs about the parameter before observing the data, that is, based solely on prior knowledge. Several approaches exist for choosing prior distributions:
+\begin{enumerate}
+\item \textbf{Informative priors}: Based on previous studies, expert knowledge or physical constraints, which reveal which values are more probable and which are unlikely or impossible.
+\item \textbf{Weakly informative priors}: Provide regularisation with flat probabilities or densities without preferences among possible values (flat densities).
+\item \textbf{Conjugate priors}: Chosen so that the posterior belongs to the same family as the prior.
+\end{enumerate}
+
+\subsection{The posterior distribution}
+The posterior distribution $P(\theta|\mathbf{y})$ represents our updated beliefs after observing the data, that is, considering both sources of knowledge, prior and observed. Key properties:
+\begin{itemize}
+\item \textbf{Compromise}: Balances prior beliefs with the evidence from the data.
+\item \textbf{Data dominance}: As $n \to \infty$, the posterior concentrates around the true value regardless of the prior.
+\item \textbf{Uncertainty quantification}: Naturally provides credible intervals.
+\item \textbf{Sequential updating}: Today's posterior becomes tomorrow's prior. Updating is performed as soon as new data become available.
+\end{itemize}
+
+The asymptotic normality of the posterior distribution under large samples is a consequence of the Bernstein–von Mises theorem under the usual regularity conditions.
+
+\subsection{Obtaining the posterior from the data}
+The Bayesian inference process consists of three steps:
+\begin{enumerate}
+\item \textbf{Specify the prior distribution}: $P(\theta)$
+\item \textbf{Specify the likelihood}: $P(\mathbf{y}|\theta)$
+\item \textbf{Compute the posterior distribution}: $P(\theta|\mathbf{y}) = \frac{P(\mathbf{y}|\theta) \cdot P(\theta)}{P(\mathbf{y})}$
+\end{enumerate}
+
+\section{Predictive distributions}
+The prior predictive distribution is our only resource when no data are available. However, this is not the normal case that arises in practice, where different types of data can be used to learn our model. Therefore, posterior predictive distributions, which incorporate data in addition to our knowledge expressed in the prior distributions, are the distributions that should be used in simulation and predictions.
+
+An important virtue of Bayesian models and methods is that they are especially well suited for generating synthetic samples, here understood as posterior predictive distributions. Since this is not only possible but easy to implement, we have a very powerful tool for generating samples (synthetic data) of any size. These samples are not only useful but necessary in most simulation methods, which are the most widely used in AI. This justifies their use and explains the success of Bayesian methods in this area of knowledge.
+
+Predictive distributions answer the much more interesting practical question: "What values could we observe for new data?"
+
+\subsection{Prior predictive distribution}
+
+The \textbf{prior predictive distribution} gives the probability of observing data $\mathbf{y}$ before seeing any actual observations:
+\begin{equation}\label{eq:prior_predictive}
+\boxed{P(\mathbf{y}) = \int P(\mathbf{y}|\theta) \cdot P(\theta) \, d\theta}
+\end{equation}
+\textbf{How to obtain it:}
+\begin{enumerate}
+\item Start with the prior distribution $P(\theta)$
+\item For each possible $\theta$, compute $P(\mathbf{y}|\theta)$
+\item Average (integrate) over all possible values of $\theta$ weighted by the prior
+\end{enumerate}
+
+\subsection{Posterior predictive distribution}
+
+The \textbf{posterior predictive distribution} gives the probability of observing new data $\tilde{\mathbf{y}}$ after seeing the observed data $\mathbf{y}$:
+\begin{equation}\label{eq:posterior_predictive}
+\boxed{P(\tilde{\mathbf{y}}|\mathbf{y}) = \int P(\tilde{\mathbf{y}}|\theta) \cdot P(\theta|\mathbf{y}) \, d\theta}
+\end{equation}
+
+\textbf{How to obtain it:}
+\begin{enumerate}
+\item Compute the posterior distribution $P(\theta|\mathbf{y})$ using the observed data
+\item For each possible $\theta$, compute $P(\tilde{\mathbf{y}}|\theta)$ for new data
+\item Average (integrate) over all possible values of $\theta$ weighted by the posterior
+\end{enumerate}
+
+\section{Conjugate prior distributions}
+
+In Bayesian inference, a family of prior distributions is called \textbf{conjugate} to a likelihood function if the posterior distribution belongs to the same family as the prior. This property greatly simplifies posterior computations, since the posterior can be obtained simply by updating the parameters of the prior distribution without the need for numerical integration. Typically, integrations are replaced by simple algebraic operations, such as sums.
+
+Conjugate distribution families become very useful tools because they greatly simplify the step from priors to posteriors, but they also have some drawbacks.
+
+\begin{definition}[Conjugate prior]
+A family of distributions $\mathcal{F}$ is conjugate to a likelihood function $P(\mathbf{y}|\theta)$ if:
+$$P(\theta) \in \mathcal{F} \quad \Rightarrow \quad P(\theta|\mathbf{y}) \in \mathcal{F}$$
+\end{definition}
+
+Conjugate priors have the mathematical convenience that the posterior has a closed-form expression, making them particularly useful for analytical work and developing intuition. However, this convenience should not override the need to choose priors that genuinely reflect prior beliefs.
+
+The main drawback of using conjugate distribution families is that we can only move within this family. Otherwise, our possibilities are not restricted to single or particular families.
+
+Therefore, it is worth noting that conjugate models, although computationally convenient, keep the same distributional family for both prior and posterior. This limits generalisation towards non-parametric models. Hence, although useful, conjugate prior distributions should be considered with some caution from the perspective of modelling flexibility.
+
+\subsection{Example 1: Beta-Binomial conjugacy}
+\begin{examplebox}
+\begin{example}[Beta-Binomial conjugacy]
+
+Consider estimating the probability $\theta$ of success in a binomial experiment. The Beta distribution is conjugate to the binomial likelihood:
+
+\begin{itemize}
+\item \textbf{Prior:} $\theta \sim \text{Beta}(\alpha, \beta)$ with density:
+$$p(\theta) = \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha)\Gamma(\beta)} \theta^{\alpha-1}(1-\theta)^{\beta-1}, \quad 0 < \theta < 1$$
+
+The prior distribution has mean $E[\theta] = \frac{\alpha}{\alpha+\beta}$ which can be interpreted as representing $\alpha$ previous successes and $\beta$ previous failures.
+
+\item \textbf{Likelihood:} For $k$ successes in $n$ trials:
+$$P(\mathbf{y}|\theta) = \binom{n}{k} \theta^k (1-\theta)^{n-k}$$
+
+\item \textbf{Posterior:} Combining the prior and the likelihood and dropping constant factors:
+\begin{align*}
+P(\theta|\mathbf{y}) &\propto P(\mathbf{y}|\theta) \cdot P(\theta) \\
+&\propto \theta^k (1-\theta)^{n-k} \cdot \theta^{\alpha-1}(1-\theta)^{\beta-1} \\
+&= \theta^{(k+\alpha)-1} (1-\theta)^{(n-k+\beta)-1}
+\end{align*}
+
+This is the functional form of a $\text{Beta}(\alpha + k, \beta + n - k)$ distribution. Therefore:
+$$\theta|\mathbf{y} \sim \text{Beta}(\alpha + k, \beta + n - k)$$
+\end{itemize}
+
+The posterior simply adds the observed successes ($k$) to the previous successes ($\alpha$) and the observed failures ($n-k$) to the previous failures ($\beta$). This elegant updating rule makes Beta-Binomial conjugacy particularly intuitive: the parameters of the prior distribution can be thought of as "pseudo-observations" that are combined with the actual observations.
+
+The posterior mean is:
+$$E[\theta|\mathbf{y}] = \frac{\alpha + k}{\alpha + \beta + n} = \frac{n}{n+\alpha+\beta} \cdot \frac{k}{n} + \frac{\alpha+\beta}{n+\alpha+\beta} \cdot \frac{\alpha}{\alpha+\beta}$$
+
+This is a weighted average of the sample proportion $\frac{k}{n}$ and the prior mean $\frac{\alpha}{\alpha+\beta}$, with weights determined by the sample size $n$ and the strength of the prior $\alpha+\beta$.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{beta_prior_posterior.png}
+\caption{Prior and posterior distributions for the coin bias parameter $\theta$. The posterior Beta(9,5) is shifted to the right and more concentrated than the prior Beta(2,2), reflecting the evidence of 7 heads in 10 tosses.}
+\label{fig:beta_prior_post}
+\end{figure}
+Figure \ref{fig:beta_prior_post} shows how the posterior distribution (red) is both shifted to the right and more concentrated compared with the prior (blue). The prior mean of 0.5 reflects the initial belief in a fair coin, while the posterior mean of 0.643 incorporates the evidence of 7 heads in 10 tosses. The greater concentration (smaller variance) reflects reduced uncertainty after observing the data.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{beta_predictive.pdf}
+\caption{Prior and posterior predictive distributions for the number of heads in 10 future coin tosses. The prior predictive is nearly uniform, while the posterior predictive is concentrated around 6–7 heads.}
+\label{fig:beta_predictive}
+\end{figure}
+
+Figure \ref{fig:beta_predictive} illustrates the dramatic difference between prior and posterior predictions. The prior predictive distribution is nearly uniform over all possible outcomes, reflecting high uncertainty before any data. The posterior predictive is concentrated around 6–7 heads, with the peak at the expected value $10 \times 0.643 \approx 6.4$. This shows how data drastically sharpen our prediction.
+
+\end{example}
+\end{examplebox}
+
+\subsection{Example 2: Gamma-Poisson conjugacy}
+\begin{examplebox}
+\begin{example}[Gamma-Poisson conjugacy]
+Consider modelling the rate parameter $\lambda$ of a Poisson process (e.g., number of events per unit time). The Gamma distribution is conjugate to the Poisson likelihood:
+\begin{itemize}
+\item \textbf{Prior:} $\lambda \sim \text{Gamma}(\alpha, \beta)$ with density:
+$$p(\lambda) = \frac{\beta^\alpha}{\Gamma(\alpha)} \lambda^{\alpha-1} e^{-\beta\lambda}, \quad \lambda > 0$$
+
+The prior distribution has mean $E[\lambda] = \frac{\alpha}{\beta}$ and variance $\text{Var}[\lambda] = \frac{\alpha}{\beta^2}$. The parameter $\alpha$ represents shape and $\beta$ rate.
+
+The Gamma prior can be interpreted as representing $\alpha$ previous events observed in $\beta$ previous time units, giving a prior rate of $\frac{\alpha}{\beta}$ events per unit time.
+
+\item \textbf{Likelihood:} For observations $\mathbf{y} = (y_1, y_2, \dots, y_n)$ from a Poisson distribution:
+$$P(\mathbf{y}|\lambda) = \prod_{i=1}^n \frac{\lambda^{y_i} e^{-\lambda}}{y_i!} = \frac{\lambda^{\sum_{i=1}^n y_i} e^{-n\lambda}}{\prod_{i=1}^n y_i!}$$
+
+Let $s = \sum_{i=1}^n y_i$ be the total count. Then:
+$$P(\mathbf{y}|\lambda) \propto \lambda^s e^{-n\lambda}$$
+
+\item \textbf{Posterior:} Combining the prior and likelihood:
+\begin{align*}
+P(\lambda|\mathbf{y}) &\propto P(\mathbf{y}|\lambda) \cdot P(\lambda) \propto \lambda^s e^{-n\lambda} \cdot \lambda^{\alpha-1} e^{-\beta\lambda} = \lambda^{(s+\alpha)-1} e^{-(\beta+n)\lambda}
+\end{align*}
+
+This is the functional form of a $\text{Gamma}(\alpha + s, \beta + n)$ distribution. Therefore:
+$$\lambda|\mathbf{y} \sim \text{Gamma}(\alpha + s, \beta + n)$$
+
+where $s = \sum_{i=1}^n y_i$ is the sum of the observed counts.
+\end{itemize}
+
+The posterior updating rule is intuitive: add the total observed count $s$ to the prior shape parameter $\alpha$, and add the number of observations $n$ to the prior rate parameter $\beta$.
+
+The posterior mean is:
+$$E[\lambda|\mathbf{y}] = \frac{\alpha + s}{\beta + n} = \frac{\beta}{\beta + n} \cdot \frac{\alpha}{\beta} + \frac{n}{\beta + n} \cdot \frac{s}{n}$$
+
+This is a weighted average of the prior mean $\frac{\alpha}{\beta}$ and the sample mean $\bar{y} = \frac{s}{n}$, with weights determined by the strength of the prior $\beta$ and the sample size $n$.
+
+\end{example}
+\end{examplebox}
+
+\begin{examplebox}
+\begin{example}[Gamma-Poisson: Web traffic analysis]
+A data analyst wants to estimate the average number of visitors per hour to a website.
+
+\textbf{Prior:} Based on similar websites, the analyst believes the rate is around 50 visitors per hour with moderate uncertainty:
+$$\lambda \sim \text{Gamma}(100, 2)$$
+This prior has:
+\begin{align*}
+E[\lambda] &= \frac{100}{2} = 50 \text{ visitors/hour} \\
+\text{Std}[\lambda] &= \sqrt{\frac{100}{2^2}} = 5 \text{ visitors/hour}
+\end{align*}
+
+\textbf{Data:} Traffic counts over 8 hours:
+$$\mathbf{y} = (48, 52, 55, 47, 51, 49, 54, 50)$$
+
+Total count: $s = \sum_{i=1}^8 y_i = 406$
+
+Sample mean: $\bar{y} = \frac{406}{8} = 50.75$ visitors/hour
+
+\textbf{Posterior:}
+$$\lambda|\mathbf{y} \sim \text{Gamma}(100 + 406, 2 + 8) = \text{Gamma}(506, 10)$$
+
+Posterior summary:
+\begin{align*}
+E[\lambda|\mathbf{y}] &= \frac{506}{10} = 50.6 \text{ visitors/hour} \\
+\text{Std}[\lambda|\mathbf{y}] &= \sqrt{\frac{506}{10^2}} = \sqrt{5.06} \approx 2.25 \text{ visitors/hour} \\
+\text{Mode}[\lambda|\mathbf{y}] &= \frac{506-1}{10} = 50.5 \text{ visitors/hour}
+\end{align*}
+
+\textbf{95\% credible interval:}
+Using Gamma quantiles (computed with statistical software):
+$$\text{CI}_{95\%} \approx [46.2, 55.2]$$
+
+\textbf{Interpretation:}
+\begin{itemize}
+\item The posterior mean (50.6) is very close to both the prior mean (50) and the sample mean (50.75)
+\item The posterior standard deviation (2.25) is much smaller than the prior standard deviation (5), showing greater precision
+\item With 8 hours of data, the prior still has some influence but the data dominate
+\end{itemize}
+
+\textbf{Posterior predictive:}
+For the next hour, the predictive distribution is Negative Binomial:
+$$\tilde{y}|\mathbf{y} \sim \text{NegBin}(r=506, p=\frac{10}{11})$$
+with mean:
+$$E[\tilde{y}|\mathbf{y}] = \frac{r(1-p)}{p} = \frac{506 \cdot \frac{1}{11}}{\frac{10}{11}} = \frac{506}{10} = 50.6$$
+and variance:
+$$\text{Var}[\tilde{y}|\mathbf{y}] = \frac{r(1-p)}{p^2} = \frac{506 \cdot \frac{1}{11}}{(\frac{10}{11})^2} = 55.66$$
+
+The predictive standard deviation is $\sqrt{55.66} \approx 7.46$ visitors/hour, which is larger than the Poisson standard deviation $\sqrt{50.6} \approx 7.11$ because it includes parameter uncertainty.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.5\textwidth]{gamma_prior_posterior.pdf}
+\caption{Prior and posterior distributions for the Poisson rate parameter $\lambda$. The posterior Gamma(506,10) is much more concentrated than the prior Gamma(100,2), showing a substantial reduction in uncertainty after observing 8 hours of data.}
+\label{fig:gamma_prior_post}
+\end{figure}
+
+Figure \ref{fig:gamma_prior_post} demonstrates the dramatic uncertainty reduction achieved by collecting data. The prior (blue) with standard deviation 5 visitors/hour represents substantial uncertainty. After observing 8 hours of data, the posterior (red) has standard deviation of only 2.25 visitors/hour — a reduction of more than 50\%. The posterior mean (50.6) is very close to both the prior mean (50) and the sample mean (50.75), indicating agreement between prior beliefs and observed data.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{gamma_predictive.pdf}
+\caption{Prior and posterior predictive distributions for the number of visitors in the next hour. The posterior predictive is more concentrated around 50.6, reflecting reduced uncertainty about the rate parameter $\lambda$ after observing data.}
+\label{fig:gamma_predictive}
+\end{figure}
+
+Figure \ref{fig:gamma_predictive} shows that the posterior predictive distribution is much more concentrated than the prior predictive. The prior predictive has a standard deviation of 7.2 visitors, while the posterior predictive has a standard deviation of only 3.5 visitors. This reflects not only the reduced uncertainty about $\lambda$, but also demonstrates how Bayesian inference propagates parameter uncertainty to predictions. Although we have observed data, the predictions still account for residual parameter uncertainty, making them more realistic than point predictions.
+
+Note that both predictive distributions have heavier tails than would be expected from a simple Poisson distribution with known $\lambda$, because they integrate over uncertainty in the rate parameter. This is a key advantage of the Bayesian approach: predictions automatically incorporate parameter uncertainty.
+\end{example}
+\end{examplebox}
+
+\begin{table}[htbp]
+\centering
+\caption{Commonly conjugate prior-likelihood pairs}
+\begin{tabular}{lll}
+\toprule
+\textbf{Likelihood} & \textbf{Prior} & \textbf{Posterior} \\
+\midrule
+Binomial($n$, $\theta$) & Beta($\alpha$, $\beta$) & Beta($\alpha + k$, $\beta + n - k$) \\
+Poisson($\lambda$) & Gamma($\alpha$, $\beta$) & Gamma($\alpha + \sum y_i$, $\beta + n$) \\
+Normal($\mu$, $\sigma^2$) & Normal($\mu_0$, $\tau_0^2$) & Normal($\mu_n$, $\tau_n^2$) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Example 3: Dirichlet-Multinomial conjugacy}
+\begin{examplebox}
+\begin{example}[Dirichlet-Multinomial conjugacy]
+
+Consider estimating the probabilities $\boldsymbol{\theta} = (\theta_1, \theta_2, \dots, \theta_K)$ of $K$ mutually exclusive outcomes in a multinomial experiment (a generalisation of the binomial to more than two categories). The Dirichlet distribution is conjugate to the multinomial likelihood:
+
+\begin{itemize}
+\item \textbf{Prior:} $\boldsymbol{\theta} \sim \text{Dirichlet}(\boldsymbol{\alpha})$ where $\boldsymbol{\alpha} = (\alpha_1, \alpha_2, \dots, \alpha_K)$ with density:
+$$p(\boldsymbol{\theta}) = \frac{\Gamma(\alpha_0)}{\prod_{j=1}^K \Gamma(\alpha_j)} \prod_{j=1}^K \theta_j^{\alpha_j-1}, \quad \theta_j > 0, \sum_{j=1}^K \theta_j = 1$$
+
+where $\alpha_0 = \sum_{j=1}^K \alpha_j$ is the concentration parameter.
+
+The prior distribution has mean $E[\theta_j] = \frac{\alpha_j}{\alpha_0}$ and can be interpreted as representing $\alpha_j$ previous observations in category $j$. The parameter $\alpha_0$ controls the strength of the prior: larger values represent more confident prior beliefs.
+
+\item \textbf{Likelihood:} For $n$ trials with counts $\mathbf{y} = (y_1, y_2, \dots, y_K)$ where $y_j$ is the number of observations in category $j$ and $\sum_{j=1}^K y_j = n$:
+$$P(\mathbf{y}|\boldsymbol{\theta}) = \frac{n!}{\prod_{j=1}^K y_j!} \prod_{j=1}^K \theta_j^{y_j} =  P(\mathbf{y}|\boldsymbol{\theta}) \propto \prod_{j=1}^K \theta_j^{y_j}$$
+where the multinomial coefficient has been dropped in the last expression.
+
+\item \textbf{Posterior:} Combining the prior and likelihood:
+\begin{align*}
+P(\boldsymbol{\theta}|\mathbf{y}) &\propto P(\mathbf{y}|\boldsymbol{\theta}) \cdot P(\boldsymbol{\theta}) \propto \prod_{j=1}^K \theta_j^{y_j} \cdot \prod_{j=1}^K \theta_j^{\alpha_j-1} = \prod_{j=1}^K \theta_j^{(y_j+\alpha_j)-1}
+\end{align*}
+
+This is the functional form of a $\text{Dirichlet}(\boldsymbol{\alpha} + \mathbf{y})$ distribution. Therefore:
+$$\boldsymbol{\theta}|\mathbf{y} \sim \text{Dirichlet}(\alpha_1 + y_1, \alpha_2 + y_2, \dots, \alpha_K + y_K)$$
+\end{itemize}
+
+The posterior updating rule is remarkably simple and intuitive: add the observed count $y_j$ in each category to the corresponding prior parameter $\alpha_j$. This makes Dirichlet-Multinomial conjugacy a natural extension of Beta-Binomial conjugacy to multiple categories.
+
+The posterior mean for category $j$ is:
+$$E[\theta_j|\mathbf{y}] = \frac{\alpha_j + y_j}{\alpha_0 + n} = \frac{\alpha_0}{\alpha_0 + n} \cdot \frac{\alpha_j}{\alpha_0} + \frac{n}{\alpha_0 + n} \cdot \frac{y_j}{n}$$
+
+This is a weighted average of the prior proportion $\frac{\alpha_j}{\alpha_0}$ and the sample proportion $\frac{y_j}{n}$, with weights determined by the strength of the prior $\alpha_0$ and the sample size $n$.
+
+\end{example}
+\end{examplebox}
+
+\begin{examplebox}
+\begin{example}[Dirichlet-Multinomial: Customer preference analysis]
+A marketing team wants to estimate customer preferences for six product categories: Electronics (E), Clothing (C), Home goods (H), Sports (S), Books (B), and Travel (T).
+
+\textbf{Prior:} Based on industry data, the team believes preferences are roughly equal with moderate uncertainty:
+$$\boldsymbol{\theta} \sim \text{Dirichlet}(15, 15, 15, 15, 15, 15)$$
+
+This prior has:
+$$E[\theta_E] = E[\theta_C] = E[\theta_H] = E[\theta_S] = E[\theta_B] = E[\theta_T] = \frac{15}{90} = 0.167$$
+$$\alpha_0 = 90 \text{ (equivalent to 90 previous observations)}$$
+$$\text{Std}[\theta_j] = \sqrt{\frac{\theta_j(1-\theta_j)}{\alpha_0+1}} = \sqrt{\frac{0.167 \cdot 0.833}{91}} \approx 0.039$$
+
+\textbf{Data:} A survey of 300 customers reveals:
+$$\mathbf{y} = (y_E, y_C, y_H, y_S, y_B, y_T) = (68, 82, 45, 28, 52, 25)$$
+
+Sample proportions:
+\begin{align*}
+\hat{\theta}_E &= \frac{68}{300} = 0.227; \quad \hat{\theta}_C = \frac{82}{300} = 0.273; \quad \hat{\theta}_H = \frac{45}{300} = 0.150 \\
+\hat{\theta}_S &= \frac{28}{300} = 0.093; \quad \hat{\theta}_B = \frac{52}{300} = 0.173; \quad \hat{\theta}_T = \frac{25}{300} = 0.083
+\end{align*}
+
+\textbf{Posterior:}
+$$\boldsymbol{\theta}|\mathbf{y} \sim \text{Dirichlet}(83, 97, 60, 43, 67, 40)$$
+
+with $\alpha_0' = 390$ (representing the combined strength of prior and data).
+
+Posterior summary:
+\begin{align*}
+E[\theta_E|\mathbf{y}] &= \frac{83}{390} = 0.213; \quad E[\theta_C|\mathbf{y}] = \frac{97}{390} = 0.249; \quad E[\theta_H|\mathbf{y}] = \frac{60}{390} = 0.154 \\
+E[\theta_S|\mathbf{y}] &= \frac{43}{390} = 0.110; \quad E[\theta_B|\mathbf{y}] = \frac{67}{390} = 0.172; \quad E[\theta_T|\mathbf{y}] = \frac{40}{390} = 0.103 \\
+\text{Std}[\theta_j|\mathbf{y}] &\approx \sqrt{\frac{E[\theta_j|\mathbf{y}](1-E[\theta_j|\mathbf{y}])}{391}} \approx 0.016-0.022
+\end{align*}
+
+\textbf{95\% credible intervals:}
+Using Dirichlet quantiles:
+\begin{align*}
+\text{CI}_{95\%}(\theta_E) &\approx [0.174, 0.253]; \;\; \text{CI}_{95\%}(\theta_C) &\approx [0.209, 0.291]; \;\; \text{CI}_{95\%}(\theta_H) &\approx [0.120, 0.190] \\
+\text{CI}_{95\%}(\theta_S) &\approx [0.080, 0.143]; \;\; \text{CI}_{95\%}(\theta_B) &\approx [0.137, 0.208]; \;\; \text{CI}_{95\%}(\theta_T) &\approx [0.074, 0.135]
+\end{align*}
+
+\textbf{Interpretation:}
+\begin{itemize}
+\item Clothing (C) emerges as the most preferred category with posterior mean 0.249
+\item Electronics (E) follows with posterior mean 0.213
+\item Books (B) shows moderate preference with posterior mean 0.172
+\item Travel (T) and Sports (S) show the lowest preferences with posterior means 0.103 and 0.110
+\item Posterior standard deviations (≈0.019) are about half the prior standard deviations (≈0.039), showing substantial reduction in uncertainty
+\item With 300 observations versus 90 prior pseudo-observations, the data dominate: posterior means are closer to sample proportions than to prior means
+\end{itemize}
+
+\textbf{Posterior predictive:}
+For the next customer, the predictive distribution is:
+$$P(\tilde{y}_j = 1|\mathbf{y}) = E[\theta_j|\mathbf{y}]$$
+
+For a sample of $m$ new customers, the predictive distribution is Dirichlet-Multinomial with parameters $(\alpha_1 + y_1, \dots, \alpha_K + y_K)$ and sample size $m$.
+
+\textbf{Business application:}
+The marketing team can use these results to:
+\begin{itemize}
+\item Allocate advertising budget: 25\% to Clothing, 21\% to Electronics, 17\% to Books, 15\% to Home goods, 11\% to Sports, 10\% to Travel
+\item Estimate inventory needs based on expected demand proportions
+\item Quantify uncertainty in preferences using credible intervals
+\item Update beliefs as new customer data arrive using the simple conjugate updating rule
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.80\textwidth]{dirichlet_prior_posterior_con_fondo.png}
+\caption{Marginal prior and posterior distributions for each category preference parameter. The posterior distributions (solid red lines) are more concentrated than the priors (dashed blue lines) and shifted towards the observed sample proportions. Clothing and Electronics show higher probabilities, while Sports and Travel show notably lower preferences.}
+\label{fig:dirichlet_prior_post}
+\end{figure}
+
+Figure \ref{fig:dirichlet_prior_post} illustrates the marginal distributions for each category. The prior distributions (dashed blue lines) are identical for all categories, reflecting the initial belief of equal preferences. The posterior distributions (solid red lines) show clear differentiation: Clothing and Electronics are shifted to the right, Books and Home goods remain near the centre, while Sports and Travel are shifted to the left. All posterior distributions are notably more concentrated than the priors, with standard deviations reduced by approximately 51\%.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.80\textwidth]{dirichlet_predictive_con_fondo.png}
+\caption{Prior and posterior predictive distributions for category selections in a sample of 150 new customers. The posterior predictive (red bars) shows clear differentiation among categories, with Clothing expected about 37 times and Travel only about 15 times, while the prior predictive (blue bars) distributes choices more uniformly around 25 per category.}
+\label{fig:dirichlet_predictive}
+\end{figure}
+
+Figure \ref{fig:dirichlet_predictive} demonstrates how data transform predictions. The prior predictive (blue bars) shows nearly uniform expectations among categories, each around 25 selections out of 150. The posterior predictive (red bars) reveals substantial differentiation: Clothing is expected to be chosen 37 times, Electronics 32 times, Books 26 times, Home goods 23 times, Sports 17 times, and Travel only 15 times. The error bars represent 95\% predictive intervals, showing that uncertainty remains even after observing data — a key feature of Bayesian prediction that accounts for both sampling variability and parameter uncertainty.
+
+\textbf{Category comparisons:}
+The Dirichlet posterior also allows us to make probabilistic statements about category comparisons. For example:
+$$P(\theta_C > \theta_E|\mathbf{y}) \approx 0.88$$
+$$P(\theta_S > \theta_T|\mathbf{y}) \approx 0.65$$
+$$P(\theta_B > 0.15|\mathbf{y}) \approx 0.73$$
+
+These can be computed by simulation from the posterior Dirichlet distribution, providing decision makers with quantified uncertainty about relative preferences.
+
+\end{example}
+\end{examplebox}
+
+\section{Comparison with maximum likelihood estimation}
+\subsection{Maximum likelihood estimation (MLE)}
+In MLE, we choose the parameter value $\hat{\theta}_{MLE}$ that maximises the likelihood function:
+$$\hat{\theta}_{MLE} = \arg\max_{\theta} P(\mathbf{y}|\theta) = \arg\max_{\theta} \log P(\mathbf{y}|\theta)$$
+\subsection{Maximum a posteriori estimation (MAP)}
+MAP estimation is the mode of the posterior distribution:
+$$\hat{\theta}_{MAP} = \arg\max_{\theta} P(\theta|\mathbf{y}) = \arg\max_{\theta} [P(\mathbf{y}|\theta) \cdot P(\theta)]$$
+\textbf{Key idea}: MAP = MLE + regularisation via the prior distribution.
+\subsection{Full Bayesian inference}
+Full Bayesian inference provides the entire posterior distribution $P(\theta|\mathbf{y})$, not just a point estimate.
+\begin{examplebox}
+\begin{example}[Estimating a normal mean]
+For data $\mathbf{y} = (2.1, 1.8, 2.3, 1.9, 2.0)$ with $n=5$, $\bar{y} = 2.02$, and prior $N(0, 4)$:
+\begin{itemize}
+\item $\hat{\mu}_{MLE} = 2.02$ (no prior influence)
+\item $\hat{\mu}_{MAP} \approx 1.93$ (slightly shrunk towards the prior)
+\item Posterior: $\mu|\mathbf{y} \sim N(1.93, 0.19)$ (with uncertainty quantification)
+\item 95\% credible interval: $[1.08, 2.78]$
+\end{itemize}
+\end{example}
+\end{examplebox}
+\begin{table}[h]
+\centering
+\caption{Comparison of inference methods}
+\begin{tabular}{lp{3cm}p{3cm}p{3cm}}
+\toprule
+\textbf{Criterion} & \textbf{MLE} & \textbf{MAP} & \textbf{Full Bayes} \\
+\midrule
+Prior information & Not used & Used as regularisation & Fully incorporated \\
+Output & Point estimate & Point estimate & Full distribution \\
+Uncertainty & Requires asymptotics & Requires work & Natural \\
+Small samples & May be unstable & More stable & More stable \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Handling Bayesian networks. Conditional probabilities}
+In Bayesian networks, parameters can be incorporated as parent nodes within the graph, thus blurring the traditional distinction between parameters and observable variables. This unified integration allows joint modelling of parametric uncertainty and observed variability, facilitating the construction of hierarchical and multilevel models.
+A \textbf{Bayesian network} is a directed acyclic graph (DAG) where:
+\begin{itemize}
+\item Nodes represent random variables
+\item Edges represent probabilistic dependencies
+\item Each node has a conditional probability distribution given its parents
+\end{itemize}
+\subsection{Structure and factorisation}
+For variables $X_1, X_2, \dots, X_n$ with parents $\text{Pa}(X_i)$, the joint distribution factorises as:
+\begin{equation}\label{eq:bn_factorization}
+\boxed{P(X_1, X_2, \dots, X_n) = \prod_{i=1}^n P(X_i | \text{Pa}(X_i))}
+\end{equation}
+
+Defining probabilistic models via sets of conditional probabilities is powerful, but care is required: not every set of conditionals defines a valid joint distribution. Bayesian networks guarantee the compatibility of such specifications, provided that an acyclic order is respected. Although multiple equivalent orders exist, each defines the same joint distribution. This robust property justifies the use of tools such as OpenBUGS, which by design impose well-defined network structures.
+
+\section{Additional solved examples}
+\begin{examplebox}
+\begin{example}[Estimating the average temperature]
+Let \(\sigma^2\) be the known variance of individual observations, and \(\tau_0^2\) the prior variance of the mean \(\mu\).
+A meteorologist wants to estimate the average daily temperature of a city in May.
+
+\textbf{Prior:}
+Based on 30-year historical averages, the meteorologist uses:
+$$\mu \sim N(18, 2^2) \quad \text{(degrees Celsius)}$$
+
+\textbf{Data:}
+Temperature measurements for the first 5 days of May (in °C):
+$$\mathbf{y} = (19.2, 17.8, 20.1, 18.5, 19.4)$$
+Sample statistics:
+\begin{align*}
+n &= 5 \\
+\bar{y} &= \frac{19.2 + 17.8 + 20.1 + 18.5 + 19.4}{5} = 19.0 \\
+\text{Assume: } \sigma^2 &= 1.5^2 = 2.25 \text{ (known from historical data)}
+\end{align*}
+
+\textbf{Posterior:}
+For the conjugate Normal-Normal model with known variance:
+$$\mu|\mathbf{y} \sim N(\mu_n, \tau_n^2)$$
+where:
+\begin{align*}
+\tau_n^2 &= \frac{1}{\frac{n}{\sigma^2} + \frac{1}{\tau_0^2}} = \frac{1}{\frac{5}{2.25} + \frac{1}{4}} = \frac{1}{2.222 + 0.25} = \frac{1}{2.472} \approx 0.405 \\
+\tau_n &\approx 0.636
+\end{align*}
+\begin{align*}
+\mu_n &= \tau_n^2 \left(\frac{n\bar{y}}{\sigma^2} + \frac{\mu_0}{\tau_0^2}\right) = 0.405 \left(\frac{5 \cdot 19.0}{2.25} + \frac{18}{4}\right) \\
+&= 0.405(42.22 + 4.5) = 0.405 \cdot 46.72 \approx 18.92
+\end{align*}
+Therefore: $\mu|\mathbf{y} \sim N(18.92, 0.405)$
+
+\textbf{95\% credible interval:}
+$$\text{CI}_{95\%} = [18.92 - 1.96 \cdot 0.636, \, 18.92 + 1.96 \cdot 0.636] = [17.67, 20.17]$$
+
+\textbf{Comparison with MLE:}
+\begin{itemize}
+\item MLE estimate: $\hat{\mu}_{MLE} = \bar{y} = 19.0$ °C
+\item Bayesian posterior mean: $\mu_n = 18.92$ °C (slightly shrunk towards the prior)
+\item The Bayesian estimate incorporates both historical information and current data
+\end{itemize}
+
+\textbf{Posterior predictive for tomorrow:}
+Tomorrow's temperature $\tilde{y}$ has distribution:
+$$\tilde{y}|\mathbf{y} \sim N(\mu_n, \sigma^2 + \tau_n^2)$$
+$$\tilde{y}|\mathbf{y} \sim N(18.92, 2.25 + 0.405) = N(18.92, 2.655)$$
+Standard deviation: $\sqrt{2.655} \approx 1.63$ °C
+95\% prediction interval for tomorrow:
+$$[18.92 - 1.96 \cdot 1.63, \, 18.92 + 1.96 \cdot 1.63] = [15.72, 22.12]$$
+Note that the prediction interval is wider than the credible interval because it includes both parameter uncertainty and data variability.
+\end{example}
+\end{examplebox}
+
+\begin{examplebox}
+\begin{example}[Extended medical diagnosis with risk factor]
+We extend our medical diagnosis example by adding smoking as a risk factor.
+
+\textbf{Variables:}
+\begin{itemize}
+\item $R$: Smoking status (Yes/No)
+\item $D$: Disease (Present/Absent)
+\item $S_1$: Symptom 1 (Present/Absent)
+\item $S_2$: Symptom 2 (Present/Absent)
+\item $T$: Test result (Positive/Negative)
+\end{itemize}
+
+\textbf{Network structure:}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=2cm and 2.5cm,
+  every node/.style={draw, circle, minimum size=1cm},
+  arrow/.style={->, >=stealth, thick}
+]
+  \node (R) {$R$};
+  \node (D) [below=of R] {$D$};
+  \node (S1) [below left=of D] {$S_1$};
+  \node (S2) [below right=of D] {$S_2$};
+  \node (T) [below=2cm of D] {$T$};
+
+  \draw[arrow] (R) -- (D);
+  \draw[arrow] (D) -- (S1);
+  \draw[arrow] (D) -- (S2);
+  \draw[arrow] (D) -- (T);
+  \draw[arrow] (S1) -- (T);
+\end{tikzpicture}
+\end{center}
+
+\textbf{Joint distribution:}
+$$P(R, D, S_1, S_2, T) = P(R) \cdot P(D|R) \cdot P(S_1|D) \cdot P(S_2|D) \cdot P(T|D, S_1)$$
+
+\textbf{Conditional probability tables:}
+
+$P(R)$:
+\begin{center}
+\begin{tabular}{cc}
+\toprule
+Smoker (Yes) & Non-smoker (No) \\
+\midrule
+0.25 & 0.75 \\
+\bottomrule
+\end{tabular}
+\end{center}
+$P(D=1|R)$:
+\begin{center}
+\begin{tabular}{lc}
+\toprule
+Condition & $P(D=1|R)$ \\
+\midrule
+Smoker ($R=1$) & 0.03 \\
+Non-smoker ($R=0$) & 0.005 \\
+\bottomrule
+\end{tabular}
+\end{center}
+$P(S_1|D)$, $P(S_2|D)$ and $P(T|D, S_1)$ remain as in the original example.
+
+\textbf{Query: } $P(D=1|T=1, R=1)$
+
+We want the probability of disease given a positive test result and smoking status.
+
+Using Bayes' theorem:
+$$P(D=1|T=1, R=1) = \frac{P(T=1|D=1, R=1) \cdot P(D=1|R=1)}{P(T=1|R=1)}$$
+
+\textbf{Step 1: Compute} $P(T=1|D=1, R=1)$
+
+Since $T$ is conditionally independent of $R$ given $D$ and $S_1$:
+$$P(T=1|D=1, R=1) = P(T=1|D=1) = 0.935$$
+(computed as before by marginalising over $S_1$)
+
+\textbf{Step 2: Compute} $P(T=1|R=1)$
+
+Using the law of total probability:
+\begin{align*}
+P(T=1|R=1) &= P(T=1|D=1, R=1) \cdot P(D=1|R=1) \\
+&\quad + P(T=1|D=0, R=1) \cdot P(D=0|R=1) \\
+&= 0.935 \cdot 0.03 + 0.019 \cdot 0.97 \\
+&= 0.02805 + 0.01843 \\
+&= 0.04648
+\end{align*}
+
+\textbf{Step 3: Final computation}
+$$P(D=1|T=1, R=1) = \frac{0.935 \cdot 0.03}{0.04648} \approx 0.604$$
+
+\textbf{Comparison with the original network:}
+\begin{itemize}
+\item Without smoking information: $P(D=1|T=1) \approx 0.332$ (33.2\%)
+\item With smoking information: $P(D=1|T=1, R=1) \approx 0.604$ (60.4\%)
+\end{itemize}
+
+The probability of disease almost doubles when we know the patient is a smoker! This demonstrates the power of Bayesian networks to incorporate multiple sources of evidence.
+
+\textbf{Alternative query:} $P(D=1|T=1, R=0)$ (non-smoker)
+
+Following the same process:
+$$P(D=1|T=1, R=0) \approx 0.197$$
+
+A non-smoker with a positive test has only a 19.7\% probability of disease, compared with 60.4\% for a smoker.
+\end{example}
+\end{examplebox}
+
+\section{Where we stand}
+
+By the end of this chapter, what began as a simple change of perspective — treating parameters as random variables — has revealed its true scope. Bayes' theorem is not merely a formula: it is the logical architecture that unites prior knowledge and observed evidence into a coherent posterior distribution, which summarises everything we know after seeing the data.
+
+You have seen this idea materialise elegantly in conjugate families: Beta-Binomial, Gamma-Poisson, Dirichlet-Multinomial. In each case, the process of statistical learning reduces to updating a handful of parameters with observed counts — a mechanism so transparent that the prior parameters acquire the natural interpretation of \emph{prior pseudo-observations}. But you have also seen that this convenience has a limit: the posterior remains confined to the same family as the prior, restricting the generality of the model.
+
+Beyond the point estimation offered by maximum likelihood, or the mode provided by MAP estimation, the full Bayesian approach offers something qualitatively different: the entire posterior distribution, with all its mass and tails, with credible intervals that mean exactly what users think classical confidence intervals mean — but which classical confidence intervals do not mean. And as the sample size grows, the prior distribution is diluted and the data dominate: the method becomes robust to initial modelling choices.
+
+What you have learned here is the conceptual and mathematical foundation upon which the next two chapters rest. The next one will show you how to compute posteriors that do not admit closed form, using simulation methods. The one after will show you how to specify complex models with a powerful declarative syntax. The Bayesian paradigm that you now master not only broadens your statistical toolbox: it redefines the very question you ask of the data.
+
+We now have a fully Bayesian view. The ability to generate synthetic data from the posterior predictive distribution is not a theoretical luxury — it is the core that fuels modern artificial intelligence methods. The next chapter (Chapter~\ref{ch:ComputationalMethodPosterior}) shows how to compute posteriors that do not admit closed form, using simulation methods (Monte Carlo, rejection, importance sampling, MCMC), and introduces the technique of "perfect sampling" that can multiply precision by an order of magnitude.

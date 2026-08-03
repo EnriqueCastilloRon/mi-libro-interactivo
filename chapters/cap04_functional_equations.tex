@@ -1,0 +1,1169 @@
+%\chapterimage{orange2.jpg}
+%\chapterspaceabove{6.75cm}
+%\chapterspacebelow{7.25cm}
+\startcontents[chapter]
+\chapter{Functional Equations}
+\label{ch:functionalequations}
+\minitocboxed
+
+\section*{Introduction}
+The Buckingham \(\pi\) theorem of Chapter \ref{ch:buckinghamPi} reduces any physically meaningful relation to a function \(\phi(\pi_1,\ldots,\pi_{n-k})\) of dimensionless groups. But the theorem says nothing about the actual form of \(\phi\) — whether it is a sum, a product, or something more complex. This chapter closes that gap by introducing 'functional equations', the natural language for translating fundamental properties of a system into mathematical constraints that force a specific functional form.
+
+Unlike differential equations, which describe local behaviour, functional equations capture global properties that must hold for all admissible arguments. We begin by identifying essential properties of the phenomenon (additivity, translation invariance, associativity, compatibility), translate them into equations, and solve to obtain the 'complete family' of models consistent with those properties. A large list of worked examples from geometry, economics, engineering, probability, and artificial intelligence reveal a surprising pattern: multivariate complexity often collapses into simple combinations of univariate functions. The chapter concludes with the associativity equation, showing that every associative operation is essentially addition in a transformed space — a result that will prove fundamental for the general functional form derived in Chapter~\ref{ch:Piforms}. One important part of this chapter is extracted from the Ph. D. theses directed by one of the authors and related to this important topic, see \cite{RuizCobo1992}, \cite{CoboOrtega1993}, \cite{IglesiasPrieto1995} and the books \cite{castillo1992functional,castillo2004functional}.
+
+\section{Motivation}
+Let us begin by exploring the fundamental motivation behind functional equations. The discerning reader might naturally question why a comprehensive chapter on functional equations appears in a book dedicated to identifying and discovering universal equations that lead to universal models. As we shall demonstrate, the rationale is both compelling and essential.
+
+\section{Observation of the Reality Being Modeled and Problem Identification}
+Mathematical models serve as indispensable tools for solving our real-world situations, transforming the reality and our physical or engineering problems into abstract mathematical concepts leading to mathematical problems that reproduce our real world.
+
+Consequently, the reality being modeled must be meticulously observed in our quest to identify the problems we need to face and their inherent properties, which must subsequently be translated into precise mathematical terms, that is, as equations. Through this rigorous approach, we try to avoid constructing arbitrary models based merely on convenience, computational simplicity, or familiarity. Rather than defaulting to models we find comfortable or mathematically tractable, our primary objective is to model reality as accurately and comprehensively as possible.
+
+This ambitious goal necessitates an extensive period of careful, systematic observation and analysis of the phenomenon under investigation.
+
+\section{Identification of the Main Properties Being Modeled}
+Our first effort must be addressed to identify a set of properties that includes a minimum of them that fully define what our problem is.
+Following this crucial observation phase, and once we have identified a comprehensive set of properties that our model must reproduce, we are prepared to embark upon the modeling process itself.
+
+\subsection{From properties to mathematical equations. Property based models}
+Since the language of mathematics is not English, Spanish or any else, but equations, the set of basic or fundamental properties associated with a problem must be translated to a system of equations.
+This transition from observation to mathematical formulation represents one of the most critical junctures in the scientific modeling endeavor.
+All identified properties must be rigorously expressed in mathematical terms, and it is precisely here where functional equations emerge as the most natural and elegant choice — a technique which, despite its considerable power (comparable to that of differential equations), is unfortunately not widely known. We refer the reader to~\cite{aczel1964functional}, \cite{aczel1989functional}, \cite{aczel2006lectures}, \cite{alsina2006associative}, \cite{castillo1992functional}, \cite{CastilloRuiz1993} and~\cite{castillo2004functional} for a thorough treatment. Readers are invited to use, enjoy them and recognize Janos Aczél as the father of functional equations. Without his work, this chapter could not exist.
+
+Unlike differential equations, integral equations, or their various combinations, functional equations deal directly with functions themselves without the additional complexity introduced by derivatives, integrals, or hybrid formulations. This directness should be embraced whenever the underlying properties can be adequately captured without such mathematical complications.
+
+Throughout our extensive research experience, we have been repeatedly struck by the remarkable suitability and elegance of functional equations as the ideal mathematical framework for capturing and expressing fundamental properties of real systems. Their inherent simplicity often belies their profound capability to encapsulate complex behavioral patterns.
+
+Once all properties have been successfully translated into mathematical language, we obtain a comprehensive system of equations. This system may encompass various types of mathematical relationships, including difference equations, differential equations, integral equations, functional equations, algebraic equations, and others.
+
+In this book we introduce and recommend property based models, that is, models that reproduce a set of given and perfectly defined properties.
+
+\section{Solving the System of Mathematical Equations}
+A key step in the modeling process is that of solving the resulting system of equations. Since, this system can include various types of mathematical equations the model solving procedure will be necessarily complex and will cover several mathematical areas of knowledge. In this book, we aim to orient the reader to functional equations and systems. Thus, our main objective is mainly based on these type of equations.
+
+Consequently, we assume that the reader is familiar with some or various of these areas of knowledge and we concentrate our effort in functional equations and associated methods.
+
+\section{What the Set of All Possible Solutions to a Given Problem Implies}
+When this system is successfully solved, it provides us with two invaluable scientific privileges:
+\begin{enumerate}
+\item \textbf{Complete Solution Visualization}: We gain the extraordinary ability to visualize and comprehend the entire set of possible solutions—that is, all mathematical expressions that simultaneously satisfy the complete collection of identified properties. {\it The intellectual satisfaction derived from contemplating, understanding, and expressing this solution set in rigorous mathematical terms represents one of the most profound rewards that a scientist can experience.} This comprehensive understanding provides deep insights into the fundamental nature of the modeled phenomenon.
+
+\item \textbf{Model Validation and Exclusion}: We also acquire the powerful capability to systematically exclude any alternative models that fail to satisfy our established criteria. While this aspect may seem less glamorous than discovering new solutions, it constitutes an equally important and beautiful complement to our scientific knowledge. The process of elimination strengthens our confidence in the validity of accepted models while preventing the adoption of inadequate or incorrect representations.
+\end{enumerate}
+
+It is crucial to emphasize the paramount importance of developing multiple valid models for addressing complex problems. In pure mathematics, there exists a tendency to overemphasize the elegance and desirability of unique solutions and models. However, the perspectives of physicists, engineers, and applied mathematicians differ fundamentally from this purely theoretical viewpoint.
+
+In real-world applications, relying exclusively on a single model can prove catastrophically inadequate. Even minor deviations from the original assumptions underlying a unique model can result in complete solution failure or, worse yet, misleading predictions.
+
+Therefore, we require a sufficiently rich and robust set of possible solutions to ensure that inevitable changes in real conditions—whether due to measurement uncertainties, environmental variations, or evolving system parameters—still permit us to maintain valid, reliable models. This multiplicity of solutions provides the flexibility and adaptability essential for practical applications, where perfect conditions rarely exist and robustness is paramount.
+
+This philosophical approach to modeling reflects a mature understanding of the relationship between mathematical idealization and physical reality, acknowledging that true scientific progress often lies not in finding the single "correct" model, but in developing a comprehensive framework of interconnected, validated models that collectively capture the full complexity of natural phenomena.
+
+\section{Definition of Functional Equations and Systems}
+We start by giving the definition of functional equations and systems of functional equations.
+\begin{definition}[Functional Equation]
+A \textbf{functional equation} is an equation in which the unknowns are functions. In contrast to differential equations or integral equations, functional equations involve the functions themselves without derivatives or integrals. The goal is to determine all functions that satisfy the given equation or system of equations.
+\end{definition}
+
+
+
+
+Functional equations are equations where the unknowns are functions rather than variables. They form a fascinating and challenging area of mathematics that bridges various fields including analysis, algebra, number theory, and mathematical physics. Unlike differential equations, which relate a function to its derivatives, functional equations relate functions to themselves evaluated at different arguments or to other functions.
+
+A system of functional equations is a collection of functional equations.
+
+The study of functional equations has a rich history dating back to ancient mathematics, with significant contributions from mathematicians such as Cauchy, Abel, Jensen, and Pólya. Modern applications span from theoretical mathematics to practical problems in computer science, economics, and physics.
+
+In the functions involved in the equations, two important elements must be considered: (a) the type of functions involved in the equations and systems, such as discrete, continuous, monotone, increasing or decreasing, invertible, differentiable, etc., and (b) their domains of definition, real, complex, interval type, bounded or unbounded, etc. In each particular case these two elements must be analyzed in detail. However, in this book we look more for the function structure than the elements themselves.
+
+This chapter presents a collection of illuminating examples that demonstrate how functional equations can be used to derive familiar formulas from fundamental principles. Rather than accepting these formulas as given, we approach them as unknown functions and use reasoning to establish constraints that lead to their complete mathematical characterization.
+
+In what follows, some examples of functional equations are given. They are a summary, extracted from the books \cite{castillo1992functional}, \cite{CastilloRuiz1993} and~\cite{castillo2004functional}, of the first author of this book, where important details and the proofs of the corresponding solutions and theorems can be found. However, we will see them from the point of view of our physical equations, the aim of this book.
+
+\section{Examples of Functional Equations}
+
+\subsection{Area of a rectangle}
+
+The formula for the area of a rectangle according to most people is: ``base times height.'' However, this is not correct. What if we assume that the formula is an unknown function $Area = f(b,h)$ and we try to derive it using functional equations?
+
+\paragraph{The Functional Equation Approach}
+Considering horizontal and vertical divisions of a rectangle in two rectangles and their areas we get the system of functional equations:
+\begin{eqnarray}
+f(b, h_1 + h_2) &=& f(b, h_1) + f(b, h_2)\\
+f(b_1 + b_2, h) &=& f(b_1, h) + f(b_2, h),
+\end{eqnarray}
+which is illustrated in Figure \ref{fig:AreaRectangulo}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.33\textwidth]{AreaRectangulo1_con_fondo.png} \includegraphics[width=0.30\textwidth]{AreaRectangulo2_con_fondo.png}
+\includegraphics[width=0.33\textwidth]{AreaRectangulo3_con_fondo.png}
+\caption{Rectangle area. Dividing a rectangle: (a) horizontally into two rectangles of heights $h_1$ and $h_2$; (b) vertically into two rectangles of bases $b_1$ and $b_2$. The area of the whole equals the sum of the areas of its parts.}
+\label{fig:AreaRectangulo}
+\end{figure}
+\begin{tcolorbox}[colback=green!10,colframe=green!50!black,title=Definition]
+\textbf{This is what functional equations are: equations in which the unknowns are functions, excluding derivatives and integrals.}
+\end{tcolorbox}
+
+\paragraph{Solving the Functional Equations}
+For continuous functions, the only solution to this system of functional equations is:
+\begin{equation}
+\boxed{Area = f(b, h) = c \cdot b \cdot h}
+\end{equation}
+where $c$ is an arbitrary constant.
+
+\paragraph{Insights and Implications}
+This derivation shows that the area formula is generally \( \text{Area} = c \times \text{base} \times \text{height} \), where the constant \(c\) handles unit conversions (e.g., feet, meters, square kilometers). The familiar school formula is just a special case where all units match.
+
+More broadly, any formula involving dimensional variables may require such scale‑change constants (and sometimes origin shifts).
+
+\textbf{Why functional equations matter}
+\begin{itemize}
+    \item They rigorously derive familiar formulas.
+    \item They reveal hidden structure behind simple concepts.
+    \item They connect geometric intuition to algebraic constraints.
+\end{itemize}
+Even elementary mathematics has rich underlying layers, and functional equations bring them to light.
+
+\paragraph{Conclusion}
+Treating the area as an unknown function and using geometric constraints recovers the traditional formula while exposing its most general form, including the unit‑conversion constant usually omitted. This approach extends far beyond rectangle areas, offering a powerful tool for physics, engineering, and any field where dimensional analysis and unit conversions are key. If another problem from other area shares the same properties, one can be in front of a multidisplinary extension.
+
+\subsection{Area of a trapezoid}
+
+Having explored how functional equations can reveal the complete formula for rectangle areas, let us now apply the same methodology to a more complex geometric figure: the trapezoid. This example will further demonstrate the power and generality of the functional equation approach.
+
+\paragraph{Setting Up the Trapezoid Problem}
+
+Similarly, if someone asks you:
+
+\begin{center}
+\textbf{What is the formula that gives the area of a trapezoid?}
+\end{center}
+
+Your probable response would be:
+
+\begin{center}
+\textcolor{orange}{\textbf{THE PRODUCT OF THE SEMI-SUM OF ITS BASES TIMES ITS HEIGHT.}}
+
+\textcolor{blue}{\textbf{However, this is not the correct answer.}}
+\end{center}
+
+Based on the formula for the area of a rectangle, can you guess the correct one?
+
+
+
+We assume that the formula for the trapezoidal area is a function of the lengths of its bases, $b_1$ and $b_2$, and its height, $h$:
+\begin{equation}
+Area = f(b_1, b_2, h)
+\end{equation}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{AreaTrapezoid1_con_fondo.png}
+\caption{A trapezoid with bases $b_1$, $b_2$ and height $h$, where the area is given by an unknown function $f(b_1, b_2, h)$.}
+\label{fig:AreaTrapezoid1}
+\end{figure}
+
+Though people would expect the formula to be:
+\begin{equation}
+f(b_1, b_2, h) = \frac{b_1 + b_2}{2}h
+\end{equation}
+
+We will see that it is not the case.
+
+\paragraph{Deriving the Trapezoid Functional Equations}
+To obtain the formula for the area of a trapezoid, we employ three fundamental geometric properties:
+\begin{enumerate}
+\item We divide the trapezoid into two trapezoids.
+\item We consider the special case of a rectangle.
+\item We change the trapezoid scale.
+\end{enumerate}
+
+We will see that these three properties together will provide us with the formula.
+
+\paragraph{Division into Two Trapezoids}
+Consider a trapezoid divided into two smaller trapezoids. Though we cannot calculate the areas of the three trapezoids directly, we can express them using our unknown function as $f(b_1, b_2, h)$, $f(b_1', b_2', h)$, and $f(b_1 + b_1', b_2 + b_2', h)$, respectively.
+
+From the geometric principle that the area of the whole equals the sum of its parts, we must have:
+\begin{equation}
+\boxed{f(b_1 + b_1', b_2 + b_2', h) = f(b_1, b_2, h) + f(b_1', b_2', h)}
+\end{equation}
+
+Consequently, the area of the initial trapezoid must be equal to the sum of the areas of the two trapezoids.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{AreaTrapezoid2_con_fondo.png}
+\caption{A trapezoid divided into two trapezoids and their corresponding areas.}
+\label{fig:AreaTrapezoid2}
+\end{figure}
+
+\paragraph{Rectangle as Special Case}
+Considering the rectangle as a particular case of a trapezoid, both bases are equal ($b_1 = b_2 = b$) and dividing it vertically into two rectangles, their areas can be written as $f(b, b, h_1)$, $f(b, b, h_2)$, and $f(b, b, h_1 + h_2)$, respectively.
+
+Following the same reasoning as before:
+\begin{equation}
+\boxed{f(b, b, h_1 + h_2) = f(b, b, h_1) + f(b, b, h_2)}
+\end{equation}
+
+Consequently, the area of the initial rectangle (trapezoid) is equal to the sum of the areas of the two rectangles (trapezoids)
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{AreaTrapezoid3_con_fondo.png}
+\caption{A rectangle as a special case of trapezoid, divided vertically into two rectangles and their corresponding areas.}
+\label{fig:AreaTrapezoid3}
+\end{figure}
+
+\paragraph{Scale Transformation}
+As our final property, the trapezoid scale is changed by a factor $s$. Then, the original trapezoid has area $f(b_1, b_2, h)$ while the new scaled trapezoid has area $f(sb_1, sb_2, sh)$.
+
+Since scaling all linear dimensions by factor $s$ scales the area by $s^2$, one obtains:
+\begin{equation}
+\boxed{f(sb_1, sb_2, sh) = s^2 f(b_1, b_2, h)}
+\end{equation}
+
+Thus, the area of the new trapezoid is equal to $s^2$ times the area of the initial trapezoid.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{AreaTrapezoid4_con_fondo.png}
+\caption{A trapezoid and its scaled version by factor $s$.}
+\label{fig:AreaTrapezoid4}
+\end{figure}
+
+\paragraph{The System of Functional Equations for Trapezoids}
+These geometric considerations produces a system of three functional equations:
+\begin{align}
+f(b_1 + b_1', b_2 + b_2', h) &= f(b_1, b_2, h) + f(b_1', b_2', h) \\
+f(b, b, h_1 + h_2) &= f(b, b, h_1) + f(b, b, h_2) \\
+f(sb_1, sb_2, sh) &= s^2 f(b_1, b_2, h)
+\end{align}
+where the only unknown is the function $f(b_1, b_2, h)$.
+
+\paragraph{Solution of the Trapezoid Functional Equations}
+It can be demonstrated that only the continuous function:
+\begin{equation}
+\boxed{Area = f(b_1, b_2, h) = (b_1 + c_1 b_2) c_2 h}
+\end{equation}
+where $c_1$ and $c_2$ are arbitrary constants, satisfies the above system of functional equations. Once more, functional equations discover the need for these constants.
+
+As a particular case, $c_1 = 1$ and $c_2 = 1/2$, one obtains the well-known formula:
+\begin{equation}
+f(b_1, b_2, h) = \frac{b_1 + b_2}{2}h
+\end{equation}
+which represents the ``semi-sum of its bases times its height''.
+
+These three equations (properties) together characterize the area of a trapezoid formula.
+
+Based on the two formulas, rectangle and trapezoid, we invite the readers to justify why we need two constants and why one is not sufficient.
+
+\paragraph{Connecting the Examples}
+Both examples demonstrate that functional equations provide a systematic way to:
+\begin{itemize}
+\item Challenge our assumptions about familiar formulas
+\item Derive complete mathematical characterizations from geometric principles
+\item Reveal the role of dimensional constants in mathematical formulas
+\item Establish the most general forms of geometric relationships
+\end{itemize}
+
+The trapezoid example extends the rectangle methodology by incorporating an additional geometric property (scale transformation) and working with a three-variate function instead of a bivariate one. This shows how the functional equation approach scales naturally to more complex geometric situations.
+
+These examples illustrate that what we often consider as ``elementary'' mathematical facts actually possess rich underlying structures that become apparent when examined through the lens of functional equations. The constants that emerge in the general solutions are not mathematical artifacts but essential components that account for dimensional analysis and unit conversions in practical applications. The area of a rectangle formula involves only one term $b \times h$, which requires only one constant adjustment. Thus, only one constant $c$ is required. Contrary, the trapezoid involves two terms $b_1 \times h$ and $b_2 \times h$ that need two dimensional corrections, which imply two constants, $c_1$ and $c_2$.
+
+\subsection{Sum of the internal angles of a polygon}
+\paragraph{Setting Up the Polygon Problem}
+Let $f(n)$ be a function that gives the sum of the internal angles of a polygon using as argument the number, $n$, of sides.
+
+If one tries to see how this formula is, some property is required to derive the formula from a functional equation.
+
+\paragraph{Deriving the Polygon Functional Equation}
+To obtain this function, the following property will be used: If given a polygon of $n$ sides, one of its sides is divided into two sides, the sum of the internal angles of the resulting polygon becomes the sum of the internal angles of the initial polygon plus the sum of the internal angles of a triangle, as shown in the figure \ref{fig:SumInternalAngles}.
+
+Thus, we have:
+\begin{equation}
+f(n + 1) = f(n) + \alpha + \beta + \gamma = f(n) + f(3), \quad (1)
+\end{equation}
+which is a functional (difference) equation.
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{SumInternalAngles_con_fondo.png}
+\caption{A polygon with $n$ sides and the same polygon after modifying one side, showing the additional triangle with angles $\alpha$, $\beta$, $\gamma$.}
+\label{fig:SumInternalAngles}
+\end{figure}
+
+\paragraph{Solution of the Polygon Functional Equation}
+The general solution of equation
+\begin{equation}
+f(n + 1) = f(n) + \alpha + \beta + \gamma = f(n) + f(3),
+\end{equation}
+is
+\begin{equation}
+f(n) = f(3)(n - 2).
+\end{equation}
+
+Thus, we have obtained $f$ as a function of the number of sides, $n$, and an initial value corresponding to the particular case of a triangle.
+
+Since this value is the number $\pi$, one gets the well known formula:
+\begin{equation}
+\boxed{f(n) = \pi (n - 2)}
+\end{equation}
+
+This gives us the familiar result that the sum of internal angles of an $n$-sided polygon is $(n-2) \times 180$ degrees or $(n-2)\pi$ radians, which is an affine function, that is, a linear function, $\pi n$ plus a constant $-2\pi$.
+
+\paragraph{Key Insights}
+This example demonstrates that simple geometric observations lead directly to a functional equation. The solution reveals the simple relationship between the number of sides and the total internal angle sum, with the triangle serving as the basic building block.
+
+\subsection{The simple interest}
+\paragraph{The Simple Interest Problem}
+Let $f(x, t)$ be the interest a person receives from the bank after a deposit of an amount $x$ during a period of duration $t$. Then, if the assumptions of simple interest hold, the function $f(x, t)$ must satisfy the following conditions:
+
+\paragraph{Deriving the Simple Interest Functional Equations.}
+\paragraph{Splitting the Deposit Amount.}
+At the end of a period of duration $t$, the person receives the same interest in the following two cases:
+\begin{enumerate}
+\item The person deposits the amount $x + y$ in one account.
+\item The person deposits the amount $x$ in one account, and the amount $y$ in another account.
+\end{enumerate}
+
+\textbf{Splitting the deposit amount into two parts.}
+Thus, both interests must be the same:
+\begin{equation}
+\boxed{f(x + y, t) = f(x, t) + f(y, t)}
+\end{equation}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{SimpleInterest1_con_fondo.png}
+\caption{Splitting a deposit amount: one account with $(x+y)$ duringa time $t$ versus two accounts with $x$ and $y$ each for the same time $t$.}
+\label{fig:SimpleInterest1}
+\end{figure}
+
+\paragraph{Splitting the Time Duration.}
+At the end of the time period $t + u$, the person receives the same interest in the following two cases:
+\begin{enumerate}
+\item The person deposits the amount $x$ during a period of duration $t + u$.
+\item The person deposits the amount $x$ first during a period of duration $t$ and later for a period of duration $u$.
+\end{enumerate}
+
+\textbf{Splitting the total deposit duration into two parts.}
+Thus, both interests must be the same:
+\begin{equation}
+\boxed{f(x, t + u) = f(x, t) + f(x, u)}
+\end{equation}
+
+\begin{figure}{h}
+\centering
+\includegraphics[width=0.6\textwidth]{SimpleInterest2_con_fondo.png}
+\caption{Splitting time duration: one deposit of $x$ for time $(t+u)$ versus the same deposit for periods $t$ and $u$.}
+\label{fig:SimpleInterest2}
+\end{figure}
+
+\paragraph{The System of Functional Equations for Simple Interest.}
+This means that the following system of equations must hold:
+\begin{equation}
+\left.\begin{aligned}
+f(x + y, t) &= f(x, t) + f(y, t) \\
+f(x, t + u) &= f(x, t) + f(x, u)
+\end{aligned}\right\} ; \quad x, y, t, u \in \mathbb{R}_+
+\end{equation}
+
+\paragraph{Solution of the Simple Interest Functional Equations.}
+The solution of the first Cauchy equation is given by
+\begin{equation}
+\boxed{f(x, t) = c(t)x}
+\end{equation}
+and back-substitution into the second leads to
+\begin{equation}
+c(t+u)x = c(t)x+c(u)x \Rightarrow c(t+u) = c(t)+c(u) \Rightarrow c(t) = Kt,
+\end{equation}
+which is the well known formula of the simple interest:
+\begin{equation}
+\boxed{f(x, t) = kxt}
+\end{equation}
+where the constant $k$ is the interest rate.
+
+\paragraph{Economic Interpretation and Bank Policy.}
+We note that the bank policy has to be such that:
+\begin{equation}
+\boxed{f(x + y, t) \geq f(x, t) + f(y, t)}
+\end{equation}
+
+Otherwise, the bank is inviting its clients to deposit their money in many accounts (a low amount in each account).
+
+In addition, we must have:
+\begin{equation}
+\boxed{f(x, t + u) \geq f(x, t) + f(x, u)}
+\end{equation}
+
+Otherwise, the bank is inviting its clients to withdraw the money every day and deposit it again. Note that both conditions produce deposit instabilities.
+
+\vspace{3mm}
+\begin{center}
+   \textcolor{red}{\bf CONSEQUENTLY, SIMPLE INTEREST IS THE OPTIMAL WAY OF KEEPING\\ ACCOUNT STABILITY BY OFFERING THE SMALLEST POSSIBLE INTEREST.}
+
+\end{center}
+\vspace{3mm}
+
+Fortunately, the actual bank policy does not follow the simple interest rule.
+
+It is important to note here that the above assumptions do not hold in reality, but they are the simple interest assumptions.
+
+It can be seen from the bank office that if we deposit a larger amount or we do so for a longer period the interest rate increases, though not always.
+
+\paragraph{Connection to Rectangle Area.}
+A comparison of the system of equations of the rectangle area:
+\begin{align}
+f(b, h_1 + h_2) &= f(b, h_1) + f(b, h_2) \\
+f(b_1 + b_2, h) &= f(b_1, h) + f(b_2, h)
+\end{align}
+and of the simple interest example:
+\begin{align}
+f(x, t + u) &= f(x, t) + f(x, u) \\
+f(x + y, t) &= f(x, t) + f(y, t)
+\end{align}
+shows that, apart from notation, the two systems of functional equations are identical.
+
+This means that we face two physical problems, one geometric and one economic, leading to exactly the same mathematical model. One can easily find several more having the same coincidence, what adds extra interest in identifying these general models.
+
+
+\paragraph{Additional Insights from Previous Examples.}
+It is interesting to point out that the commutativity of the basis $b$ and height $h$ in the rectangle area results as a consequence of the assumptions, but it is not axiomatic.
+
+This implies that a rectangle can be rotated an angle of $\pi/2$ radians (exchange base and height) without changing its area.
+
+The commutativity also holds for the simple interest case, that is, we get the same interest if we deposit \$1 for 2 years as if we deposit \$2 for 1 year.
+
+
+\subsection{The sum of products functional equation}
+\paragraph{Setting Up the Sum of Products Functional Equation.}
+The sum of products functional equation is a fundamental type that appears in many applications. The following theorem provides its complete characterization, see \cite{aczel1964functional}. It was applied to fatigue problems in \cite{Castillo85a}. Due to its practical importance, it is included next, but in a form developed by previous works, including \cite{castillo2004functional}, \cite{castillo1992functional} and~\cite{CastilloRuiz1993}, in which its direct application to get the associated solutions is used. This will be the theorem to be used to derive the multilinear models in Chapter \ref{ch:trajectory_models}.
+\begin{theorem}[Sum of Products Equation]\label{th:sumprod}
+All solutions of the equation
+\begin{equation}\label{ecu:sumprod}
+\sum_{k=1}^{n} f_k(x)g_k(y) = 0
+\end{equation}
+can be written in the form
+$$\begin{bmatrix} f_1(x) \\ f_2(x) \\ \vdots \\ f_n(x) \end{bmatrix} = \begin{bmatrix} a_{11} & a_{12} & \cdots & a_{1r} \\ a_{21} & a_{22} & \cdots & a_{2r} \\ \vdots & \vdots & \ddots & \vdots \\ a_{n1} & a_{n2} & \cdots & a_{nr} \end{bmatrix} \begin{bmatrix} \phi_1(x) \\ \phi_2(x) \\ \vdots \\ \phi_r(x) \end{bmatrix}$$
+$$\begin{bmatrix} g_1(y) \\ g_2(y) \\ \vdots \\ g_n(y) \end{bmatrix} = \begin{bmatrix} b_{1r+1} & b_{1r+2} & \cdots & b_{1n} \\ b_{2r+1} & b_{2r+2} & \cdots & b_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ b_{nr+1} & b_{nr+2} & \cdots & b_{nn} \end{bmatrix} \begin{bmatrix} \psi_{r+1}(y) \\ \psi_{r+2}(y) \\ \vdots \\ \psi_n(y) \end{bmatrix}$$
+where $r$ is an integer between 0 and $n$, and $\{\phi_1(x), \ldots, \phi_r(x)\}$ on one hand and $\{\psi_{r+1}(x), \ldots, \psi_n(x)\}$ on the other are arbitrary systems of mutually linearly independent functions, and the constants $a_{ij}$ and $b_{ij}$ satisfy
+$$\begin{bmatrix} a_{11} & a_{21} & \cdots & a_{n1} \\ a_{12} & a_{22} & \cdots & a_{n2} \\ \vdots & \vdots & \ddots & \vdots \\ a_{1r} & a_{2r} & \cdots & a_{nr} \end{bmatrix}^T \begin{bmatrix} b_{1r+1} & b_{1r+2} & \cdots & b_{1n} \\ b_{2r+1} & b_{2r+2} & \cdots & b_{2n} \\ \vdots & \vdots & \ddots & \vdots \\ b_{nr+1} & b_{nr+2} & \cdots & b_{nn} \end{bmatrix} = 0$$
+\end{theorem}
+
+\vspace*{5mm}
+
+The following two examples are a direct application of the theorem.
+
+\paragraph{Application: Cover with Polynomial Cross Sections.}
+Consider the problem of designing a cover for a sports area such that its construction process is simplified by having polynomial cross sections. We seek the most general function $Z = z(x,y)$ such that all sections with planes parallel to the axes are second degree polynomials:
+$$z(x,y) = a(y)x^2 + b(y)x + c(y)$$
+$$z(x,y) = d(x)y^2 + e(x)y + f(x)$$
+
+These conditions imply:
+$$a(y)x^2 + b(y)x + c(y) - d(x)y^2 - e(x)y - f(x) = 0,$$
+which is a sum of products functional equation.
+
+According to the theorem, since the sets of functions $\{x^2, x, 1\}$ and $\{y^2, y, 1\}$ are linearly independent, we have $r = 3$ and can write:
+$$\begin{bmatrix} x^2 \\ x \\ 1 \\ d(x) \\ e(x) \\ f(x) \end{bmatrix} = \begin{bmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \\ a_{41} & a_{42} & a_{43} \\ a_{51} & a_{52} & a_{53} \\ a_{61} & a_{62} & a_{63} \end{bmatrix} \begin{bmatrix} x^2 \\ x \\ 1 \end{bmatrix}$$
+
+$$\begin{bmatrix} a(y) \\ b(y) \\ c(y) \\ -y^2 \\ -y \\ -1 \end{bmatrix} = \begin{bmatrix} b_{14} & b_{15} & b_{16} \\ b_{24} & b_{25} & b_{26} \\ b_{34} & b_{35} & b_{36} \\ -1 & 0 & 0 \\ 0 & -1 & 0 \\ 0 & 0 & -1 \end{bmatrix} \begin{bmatrix} y^2 \\ y \\ 1 \end{bmatrix}$$
+
+The orthogonality condition leads to the system:
+$$b_{14} = a_{41}; \quad b_{15} = a_{51}; \quad b_{16} = a_{61}; \quad b_{24} = a_{42}; \quad b_{25} = a_{52}$$
+$$b_{26} = a_{62}; \quad b_{34} = a_{43}; \quad b_{35} = a_{53}; \quad b_{36} = a_{63}$$
+
+With appropriate reparameterization, we obtain:
+$$a(y) = A + By + Cy^2; \quad b(y) = D + Ey + Fy^2; \quad c(y) = G + Hy + Iy^2$$
+$$d(x) = I + Fx + Cx^2; \quad e(x) = H + Ex + Bx^2; \quad f(x) = G + Dx + Ax^2$$
+
+The final solution is:
+$$z(x,y) = Cx^2y^2 + Bx^2y + Fxy^2 + Ax^2 + Exy + Iy^2 + Dx + Hy + G$$
+where $A, B, C, D, E, F, G, H, I$ are arbitrary constants.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{PolynomialCrossSections_con_fondo.png}
+\caption{Example of a cover with polynomial cross sections obtained by careful selection of the arbitrary constants.}
+\label{fig:polynomial_cover}
+\end{figure}
+
+\paragraph{Application: Bivariate Distributions with Normal Conditionals.}
+We characterize all continuous bivariate random variables $(X,Y)$ with normal conditionals. This is our basic property in this example. Let $f_{(X,Y)}(x,y)$, $g(x)$, $h(y)$, $f_{X|Y}(x|y)$, and $f_{Y|X}(y|x)$ denote the joint, marginal, and conditional densities respectively.
+
+We have:
+$$f_{(X,Y)}(x,y) = f_{X|Y}(x|y)h(y) = f_{Y|X}(y|x)g(x)$$
+
+With normal conditionals:
+$$f_{Y|X}(y|x) \propto \frac{\exp\left\{-\frac{1}{2}\left[\frac{y-a(x)}{b(x)}\right]^2\right\}}{b(x)}$$
+$$f_{X|Y}(x|y) \propto \frac{\exp\left\{-\frac{1}{2}\left[\frac{x-d(y)}{c(y)}\right]^2\right\}}{c(y)}$$
+where $b(x)$ and $c(y)$ are conditional standard deviations, $a(x)$ and $d(y)$ are regression functions, and $b(x) > 0, c(y) > 0$.
+
+Upon substitution, taking logarithms, setting $u(x) = \log[g(x)/b(x)]$ and $v(y) = \log[h(y)/c(y)]$, and rearranging terms:
+$$[2u(x)b^2(x) - a^2(x)]c^2(y) + b^2(x)[d^2(y) - 2v(y)c^2(y)]$$
+$$- y^2c^2(y) + x^2b^2(x) + 2a(x)yc^2(y) - 2xb^2(x)d(y) = 0$$
+
+This is a sum of products functional equation.
+
+The solution yields a general family of bivariate distributions, in which the arbitrary constants $\{A, B, C, D, E, F, G, H, J\}$ must satisfy one of the following conditions for $f(x,y)$ to be a probability density function:
+
+\textbf{Model (i):} $F = E = C = 0, D > 0, J > 0, B^2 < DJ$
+
+\textbf{Model (ii):} $F > 0, FD > E^2, JF > C^2$
+
+Model (i) corresponds to the classical bivariate normal distribution, while Model (ii) provides a more general class with the following properties:
+\begin{itemize}
+\item Regression lines need not be straight lines
+\item Marginal distributions are not normal
+\item The mode is at the intersection of regression lines
+\end{itemize}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{NormalConditionals1_con_fondo.png}
+\caption{Left: Classical bivariate normal model with corresponding marginals and regression lines. Right: Non-normal distribution with normal conditionals and corresponding marginals and regression lines.}
+\label{fig:bivariate_comparison1}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.7\textwidth]{NormalConditionals2_con_fondo.png}
+\caption{A two-mode (non-normal) distribution with normal conditionals, showing corresponding marginals and regression lines.}
+\label{fig:bivariate_twomode}
+\end{figure}
+
+This theorem will be used in Chapter \ref{ch:fatigue_foundations} to derive general fatigue models, showing its relevance in practical applications.
+
+\subsection{Deterministic damage accumulation model}
+\paragraph{Problem Formulation.}
+Damage accumulation curves represent how damage increases as a function of the number of cycles $N$ under constant load. These curves are used to derive damage accumulation rate curves applied in engineering design. We derive a model for deterministic damage accumulation curves where the specimen, initial damage, and load are known (deterministic).
+
+From experimental observations, we can draw the following properties:
+\begin{enumerate}
+\item Damage accumulation curves are concave from above
+\item The damage accumulation curves depend on the initial damage
+\item Different damage accumulation curves follow similar patterns, depending only on initial damage and applied load
+\item Larger loads or larger initial damage result in smaller specimen lifetime
+\end{enumerate}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{DamageCurve_con_fondo.png}
+\caption{Examples of crack growth curves for different specimens under three different combinations of stress ranges and levels, showing random initial crack-size distributions.}
+\label{fig:DamageCurve}
+\end{figure}
+
+\paragraph{Compatibility Condition and Functional Equation.}
+We seek a model of the form:
+$$d = h(d_0, N)$$
+where $d$ is the deterministic damage, $d_0$ is the initial damage, and $N$ is the number of cycles.
+
+For consistency, the formula must provide the same results whether we:
+\begin{itemize}
+\item Load for $N_1$ cycles first, then $N_2$ extra cycles, or
+\item Load directly for $N_1 + N_2$ cycles
+\end{itemize}
+
+This leads to the functional equation:
+\begin{equation}
+d = h(d_0, N_1 + N_2) = h(h(d_0, N_1), N_2).
+\end{equation}\label{eq:damage0}
+\paragraph{Solution via Translation Equation.}
+This is the well-known translation equation with general solution:
+\begin{equation}\label{eq:damagesol}
+d = h(d_0, N) = \phi[\phi^{-1}(d_0) + N]
+\end{equation}
+where $\phi(\cdot)$ is an arbitrary invertible function.
+
+This result states that one cannot choose an arbitrary function of two arguments $h(·,·)$ to represent the damage accumulation problem. The only degree of freedom consists of a one-argument invertible function $\phi(·)$.
+
+\paragraph{Physical Interpretation and Applications.}
+
+From the solution, we can derive:
+\begin{align}
+N &= \phi^{-1}(d) - \phi^{-1}(d_0)\label{eq:damage1} \\
+d_0 &= \phi(\phi^{-1}(d) - N)\label{eq:damage2}
+\end{align}
+
+This enables reconstruction of initial damage from current damage and allows closed-form expressions relating lifetime $N$, initial damage $d_0$, and crack size $d$.
+
+Equation (\ref{eq:damage2}) allows moving back to time, that is, the knowledge of the damage level $d_0$, associated  with $N$ cycles before the actual damage $d$ is attained.
+
+It is worthwhile mentioning that the $\phi()$ function can be interpreted as the observed damage evolution in a test experiment and that the solution (\ref{eq:damagesol}) can not only be obtained by solving the equation mathematically, but also by physical analysis of the damage process (see Figure \ref{fig:DamageCurve1}).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.8\textwidth]{DamageCurve1_con_fondo.png}
+\caption{Graphical method to obtain crack size $d$ for given number of cycles $N$, showing two damage accumulation curves related by translation.}
+\label{fig:DamageCurve1}
+\end{figure}
+
+The uniqueness analysis shows that if two functions $\phi_1$ and $\phi_2$ satisfy the translation equation, then $\phi_2(d) = \phi_1(d - b)$ where $b$ is a constant. Thus, the function $\phi_1(d)$ is unique apart from a translation.
+
+
+\subsection{Artificial intelligence and medical diagnosis}
+\paragraph{Problem Statement.}
+Consider determining the probability $Q(x,y,z)$ of a patient having a disease based on three continuous symptoms $X$, $Y$, and $Z$ with numerical values $x$, $y$, and $z$ respectively.
+
+We assume that information from any pair of symptoms can be collected into a single value (function of the pair), which can then be combined with the remaining symptom to give $Q(x,y,z)$.
+
+This assumption leads to the system:
+\begin{equation}\label{symptomslabel1}
+Q(x,y,z) \equiv F[G(x,y), z] = K[x, N(y,z)] = L[y, M(x,z)]
+\end{equation}
+where $F$, $G$, $H$, $K$, $L$, and $M$ are unknown functions.
+
+\paragraph{Functional Network Interpretation.}
+This system represents three equivalent methods for computing the disease probability:
+\begin{enumerate}
+\item Combine $x$ and $y$ using function $G$, then use function $F$ with this result and $z$
+\item Combine $y$ and $z$ using function $N$, then use function $K$ with $x$ and this result
+\item Combine $x$ and $z$ using function $M$, then use function $L$ with $y$ and this result
+\end{enumerate}
+
+We assume that the three provide the same result, which is the property we want to reproduce in our model.
+
+
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{ArtificialIntelligence1_con_fondo.png}
+\caption{Functional network representation of the medical diagnosis problem, where $I$ represents the identity function.}
+\label{fig:ArtificialIntelligence1}
+\end{figure}
+
+\paragraph{Solution and Network Simplification.}
+The general continuous solution of the functional system (\ref{symptomslabel1}) is:
+\begin{align}
+F(x,y) &= k[f(x) + g(y)] \\
+G(x,y) &= f^{-1}[p(x) + q(y)] \\
+K(x,y) &= k[p(x) + n(y)] \\
+N(x,y) &= n^{-1}[q(x) + g(y)] \\
+L(x,y) &= k[q(x) + m(y)] \\
+M(x,y) &= m^{-1}[p(x) + g(y)]
+\end{align}
+where $k$, $g$, $p$, $q$ are arbitrary functions and $f$, $m$, $n$ are arbitrary invertible functions.
+
+Substituting these solutions yields the simplified form:
+\begin{equation}\label{symptomslabel2}
+Q(x,y,z) = k[p(x) + q(y) + g(z)]
+\end{equation}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.9\textwidth]{ArtificialIntelligence2_con_fondo.png}
+\caption{Two equivalent functional networks for the diagnosis problem: (a) Original complex network, (b) Simplified additive network.}
+\label{fig:ArtificialIntelligence2}
+\end{figure}
+
+\paragraph{Network Comparison.}
+Equation (\ref{symptomslabel2}) suggests that the complex network topology in the original formulation is equivalent to a much simpler additive structure. This demonstrates how functional equations can:
+\begin{itemize}
+\item Uncover hidden structural relationships in complex systems
+\item Provide simplified equivalent representations
+\item Constrain the form of unknown functions in multi-variable problems
+\end{itemize}
+
+This new network differs fundamentally from neural networks because:
+\begin{itemize}
+\item Neuron functions are arbitrary (not fixed activation functions)
+\item Neuron functions can be multi-argument
+\item Multiple neurons can have coincident outputs
+\end{itemize}
+
+In addition, it implies a susbstantial reduction in complexity because it uses univariate functions.
+
+\paragraph{Summary of Applications.}
+The applications demonstrate the power of functional equations in diverse fields:
+
+Engineering Applications: The translation equation provides the most general form for damage accumulation models and stress-strain relationships, constraining possible constitutive laws based on physical consistency requirements.
+
+Artificial Intelligence: Functional equations reveal the underlying mathematical structure of complex decision-making processes, enabling network simplification and providing insight into the fundamental relationships between variables.
+
+Mathematical Modeling: These examples show how functional equations arise naturally when imposing reasonable consistency conditions on mathematical models, often leading to unexpected constraints and simplifications.
+
+\subsection{The iterator}
+Suppose we want to apply a certain function $f$ several times and determine the value resulting from the $n$-th iterate, i.e., we consider the function $f^{(n)}(x)$, which we denote as $F(x,n) = f^{(n)}(x)$. Then, it is clear that:
+\begin{equation}
+F(x, m+n) = f^{(n+m)}(x) = f^{(n)}(f^{(m)}(x)) = F(F(x,m), n),
+\end{equation}
+which proves that the function $F(x,n)$ satisfies the translation functional equation, whose general solution is:
+\begin{equation}
+\label{eq:iterator_general}
+f^{(n)}(x) = F(x,n) = g^{-1}[g(x) + n]
+\end{equation}
+
+This implies that:
+\begin{equation}
+\label{eq:single_iteration}
+f(x) = F(x,1) = g^{-1}[g(x) + 1] \Leftrightarrow g(f(x)) = g(x) + 1
+\end{equation}
+
+Therefore, the problem of finding the $n$-th iterate is merely a matter of solving the equivalent functional equation:
+\begin{equation}
+\label{eq:abel_equation}
+g(f(x)) = g(x) + 1
+\end{equation}
+or equivalently:
+\begin{equation}
+f(g^{-1}(x)) = g^{-1}(x + 1)
+\end{equation}
+
+This is a particular case of Abel's equation (see \cite{KucChoGer:90}).
+
+\paragraph{Theoretical and Computational Implications.}
+A correspondence between functions $g$ and $f$ has been discovered. Given an invertible function $g(x)$, one can obtain a function $f(x)$ using equation (\ref{eq:single_iteration}) and its $n$-th iterate using equation (\ref{eq:iterator_general}). However, the problem of obtaining $g(x)$ when $f(x)$ is known is much more complicated.
+
+\paragraph{Computational Advantage.}
+The practical importance of this result is significant: instead of evaluating the $n$-th iterate of $f$, which requires evaluating function $f$ exactly $n$ times, one can evaluate equation (\ref{eq:iterator_general}), which requires only the evaluation of two functions $g$ and $g^{-1}$, resulting in considerable computational savings.
+
+For large values of $n$, this represents a dramatic improvement in computational efficiency, reducing the complexity from $O(n)$ to $O(1)$ function evaluations.
+
+\begin{examplebox}
+\begin{example}[Iterate of a Linear Function]
+Consider the function:
+\begin{equation}
+f(x) = Ax + B
+\end{equation}
+
+The $n$-th iterate $f^{(n)}(x)$ of this function is:
+\begin{equation}
+f^{(n)}(x) = A^n x + \frac{B(1-A^n)}{1-A},
+\end{equation}
+which can be written as:
+\begin{equation}
+f^{(n)}(x) = g^{-1}[g(x) + n]
+\end{equation}
+where:
+\begin{align}
+g(x) &= \frac{\log\left(\frac{B+(A-1)x}{(A-1)C}\right)}{\log(A)} \\
+g^{-1}(x) &= CA^x + \frac{B}{1-A}
+\end{align}
+for an appropriate constant $C$.
+\end{example}
+\end{examplebox}
+
+\vspace*{4mm}
+\paragraph{Applications and Extensions.}
+The iterator concept has several important applications:
+\begin{itemize}
+\item \textbf{Dynamical systems}: Understanding the long-term behavior of iterative maps
+\item \textbf{Numerical methods}: Efficient computation of repeated function applications
+\item \textbf{Fixed point theory}: Analysis of convergence properties
+\item \textbf{Fractal geometry}: Generation of self-similar structures through iteration
+\end{itemize}
+
+\paragraph{Connection to Abel's Equation.}
+The fundamental insight is that the iteration problem reduces to solving Abel's functional equation $g(f(x)) = g(x) + 1$. This equation, see \cite{Abe:26b}:
+\begin{itemize}
+\item Transforms the multiplicative structure of iteration into an additive one
+\item Reveals the deep connection between functional equations and dynamical systems
+\item Provides a theoretical framework for understanding iterative processes
+\end{itemize}
+
+The iterator example demonstrates how functional equations can transform a computationally intensive problem into an elegant mathematical framework, highlighting the power of functional equation methods in both theoretical analysis and practical computation.
+\subsection{The generalized bisymmetry equation.}
+\paragraph{Setting Up the Network Equivalence Problem}
+Consider the generalized bisymmetry functional equation
+\begin{equation}\label{GBE}
+F[G(x, y), H(u, v)] = K[M(x, u), N(y, v)],
+\end{equation}
+which can be interpreted as a complex network system, as the one in the upper part of Figure \ref{fig:GeneralizedBisymmetry3S}, where we have four inputs $x$, $y$, $u$, $v$ and a single output. As indicated in the functional equation, we want to find when two different network architectures, associated with the two terms in (\ref{GBE}), produce identical outputs for all possible inputs. This is our basic property in this example.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{GeneralizedBisymmetry.PNG}
+\caption{Initial complex network architecture associated with Functional equation (\ref{GBE}) and simplified equivalent network based on the solution of the functional equation.}
+\label{fig:GeneralizedBisymmetry3S}
+\end{figure}
+We note that this network processes inputs through functions $F$, $G$, $H$, $K$, $M$, and $N$, which are all functions of two arguments.
+
+Thus, the upper part of Figure \ref{fig:GeneralizedBisymmetry3S} illustrates graphically the generalized bisymmetry functional equation.
+
+\paragraph{Solution of the Generalized Bisymmetry Equation.}
+The general continuous solution of the generalized bisymmetry equation shows that both sides can be written in the remarkably simple form:
+\begin{equation}
+F[G(x, y), H(u, v)] = K[M(x, u), N(y, v)] = k[p(x) + q(y) + r(u) + s(v)],
+\end{equation}
+where the complex functions are related to the simple ones through:
+\begin{align}
+F(x, y) &= k[f(x) + g(y)] \\
+G(x, y) &= f^{-1}[p(x) + q(y)] \\
+K(x, y) &= k[l(x) + m(y)] \\
+H(x, y) &= g^{-1}[r(x) + s(y)] \\
+M(x, y) &= l^{-1}[p(x) + r(y)] \\
+N(x, y) &= m^{-1}[q(x) + s(y)].
+\end{align}
+Thus, the equivalent network is the one shown in the lower part of Figure \ref{fig:GeneralizedBisymmetry3S}, which uses simpler functions $k$, $p$, $q$, $r$, $s$ (functions of one argument each).
+
+This reveals that any complex network satisfying the bisymmetry condition is equivalent to a much simpler additive network using only single-variable functions.
+Figure \ref{fig:GeneralizedBisymmetry3S} shows both structures together to appreciate the important differences between them.
+
+\paragraph{Key Insights.}
+The generalized bisymmetry equation demonstrates a fundamental principle: complex multi-variable network architectures that satisfy certain symmetry conditions can always be decomposed into simpler additive forms. This has profound implications for network design, showing that apparent complexity often masks underlying simplicity when proper functional relationships are maintained.
+
+\subsection{The generalized associativity equation}
+Consider the generalized associativity equation:
+\begin{equation}
+F[G(x, y), z] = K[x, N(y, z)],
+\end{equation}
+which is illustrated in Figure \ref{fig:GeneralizedAssociativity1}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{GeneralizedAssociative1.png}
+\caption{Two sequential processing paths that must yield equivalent results}
+\label{fig:GeneralizedAssociativity1}
+\end{figure}
+This is a system with three inputs $x$, $y$, $z$, which are processed through two different sequential paths, the two associated with the two terms of the equation, and one output. We want to determine when these paths are equivalent, ensuring that they lead to the same final output. This is the property we want to reproduce in our model.
+
+The first path processes $x$ and $y$ through function $G$, then combines the result with $z$ using function $F$. The second path processes $y$ and $z$ through function $N$, and then combines it with $x$ using function $K$, as indicated in Figure \ref{fig:GeneralizedAssociativity1}. The generalized associativity equation ensures that both processing sequences yield identical results.
+
+\paragraph{Solution of the Generalized Associativity Equation}
+The general continuous solution shows that both processing paths can be expressed as:
+\begin{equation}
+F[G(x, y), z] = K[x, N(y, z)] = k[p(x) + q(y) + g(z)]
+\end{equation}
+where the functions are related through:
+\begin{align}
+F(x, y) &= k[f(x) + g(y)] \\
+G(x, y) &= f^{-1}[p(x) + q(y)] \\
+K(x, y) &= k[p(x) + n(y)] \\
+N(x, y) &= n^{-1}[q(x) + g(y)].
+\end{align}
+
+This suggests the functional structure in Figure \ref{fig:GeneralizedAssociativity2}.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{GeneralizedAssociative2.png}
+\caption{Two sequential processing paths that must yield equivalent results}
+\label{fig:GeneralizedAssociativity2}
+\end{figure}
+
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.6\textwidth]{GeneralizedAssociative3.png}
+\caption{Two sequential processing paths that must yield equivalent results}
+\label{fig:GeneralizedAssociativity3}
+\end{figure}
+
+This demonstrates that sequential processing systems satisfying generalized associativity reduce to simple additive combinations of univariate transformations, and that both functional networks are equivalent, see Figure \ref{fig:GeneralizedAssociativity3}.
+
+Figure \ref{fig:GeneralizedAssociativity3} illustrates the meaning of the resulting solution, and how the outputs can be obtained from the inputs. It also shows the complexity reduction, because less functions are involved and they are univariate functions, contrary to the initial bivariate functions of the initial network.
+
+\paragraph{Key Insights.}
+The generalized associativity equation reveals a fundamental principle of order-independent processing: when different sequential operations produce identical results, the underlying structure must be essentially additive. This explains why associative operations in mathematics and computer science often have such clean, linear representations.
+
+\section{The Associativity Equation}\index{Sectioning!Sections}
+
+Consider the case of the function:
+\begin{equation}
+\phi(\pi_1,\pi_2,\pi_3) = F[F(\pi_1,\pi_2),\pi_3] = F[\pi_1,F(\pi_2,\pi_3)],
+\label{eq:associativity}
+\end{equation}
+in which the associative property of the $F$ operation is stated: "if the contributions of $\pi_1$ and $\pi_2$ are aggregated first, and later the contribution of $\pi_3$ is aggregated to get the $\phi(\pi_1, \pi_2, \pi_3)$ function the result must be coincident with the case in which first the aggregation of $\pi_2$ and $\pi_3$ is done and later $\pi_1$ is aggregated to the group $[\pi_2, \pi_3]$, using in both cases the same aggregation function $F(\pi_1, \pi_2)$".
+
+Equation~\eqref{eq:associativity} is the associative functional equation, that defines the well known associative property of the operation
+\begin{equation}
+\pi_1 \oplus \pi_2 = F(\pi_1,\pi_2),
+\label{eq:operationdef}
+\end{equation}
+whose general solution is given by the following theorem.
+
+\begin{theorem}[The associativity equation]
+\label{thm:associativity}
+The general solution, continuous and invertible in both variables on a real rectangle of the functional equation~\eqref{eq:associativity}, is:
+\begin{equation}
+F(\pi_1,\pi_2) = f^{-1}[f(\pi_1) + f(\pi_2)],
+\label{eq:associativesolution}
+\end{equation}
+where $f$ is an arbitrary continuous, strictly monotonic and invertible function, which can be replaced only by $cf(\pi_1)$, where $c$ is an arbitrary constant.
+\end{theorem}
+
+The beauty of this theorem is that it allows us to visualize associative operations, on the reals, which is where we are working in this paper. Then, any one argument continuous and invertible function $f()$, generates an associative operation on the reals and vice versa.
+
+\subsection{Examples of associative operations}\index{Sectioning!Subsections}
+Some important examples of associative operations in the set of real numbers, $\R$, are:
+\begin{itemize}
+\item \textbf{The sum:} In this case the $f$ function is the identity function, that is, $f(x) = x$.
+\item \textbf{The product:} In this case the $f$ function is the logarithmic function, that is, $f(x) = \log(x)$.
+\item \textbf{The mean:} In this case the $f$ function is $f(x) = x/2$, which results from the sum when using the $c$ constant mentioned above as $c = 1/2$.
+\item \textbf{The linear function:} In this case the $f$ function is $f(x) = cx$, which results from the sum when using the $c \neq 1$ constant mentioned above.
+\end{itemize}
+
+\subsection{Role of associative operations}\index{Sectioning!Subsections}
+The following corollary, not very well known, permits writing any associative operation in terms of any other associative operation, a property that brings a desired generality in terms of degrees of freedom to express the associative property.
+
+\begin{corollary}[Associativity in terms of any associative operation]
+\label{cor:associativegeneral}
+The solution~\eqref{eq:associativesolution} can also be written in terms of any associative operation $\oplus$, that is,
+\begin{equation}
+F(\pi_1,\pi_2) = g^{-1}[g(\pi_1) \oplus g(\pi_2)],
+\label{eq:generalassociative}
+\end{equation}
+where the $g(\cdot)$ function depends on the $\oplus$ operation selected.
+\end{corollary}
+
+Reiterating aggregation with other variables, using the same aggregation function $F(\cdot,\cdot)$, in equation~\eqref{eq:associativesolution}, leads to
+\begin{equation}
+\phi(\pi_1,\pi_2,\ldots,\pi_n) = f^{-1}[f(\pi_1) + f(\pi_2) + \cdots + f(\pi_n)].
+\label{eq:n_variableassociative}
+\end{equation}
+
+The nice and incredible result is that, thanks to a single argument $f(\cdot)$ invertible and monotonic function, the problem can be reduced to sums.
+
+The relevance of this theorem is that it reveals why sums and products are operations that have been used in many applications of the Buckingham theorem without explanation, such as, for example, in neural networks when combining neuron outputs with weights. Consequently, this theorem permits generalizing the results to any associative operation.
+
+In fact, if the operation $x \oplus y=F(x,y)$ is associative, the following property holds:
+\begin{equation}
+\pi_1\oplus \pi_2 \oplus \ldots \oplus \pi_n = f^{-1}[f(\pi_1)+f(\pi_2)+\ldots+f(\pi_n)],
+\label{eq:associativeproperty}
+\end{equation}
+where $f()$ is an invertible function.
+
+In particular, since the product is an associative operation, one can write:
+\begin{equation}
+\pi_1 * \pi_2 * \ldots * \pi_n = \exp(\log(\pi_1)+\log(\pi_2)+\ldots+\log(\pi_n)) = \exp(\log(\pi_1 *\pi_2 * \ldots * \pi_n)),
+\label{eq:productexample}
+\end{equation}
+in which case the $f()$ function is the logarithm. The same result can be obtained for the sum, using as $f()$ the identity function $f(\pi)=\pi$.
+
+\paragraph{Key Insights.}
+The classical associativity equation demonstrates a profound mathematical principle: all associative operations are fundamentally equivalent to addition when viewed in the appropriate coordinate system. The function $f$ serves as a change of variables that transforms the associative operation into simple addition, revealing the hidden linear structure underlying all associative operations.
+
+Moreover, since addition is commutative, every associative operation is automatically commutative, which explains why associative binary operations always satisfy both properties simultaneously.
+
+
+\section{Other illustrative applications}
+
+The theory of functional equations has found applications in a remarkably wide range of disciplines. In many cases, the equations do not merely provide solutions to isolated problems but characterize the entire class of mathematical models satisfying prescribed structural properties. This ability to derive complete families of admissible models from a small set of natural assumptions is one of the main strengths of the subject.
+
+In probability and statistics, functional equations characterize distribution families possessing important closure properties. They describe the distributions that remain stable under operations such as maxima, minima, or sums of independent random variables, determine the structure of reproductive families, and provide a unified treatment of conjugate Bayesian prior distributions. These results play a central role in extreme-value theory, reliability analysis, stochastic processes, actuarial science, and Bayesian inference. Comprehensive treatments of these topics can be found in \cite{castillo2004functional}, \cite{castillo1992functional} and~\cite{CastilloRuiz1993}.
+
+Another important application concerns generalized auto-distributivity equations. Although they arise from an abstract algebraic formulation, they provide a remarkably general framework encompassing numerous functional equations appearing throughout mathematics, statistics, and engineering. Their solutions reveal common structural principles underlying apparently unrelated problems and often reduce multivariate functional relationships to combinations of univariate functions, thereby greatly simplifying both theoretical analysis and practical implementation.
+
+Functional equations also provide an alternative formulation of many engineering problems traditionally expressed by differential equations. Instead of describing equilibrium over infinitesimal elements, the same physical principles can be imposed on finite domains, leading to exact systems of functional equations. This approach has been successfully applied to beam and plate analysis, where it preserves the physical interpretation of equilibrium while offering new computational viewpoints and exact finite-step formulations. Details and complete derivations are presented in \cite{castillo2004functional}, \cite{castillo1992functional} and~\cite{CastilloRuiz1993}.
+
+Finally, in Economics, functional equations offer an axiomatic methodology for deriving market models directly from economically meaningful assumptions. Rather than postulating specific functional forms, properties such as price sensitivity, advertising response, market equilibrium, or competitive interaction are expressed as consistency conditions whose solutions determine the admissible sales functions. This approach produces mathematically consistent monopoly and duopoly models while clarifying the economic interpretation of their parameters.
+
+Beyond these examples, functional equations appear naturally in many other scientific areas, including information theory, decision theory, utility and preference modeling, psychophysics, machine learning, neural network design, dynamical systems, geometry, physics, and biological modeling. In each case, they provide a rigorous mathematical framework for translating qualitative structural requirements into quantitative mathematical models.
+
+The examples presented throughout this book illustrate only a small sample of the broad applicability of functional equations. Their greatest value lies not in solving isolated equations but in revealing the mathematical structures that necessarily underlie entire classes of scientific models. Readers interested in the complete mathematical developments, proofs, and additional applications are referred to the original monographs and research papers, particularly \cite{castillo2004functional}, \cite{castillo1992functional} and~\cite{CastilloRuiz1993}, where these topics are treated in detail.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Methods for Solving Functional Equations}\label{s2.1}
+
+In the previous sections we have shown some basic examples of functional
+equations and their solutions. However, we did not explain how
+these solutions were obtained.
+
+Unlike differential equations, for which systematic solution techniques
+are well-established, functional equations lack a general, unifying
+methodology. In many cases, ``ad hoc'' methods are required. This
+represents a significant shortcoming and is perhaps one of the reasons
+why engineers and applied scientists have not incorporated functional
+equations into their everyday practice. To facilitate their use,
+we can:
+\begin{itemize}
+\item Compile a list of the main functional equations alongside their corresponding solutions.
+\item Identify the classes of equations that can be solved using the same techniques.
+\end{itemize}
+
+Since the techniques for solving functional equations differ completely
+from those for differential equations, it is worthwhile to devote
+some time to them. This investment will pay off later, as functional
+equations will become a natural tool in our modeling work and will
+shape our way of thinking and formulating problems.
+
+An excellent reference for identifying these methods is the book by
+Aczél \cite{aczel2006lectures}, which should be considered an essential
+resource on the subject.
+
+Nevertheless, in this book, following the work of Castillo et al.
+\cite{castillo2004functional}, we list the most common methods for
+solving functional equations:
+\begin{enumerate}
+\item Replacement of variables by given values.
+\item Transforming one or several variables.
+\item Transforming one or several functions.
+\item Using a more general equation.
+\item Treating some variables as constants.
+\item Inductive methods.
+\item Iterative methods.
+\item Separation of variables.
+\item Reduction by means of analytical techniques (differentiation, integration, etc.).
+\item Mixed methods.
+\end{enumerate}
+
+Those readers interested in learning how these methods can be used to solve some functional equations can do it in Chapter 2 of \cite{castillo2004functional}, pages 19--32.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Key Interesting Ideas and Insights From the Chapter}
+
+In this chapter we have explored functional equations as a powerful and natural mathematical framework for deriving universal models from fundamental properties of the systems being modeled. Below we summarize the most basic yet original ideas that have emerged, together with the illustrative examples that made them evident. These ideas fundamentally change the way we approach mathematical modeling in science and engineering.
+
+Figure \ref{fig:FEIllustration} illustrates the steps to derive models based on properties and shows the relevance of functional equations, as an alternative to differential equations in this process.
+
+
+\begin{figure}[!h]
+\centering
+%\includegraphics[width=0.75\textwidth]{FunctionalEquationsIllustration.png}
+\begin{tikzpicture}[
+    scale=0.8,
+    fill=mainblue,
+    transform shape]
+    \node (title) [align=center, text=mainblue, minimum width=11.5cm] {
+        \fontsize{20}{24}\selectfont\bfseries FUNCTIONAL EQUATIONS:\\[4pt]
+        \fontsize{20}{24}\selectfont\bfseries FROM PROPERTIES TO MODELS
+    };
+    \node (b1) [font=\large, flowbox=blue, below=0.8cm of title] {
+        \textbf{Select Desired Properties}\\
+        \textcolor{textgray}{\small (symmetry, invariance, scaling, additivity, etc.)}
+    };
+    \node (b2) [font=\large, flowbox=red, below=0.9cm of b1, minimum height=1.8cm] {
+        \textbf{System of Functional Equations}\\
+        \vspace{2pt}
+        \fontsize{16}{18}\selectfont $\boldsymbol{\mathcal{E}[f] = 0}$
+    };
+    \node (b3) [font=\large, flowbox=green, below=0.9cm of b2] {
+        \textbf{Solve System of Functional Equations}\\
+        \textbf{General Solution} \ $f(x)$
+    };
+    \node (b4) [font=\large, flowbox=orange, below=0.9cm of b3] {
+        \textbf{Apply Constraints / Boundary Conditions}\\
+        \textbf{Determine Constants}
+    };
+    \node (b5) [font=\large, flowbox=blue, below=0.9cm of b4] {
+        \textbf{Obtain Valid Models}\\
+        \textbf{Consistent with Properties}
+    };
+    \draw[downarrow] (b1.south) -- (b2.north);
+    \draw[downarrow] (b2.south) -- (b3.north);
+    \draw[downarrow] (b3.south) -- (b4.north);
+    \draw[downarrow] (b4.south) -- (b5.north);
+    \begin{scope}[on background layer]
+        \node[
+            draw=orange!80!black,
+            fill=orange!45,
+            line width=2.5pt,
+            rounded corners=10pt,
+            inner sep=18pt,
+            fit=(title) (b1) (b2) (b3) (b4) (b5)
+        ] (frame) {};
+    \end{scope}
+\end{tikzpicture}
+\caption{Illustration of the relevance of functional equations in deriving valid models defined by their properties.}
+\label{fig:FEIllustration}
+\end{figure}
+
+
+\subsection{Basic important ideas}
+
+\begin{enumerate}
+\item \textbf{Functional equations as the most direct translation of physical/geometric/economic properties}\\
+The language of mathematics is equations, and when the unknown is a \emph{function} itself (rather than a number or a derivative), functional equations arise naturally. They express properties without the artificial introduction of derivatives or integrals. This directness often reveals the true structure of a model that differential or integral formulations obscure.
+
+\item \textbf{The appearance of arbitrary constants and arbitrary functions}\\
+Almost every solution obtained in the chapter contains one or more arbitrary constants (or even arbitrary functions). These are not mathematical artifacts; they are essential:
+\begin{itemize}
+\item Constants account for changes of scale (units), changes of origin, and dimensional consistency.
+\item Arbitrary functions reflect the freedom left by the imposed properties; they embody the ``degrees of freedom'' of the modeled phenomenon.
+\end{itemize}
+The presence of these arbitrary elements is one of the most profound lessons: a set of properties rarely determines a \emph{unique} formula. It determines a \emph{family} of formulas. This multiplicity is not a weakness—it is a strength that provides robustness under real-world uncertainties.
+
+\item \textbf{Complete solution sets instead of single formulas}\\
+Solving a system of functional equations yields the entire set of functions satisfying the chosen properties. This gives two powerful scientific privileges:
+\begin{itemize}
+\item Visualization of \emph{all} possible models consistent with the observed reality.
+\item Systematic exclusion of any model that violates even one of the imposed properties.
+\end{itemize}
+In applied sciences we rarely need a single ``correct'' model; we need a rich enough family that remains valid when conditions change slightly.
+
+\item \textbf{Complexity reduction: from multivariate to univariate functions}\\
+A recurring miracle in the solutions is that apparently complicated multivariate functional equations often reduce to expressions involving only \emph{univariate} (single-argument) functions combined through simple operations (sums, products, compositions). This dramatic simplification appears in:
+\begin{itemize}
+\item Associativity, bisymmetry, and auto-distributivity equations.
+\item Functional networks (medical diagnosis, AI models).
+\item Translation and iterator equations.
+\end{itemize}
+The reduction reveals hidden additive or linear structures behind seemingly complex interactions.
+
+\item \textbf{Equivalence between seemingly unrelated problems}\\
+Identical systems of functional equations can emerge from completely different physical or economic contexts. Classic examples:
+\begin{itemize}
+\item Area of a rectangle $\equiv$ simple interest formula.
+\item Damage accumulation $\equiv$ iterator problem $\equiv$ translation equation.
+\end{itemize}
+This shows that the mathematical skeleton is often more fundamental than the particular interpretation.
+
+\item \textbf{Functional equations as a universal modeling tool across disciplines}\\
+The same methodology works equally well for:
+\begin{itemize}
+\item Elementary geometry (rectangle, trapezoid, polygon angles).
+\item Finance and economics (interest, monopoly, duopoly).
+\item Probability and statistics (stable distributions, conjugate priors, reproductive families, normal conditionals).
+\item Engineering (beam and plate analysis, damage accumulation, fatigue models).
+\item Artificial intelligence and decision theory (functional networks, medical diagnosis).
+\end{itemize}
+Functional equations therefore constitute a truly \emph{universal} language for property-based modeling.
+\end{enumerate}
+
+
+\subsection{Illustrative examples that crystallized these ideas}
+
+The following examples were chosen because each revealed one or more of the suggestive ideas above in a particularly clear and surprising way.
+
+\paragraph{Rectangle and Trapezoid Areas}
+The familiar school formulas are not the most general ones. The complete solutions are
+\[
+f(b,h)=c\,b\,h, \qquad f(b_1,b_2,h)=(b_1+c_1 b_2)c_2 h
+\]
+with arbitrary constants. These constants are mandatory for dimensional homogeneity and unit conversion. The trapezoid requires \emph{two} constants because it contains two distinct linear terms in the bases.
+
+\paragraph{Sum of Internal Angles of a Polygon}
+A single difference equation $f(n+1)=f(n)+f(3)$ immediately yields the affine solution $f(n)=\pi(n-2)$. The arbitrary constant (the triangle angle sum) appears naturally as the ``initial condition'' of the recurrence.
+
+\paragraph{Simple Interest}
+The system
+\[
+f(x+y,t)=f(x,t)+f(y,t), \qquad f(x,t+u)=f(x,t)+f(x,u)
+\]
+is mathematically identical to the rectangle-area system. The solution $f(x,t)=kxt$ shows that simple interest is the \emph{minimal} policy that guarantees bank stability (any superadditive policy would invite clients to split deposits or withdraw daily).
+
+\paragraph{Sum-of-Products Equation and Its Applications}
+This powerful theorem characterizes all solutions of $\sum f_k(x)g_k(y)=0$. It was used to:
+\begin{itemize}
+\item Obtain the most general surface with polynomial cross-sections (nine arbitrary constants).
+\item Characterize all bivariate distributions with normal conditionals (revealing models more general than the classical bivariate normal).
+\item Derive the fatigue model based on coinciding conditional location-scale families.
+\end{itemize}
+
+\paragraph{Translation Equation (Damage Accumulation and Iterator)}
+The equation $h(d_0,N_1+N_2)=h(h(d_0,N_1),N_2)$ forces the solution
+\[
+h(d_0,N)=\phi[\phi^{-1}(d_0)+N]
+\]
+where $\phi$ is an arbitrary invertible function. This single arbitrary function completely determines the damage evolution or the $n$-th iterate of any map, converting an $O(n)$ iteration process into an $O(1)$ evaluation.
+
+\paragraph{Generalized Functional Equations (Associativity, Bisymmetry, Auto-Distributivity)}
+All these equations share a common revolutionary feature: their continuous solutions reduce complex multivariate networks to simple additive forms involving only univariate functions. The classical associativity equation
+\[
+F(x,y)=f^{-1}[f(x)+f(y)]
+\]
+shows that \emph{every} associative operation is addition in a suitably transformed space. The same additive skeleton appears in Bayesian conjugate families, reproductive distributions, maximum-stable distributions, and functional networks for medical diagnosis.
+
+\paragraph{Beam and Plate Analysis}
+Replacing infinitesimal balances (differential equations) by finite-segment balances yields exact functional (or difference) equation systems. For any step size $u$ the solution is exact at the discretization points, offering a physically transparent and computationally advantageous alternative to classical fourth-order differential equations.
+
+\subsection{Final philosophical remark}
+
+The central message of the chapter is that by carefully choosing a minimal set of fundamental properties and translating them into functional equations, we obtain not a single formula but the \emph{complete family} of all models compatible with those properties. The arbitrary constants and arbitrary functions that appear are the mathematical expression of the freedom and robustness that real-world modeling demands.
+
+Functional equations therefore provide a rigorous, elegant, and surprisingly general pathway from observation of reality $\to$ identification of essential properties $\to$ derivation of the most general consistent mathematical models. They teach us to embrace, rather than fear, the multiplicity of solutions, because in the presence of uncertainty and change, a rich family of validated models is far more valuable than a single ``unique'' solution that collapses under the slightest perturbation of assumptions.
+
+This property-based, functional-equation approach constitutes one of the most powerful and universal tools available to the scientist, engineer, economist, or data scientist who seeks to build models that are both faithful to reality and resilient to its inherent variability.
+
+We have seen how functional equations turn property requirements into concrete functional forms. This reduction in complexity prepares the ground for the next step: transforming all variable ranges to a common, interpretable interval using the ECDF transformation (Chapter~\ref{ch:cdftransformation}). Moreover, the functional equation approach has taught us that a set of properties rarely determines a unique formula; it determines a whole family — a strength that provides robustness under real‑world uncertainties.
+
+The reader interested in methods for solving functional equations can see them in \cite{aczel2006lectures} and \cite{castillo2004functional}.
+
+\section*{Closing}
+
+With these methods in hand, we are now equipped to move from the general theory of functional equations to a specific, powerful transformation: the ECDF (empirical cumulative distribution function) transformation. The next chapter shows how mapping every variable to its percentile in \([0,1]\) not only makes all variables dimensionless and uniformly interpretable, but also reveals the deep truth that order—not magnitude—carries the essential information for dependence modeling. The functional equation toolkit will prove indispensable in deriving the general functional forms that follow.
+
+

@@ -1,0 +1,144 @@
+\startcontents[chapter]
+\chapter{New Concepts in Functional Networks}
+\label{ch:newfunctionalnetworks}
+\minitocboxed
+
+\section*{Introduction}
+The fact that input and output sets of variables are allowed to be freely chosen without the need of re‑learning changes the traditional AI paradigm. In conventional neural networks, variables are fixed as inputs, outputs, or hidden. This chapter advocates an alternative approach: treat all variables equivalently, learn the full joint relationship, and then designate any subset as input and any subset as output at query time. Reassigning these roles does not require retraining the model, leading to significant computational savings and unprecedented flexibility.
+
+We illustrate this with a probabilistic safety analysis of a railway line and a COVID‑19 pandemic model, where the same Bayesian network can be used to predict forward or backward in time, or to answer different queries by simply changing which nodes are evidence and which are query variables.
+
+
+In this chapter we are led to a revision of the concept of neural and functional networks, considering new ideas that come from the previous discussion. In fact several well established ideas are questioned and new ideas arise to improve the power and efficiency of existing networks.
+
+\section{Limitations of Predefining Input and Output Variables}\index{Sectioning!Sections}
+In this subsection, we propose a novel approach to enhance neural and functional networks by addressing the limitations of traditional variable partitioning.
+
+In the conventional neural network paradigm, variables are typically divided into two categories, input and output, or, at most, three, including hidden neurons. However, we advocate for an alternative approach that treats all variables equivalently, without distinguishing between input, output, or hidden variables. Once the multivariate relationship among variables is learned, users can flexibly designate which variables serve as known data (input), which are to be inferred (output), or which act as intermediate variables.
+
+A key advantage of this approach is that reassigning these roles does not require retraining the model, leading to significant savings in computational resources. While the initial learning process may demand more computational effort, the flexibility gained avoids the need for repeated retraining when variable roles change.
+
+This concept was first introduced in \cite{CastilloGHL:01a}, a paper selected by \emph{Technometrics} for presentation at its annual meeting of the Technometrics Society.
+
+\subsection{Probabilistic safety analysis}\index{Sectioning!Subsections}
+In this section some Bayesian networks for performing a probabilistic safety analysis of a railway line or a road is presented, as presented in \cite{CalvinoMartinez2013}, \cite{GrandeAndrade2015}, \cite{Castillo2016MarkovianBayesian} and \cite{Mora2017}.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{PSATrenes1_con_fondo.png}
+\caption{Diagram showing how the sequence of different elements of a railway line can be incorporated to build a Bayesian network.}
+\label{fig:railwaydiagram}
+\end{figure}
+
+The idea is to reproduce the railway line or the road by mimicking each of its elements where incidents and accidents can occur, as shown in Figure~\ref{fig:railwaydiagram}. Apart from the elements, all possible incidents must be incorporated together with climate data, driver preparation, with consideration of the train characteristics, safety material and software used, and, very important, the attention state of the driver and its evolution, with causes of distractions and recovering attention when distracted.
+
+Figure \ref{fig:railwaythreeparts} illustrates: A) the segment acyclic graph of the Bayesian network, B) the graphical representation of traffic signs and track elements, C) the segment characteristics, and D) a cumulated risk chart, extracted from \cite{GrandeAndrade2015} and \cite{Mora2017}.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{PSATrenes2_con_fondo.png}
+\caption{The three parts mentioned in the text, Bayesian network, piece of the road and information about location risks.}
+\label{fig:railwaythreeparts}
+\end{figure}
+% mark
+In Figure~\ref{fig:railwaythreeparts} the upper part is a part of the Bayesian network (BN) associated with a road section, whose elements are incorporated by the BN block on top of them. The lowest part shows the yearly expected number of incidents at each location, at the circulating instant, that is, under its particular conditions, (driver attention, weather conditions, speed, etc. Note that these frequencies are different not only for different drivers but for different times they visit the same location.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.6\textwidth]{PSATrenes3_con_fondo.png}
+\caption{Two small parts of a road together with the associated information about safety.}
+\label{fig:roadsafetyparts}
+
+(\href{https://raw.githubusercontent.com/EnriqueCastilloRon/mi-libro-interactivo/main/videos/VideoN623.mp4}{\textcolor{blue}{\underline{Click to play video}}})
+\end{figure}
+
+Finally, Figure~\ref{fig:roadsafetyparts} shows two small pieces illustrating how the risks associated with the corresponding two pieces are shown. In fact sub-Bayesian networks can be extracted for different parts of the road and warnings communicated to the driver when the risk goes above a given threshold. This can be incorporated to the car navigation system, increasing the safety substantially.
+
+Note that we are in front of very long longitudinal Bayesian networks, such that the close future is independent of the past, given the present, and this implies that the conditional probability factors depend only of a few previous variables. Note that during the trip one is continuously changing the data variables (inputs) and the output variables (incidents and accidents, whose probability is calculated).
+
+\subsection{COVID model}\index{Sectioning!Subsections}
+In this section an example of a Bayesian network to predict the covid pandemic evolution, is presented, where the input and output nodes can be selected depending on the period being predicted, see the complete version in \cite{Castillo2020Covid}. In fact, though the Bayesian network covers long periods, prediction can be done from any day to any day, including backwards, so that, the time of prediction, with the associated input data, and the predicted state, output, can be arbitrarily selected.
+
+The model considers different states of the people of any population, considering susceptible, $S_y$ and $S_o$, exposed, $E_y$ and $E_o$, and infected, $J$ and $M$, groups differentiating by two groups of age, young, $y$, and elder, $o$. Next, it considers the hospitalized, $H$, and the ICU, $U$, groups, and the recovered, $R$, and deceased, $F$, groups. It considers how persons can move, caused by the disease, from a group to another with known proportions, the $t$ factors, whose subindices indicate the origin and destination of the moves.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{COVID2_con_fondo.png}
+\caption{Diagram illustrating the Covid progression.}
+\label{fig:covidprogression}
+\end{figure}
+
+Figure~\ref{fig:covidprogression} shows a diagram showing the assumed progression process.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{RedBayesianaCovid_con_fondo.png}
+\caption{Bayesian network of the Covid example.}
+\label{fig:covidnetwork}
+\end{figure}
+
+Figure~\ref{fig:covidnetwork} shows a diagram showing how the Bayesian network is built by joining the variables associated with the different states during the different days of the period being analyzed.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{VentanaCovid_con_fondo.png}
+\caption{Window of a Web page of an html application designed to evaluate, in real time, the effect of any parameter on the pandemic progress.}
+\label{fig:covidwebapp}
+
+(\href{https://enriquecastilloron.github.io/PRUEBA/COVID5.html}{\underline{Click to open application}}).
+
+
+(\href{https://enriquecastilloron.github.io/PRUEBA/VIDEOAPPCORTO.mp4}{\textcolor{blue}{\underline{Click to play video}}})
+
+
+%(\href{run:./MultivarVis_Analysis.html}{\textcolor{blue}{\underline{Click to open application}}}).
+%(\href{run:./VIDEOAPPCORTO.MP4}{\textcolor{blue}{\underline{Click to play video}}})
+\end{figure}
+Figure~\ref{fig:covidwebapp} shows the window of a web page designed to evaluate the effect of changing any parameter value in real time and based on the system of equations. The user can determine the sensitivity of any of the multiple parameters on any of the evolution cumulative curves of the model, what is very relevant when making decisions to retard the progress or improve the effects of different technical or political changes.
+
+The equations of the model, as indicated in \cite{Castillo2020Covid}, are:
+\begin{align}
+S_j(t+1) &= S_j(t)(1-t_{se_j}(J(t) + M(t))) \label{eq:covid1}\\
+S_m(t+1) &= S_m(t)(1-t_{sem}(J(t) + M(t))) \label{eq:covid2}\\
+S(t+1) &= S_j(t+1) + S_m(t+1) \label{eq:covid3}\\
+E_j(t+1) &= E_j(t) + t_{se_j}S_j(t)(J(t) + M(t)) - t_{e_j}E_j(t) \label{eq:covid4}\\
+E_m(t+1) &= E_m(t) + t_{sem}S_j(t)(J(t) + M(t)) - t_{em}E_m(t) \label{eq:covid5}\\
+J(t+1) &= J(t) + t_{e_j}E_j(t) - (t_{jh} + t_{jr} + t_{jf})J(t) \label{eq:covid6}\\
+M(t+1) &= M(t) + t_{em}E_m(t) - (t_{mh} + t_{mr} + t_{mf})M(t) \label{eq:covid7}\\
+H(t+1) &= H(t) + t_{jh}J(t) + t_{mh}M(t) - (t_{hu} + t_{hr} + t_{hf})H(t) \label{eq:covid8}\\
+U(t+1) &= U(t) + t_{hu}H(t) - (t_{ur} + t_{uf})U(t) \label{eq:covid9}\\
+R(t+1) &= R(t) + t_{ur}U(t) + t_{hr}H(t) + t_{jr}J(t) + t_{mr}M(t) \label{eq:covid10}\\
+F(t+1) &= F(t) + t_{mf}M(t) + t_{jf}J(t) + t_{hf}H(t) + t_{uf}U(t) \label{eq:covid11}\\
+E_{j0}(t+1) &= E_{j0}(t) + t_{se_j}S_j(t)(J(t) + M(t)) \label{eq:covid12}\\
+E_{m0}(t+1) &= E_{m0}(t) + t_{sem}S_j(t)(J(t) + M(t)) \label{eq:covid13}\\
+J_0(t+1) &= J_0(t) + t_{e_j}E_j(t) \label{eq:covid14}\\
+M_0(t+1) &= M_0(t) + t_{em}E_m(t) \label{eq:covid15}\\
+H_0(t+1) &= H_0(t) + t_{jh}J(t) + t_{mh}M(t) \label{eq:covid16}\\
+U_0(t+1) &= U_0(t) + t_{hu}H(t), \label{eq:covid17}
+\end{align}
+where the last six equations, determine the cumulative number of persons in the corresponding groups.
+
+These equations, contrary to most models used in practice, have been derived based on exact functional equations instead of differential or approximate difference equations, aim to determine cumulative values, which are much less sensitive to sample data, especially when the real situation of the disease wants to be ignored or manipulated.
+
+\section{Converting Deterministic to Random Models}\index{Sectioning!Sections}
+Though some examples have been previously given to convert a deterministic to a random model, for example, using the $\varepsilon(\boldsymbol{\theta})$ random term, in this section, we demonstrate how the general function~\eqref{eq:mainresult}, copulas and well known results, such as those in equations~\eqref{eq:factorization} and~\eqref{eq:universalfactorization}, can be applied to estimate the joint cumulative distribution function (CDF), $F(\pi_1,\pi_2,\ldots,\pi_n)$ of an $n$-dimensional random variable. This approach enables the transformation of deterministic models into random models, as elaborated below.
+
+\subsection{Deterministic models force deterministic populations}\index{Sectioning!Subsections}
+To clarify this concept, consider the typical use of neural networks in solving real-world problems. Neural networks are trained on a sample of multivariate data, comprising input and output variables, to learn the network's parameters. However, practitioners often overlook that this sample is drawn from a specific population, which is rarely carefully selected or clearly defined. Consequently, the learned model is valid only for the population and sampling method used. Applying the model to different populations or sampling methods is problematic and can invalidate the solution.
+
+This tries to highlight a critical oversight: users are often unaware that they are inherently dealing with random models. Thus, it is essential to treat these models as random from the outset.
+
+\section{Need to Distinguish Between Populations}\index{Sectioning!Subsections}
+In practice, the population to which a model is applied typically exhibits different random behavior than the sampled population. For instance, consider a structural engineering problem, such as assessing the fatigue failure reliability of a bridge. This analysis involves three sets of variables: (1) external actions, including gravity, stresses, wind, and seismic loads; (2) material properties, such as Young's modulus, tensile strength, and compressive strength; and (3) structural responses, such as displacements, strains, or failures.
+
+To evaluate the safety of a bridge over its lifespan or a specific period, the relevant population includes the real-world conditions of these variable sets, accounting for the materials used in construction and maintenance protocols. However, material properties are typically determined through laboratory tests, which reflect the random characteristics of a controlled testing environment. Designers must account for this discrepancy between the laboratory and real-world populations.
+
+This is where copulas play a pivotal role. By learning the copula structure, which is independent of the marginal distributions of the analyzed population, we can model the joint dependency of variables. Once the copula is learned, the marginal distributions can be substituted to obtain the joint CDF tailored to the specific problem. However, the reader must realize that these marginal transformations are not sufficient to correct for the actual multivariate transformation required to move from lab to real situations.
+
+This approach can be interpreted as follows: in laboratory tests to determine mechanical properties, different random population characteristics may be used. However, these can later be replaced with the random properties of the real-world scenario. Specifically, the CDFs in~\eqref{eq:sklarforward} associated with laboratory tests are predefined, but to assess the bridge's safety, they must be replaced with the marginal distributions reflecting the bridge's operational lifespan. This ensures that the model accurately represents the real-world population.
+
+Consequently, transforming the model estimated under some random conditions to different ones is an important problem. As we know, copulas solve the problem of changing each variable independently, using the new marginals and the same learnt copula, but this is valid only for this particular case.
+
+Fortunately, Bayesian networks permit the change very easily. If a group of dependent variables is transformed by a multidimensional transformation, we can consider a Bayesian network of groups, extending the chain rule to groups of variables, who are independent too and then, they can be replaced independently of other groups.
+
+This new paradigm — generating synthetic data once the query is known is possible after learning the general functional structure derived in Chapter~\ref{ch:Piforms} and the Bayesian network factorisation of Chapter~\ref{ch:bayesiannetworks}. The next chapter (Chapter~\ref{ch:newaitool}) implements these ideas in a web‑based tool that allows users to visualize conditional distributions and perform real‑time sensitivity analysis, using only data and without retraining. 

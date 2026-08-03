@@ -1,0 +1,221 @@
+\startcontents[chapter]
+\chapter{Archimedean Copulas}
+\label{ch:ArchimedeanCopulas}
+\minitocboxed
+
+\section*{Connection to The General Functional Form of Chapter~\ref{ch:Piforms}}
+Recall from Chapter~\ref{ch:Piforms} that, under the natural conditions of sequential aggregation and order independence, any function of dimensionless variables must take the universal additive form
+\[
+\Phi(\pi_1,\dots,\pi_n) = p\!\left(\sum_{j=1}^n p_j(\pi_j)\right).
+\]
+When we apply this structural constraint to a copula (a multivariate CDF with uniform marginals), we obtain a powerful result: \textbf{the only copulas compatible with these conditions are the Archimedean copulas}. Indeed, substituting the universal form into Sklar’s theorem forces the copula to satisfy
+\[
+C(u_1,\dots,u_n) = \phi^{[-1]}\!\bigl(\phi(u_1)+\cdots+\phi(u_n)\bigr),
+\]
+which is precisely the definition of an Archimedean copula. This derivation is not a matter of convenience; it shows that Archimedean copulas are not just one family among many, but the \emph{necessary} dependence structure when the aggregation properties of Chapter~\ref{ch:Piforms} hold. The rest of this chapter explores the consequences of this fundamental link, present the three classical copula families and discuss Bernstein copulas as a flexible nonparametric approximation.
+
+\section{Additive Representation and The Main Theorem}
+
+Consider functions of the form
+\begin{equation}
+C(u_1,\ldots,u_n)=p\!\left(\sum_{j=1}^n p_j(u_j)\right) \label{eq:copulageneralform}
+\end{equation}
+where \(p:[0,\infty]\rightarrow[0,1]\) and \(p_j:[0,1]\rightarrow[0,\infty]\) are continuous and invertible. We determine the conditions under which \eqref{eq:copulageneralform} defines a valid copula.
+
+\begin{theorem}[Archimedean representation]
+Let \(C:[0,1]^n\to[0,1]\) be a function of the form \eqref{eq:copulageneralform} with continuous, invertible \(p\) and \(p_j\). If \(C\) satisfies the copula properties (groundedness, uniform marginals, and \(n\)-increasing), then necessarily \(p_1=\cdots=p_n=\phi\) and \(p=\phi^{-1}\), where \(\phi:[0,1]\to[0,\infty]\) is a strictly decreasing continuous function with \(\phi(0)=\infty\), \(\phi(1)=0\), and \(\phi^{-1}\) is completely monotone. Consequently,
+\begin{equation}
+C(u_1,\ldots,u_n)=\phi^{-1}\!\left(\sum_{j=1}^n\phi(u_j)\right), \label{eq:archimedean}
+\end{equation}
+which is the standard form of an Archimedean copula.
+\end{theorem}
+
+\begin{proof}
+We impose the copula conditions one by one.
+
+\paragraph{Groundedness.} A copula must satisfy \(C(u_1,\ldots,u_k=0,\ldots,u_n)=0\). Substituting into \eqref{eq:copulageneralform} gives
+\[
+p\!\left(\sum_{j\neq k} p_j(u_j)+p_k(0)\right)=0.
+\]
+Since \(p\) is continuous and invertible, it is strictly monotonic. If \(p\) were increasing, the equality would force all \(p_j\) to be constant, contradicting invertibility. Hence \(p\) is strictly decreasing. Therefore we must have \(p(0)=1\) and \(\lim_{t\to\infty}p(t)=0\). For the argument of \(p\) to diverge to \(\infty\) when any \(u_k=0\), we need \(p_k(0)=\infty\). Continuity then implies \(\lim_{u\to0^+}p_j(u)=\infty\) and \(p_j(1)=0\).
+
+\paragraph{Uniform marginals.} The condition \(C(1,\ldots,u_k,\ldots,1)=u_k\) together with \(p_j(1)=0\) yields
+\[
+p(p_k(u_k))=u_k.
+\]
+Applying the inverse gives \(p_k(u)=p^{-1}(u)\). Hence all \(p_k\) are identical; denote this common function by \(\phi\). Moreover \(p=\phi^{-1}\). Substituting back into \eqref{eq:copulageneralform} we obtain \eqref{eq:archimedean}.
+
+\paragraph{\(n\)-increasing property.} For a bivariate copula (\(n=2\)), the \(n\)-increasing condition reduces to the requirement that \(\phi\) be convex. In arbitrary dimension, the \(n\)-increasing property is equivalent to the condition that \(\phi^{-1}\) be completely monotone, i.e.,
+\[
+(-1)^k\frac{d^k}{dt^k}\phi^{-1}(t)\ge 0\qquad\text{for all }k=0,1,2,\ldots
+\]
+(\cite{kimberling1974probabilistic}, see the classical result by Kimberling). This completes the proof. ∎
+\end{proof}
+
+Thus Archimedean copulas are the only copulas compatible with our universal aggregation structure. The generator \(\phi\) must satisfy:
+\begin{itemize}
+\item strictly decreasing and continuous,
+\item \(\phi(0)=\infty,\;\phi(1)=0\),
+\item \(\phi^{-1}\) completely monotone (equivalently, \(\phi\) is a Bernstein function).
+\end{itemize}
+
+\section{Why Archimedean Copulas Matter}
+
+Archimedean copulas are widely used in practice because they combine analytical tractability, an interpretable dependence parameter, scalability to high dimensions, and a natural connection with associative operators. The three classical families are:
+
+\begin{itemize}
+\item \textbf{Clayton copula} (lower tail dependence): \(C_\theta(u,v)=(u^{-\theta}+v^{-\theta}-1)^{-1/\theta},\;\theta>0\).
+\item \textbf{Gumbel copula} (upper tail dependence): \(C_\theta(u,v)=\exp\!\bigl(-[(-\ln u)^\theta+(-\ln v)^\theta]^{1/\theta}\bigr),\;\theta\ge1\).
+\item \textbf{Frank copula} (symmetric dependence): \(C_\theta(u,v)=-\frac{1}{\theta}\ln\!\bigl(1+\frac{(e^{-\theta u}-1)(e^{-\theta v}-1)}{e^{-\theta}-1}\bigr),\;\theta\neq0\).
+\end{itemize}
+
+Each family captures a different type of tail behaviour, which is essential for modelling extreme events in fields such as finance, hydrology, and fatigue analysis.
+
+\section{Bernstein Polynomials and Nonparametric Copula Approximation}
+
+Bernstein polynomials provide a powerful tool for approximating continuous functions on \([0,1]\). For a function \(f:[0,1]\to\mathbb{R}\), the Bernstein polynomial of degree \(n\) is defined as
+\[
+B_n(f;x)=\sum_{k=0}^n f\!\left(\frac{k}{n}\right)\binom{n}{k}x^k(1-x)^{n-k}.
+\]
+It is well known that \(B_n(f;x)\to f(x)\) uniformly as \(n\to\infty\).
+
+\subsection{Bernstein copulas}
+
+Given a copula \(C:[0,1]^d\to[0,1]\), its Bernstein approximation of degree \(m\) is
+\[
+C_m(u_1,\ldots,u_d)=\sum_{k_1=0}^m\cdots\sum_{k_d=0}^m
+C\!\left(\frac{k_1}{m},\ldots,\frac{k_d}{m}\right)
+\prod_{i=1}^d \binom{m}{k_i} u_i^{k_i}(1-u_i)^{m-k_i}.
+\]
+Bernstein copulas have several attractive properties: they converge uniformly to the true copula, they are smooth, they preserve the copula structure (i.e., they are genuine copulas), and they are particularly useful for empirical estimation when the parametric form is unknown.
+
+\subsection{Relation between Archimedean and Bernstein copulas}
+
+Archimedean copulas impose a strong parametric constraint via the generator \(\phi\). In contrast, Bernstein copulas provide a flexible nonparametric approximation that can represent any continuous copula arbitrarily well. The advantages of the Bernstein approach are flexibility, data‑driven construction, applicability in high dimensions, and the ability to preserve the underlying dependence structure without prior assumptions.
+
+\section{Computational Examples: Parametric Targets and Bernstein Approximation}
+
+We analyse the Clayton, Gumbel and Frank copulas using a simulation study. The procedure consists of:
+\begin{enumerate}
+\item Simulate samples from each Archimedean family.
+\item Compute the empirical copula from the pseudo‑observations.
+\item Construct the Bernstein approximation of degree \(m\).
+\item Evaluate the approximation quality using mean squared error (MSE), Spearman correlation, and Kolmogorov–Smirnov (KS) statistics.
+\end{enumerate}
+
+\subsection{Sampling methods}
+
+Samples from Clayton and Frank copulas are generated via the closed‑form conditional inversion method. For the Gumbel copula, whose conditional inverse has no closed form, we use the Marshall–Olkin algorithm. A positive \(\alpha\)-stable random variable \(W\sim S(\alpha,1,0,0)\) with \(\alpha=1/\theta\) is generated using the Chambers–Mallows–Stuck algorithm, and then
+\[
+U_i = \exp\!\left(-\frac{E_i}{W}\right)^{1/\theta},\quad i=1,2,
+\]
+where \(E_1,E_2\) are independent standard exponentials.
+
+\subsection{Parameter estimation}
+
+The dependence parameter \(\theta\) is estimated in two stages. First, a moment estimator based on Kendall's \(\tau\) provides a consistent starting point using the family‑specific closed‑form relationships:
+\[
+\hat{\theta}_{\tau} = \begin{cases}
+\dfrac{2\hat{\tau}}{1-\hat{\tau}} & \text{Clayton},\\[6pt]
+\dfrac{1}{1-\hat{\tau}}           & \text{Gumbel},\\[6pt]
+15\hat{\tau}                      & \text{Frank (approximation)}.
+\end{cases}
+\]
+This initial estimate is then refined by maximum likelihood using the L‑BFGS‑B algorithm with family‑specific parameter bounds.
+
+\subsection{Simulation study design}
+
+The simulation study evaluates the approximation quality of the Bernstein copula for the three target families across \(R=50\) independent replications, with sample size \(n=3\,000\) and Bernstein degree \(m=30\). For each replication we compute three metrics on a regular \(100\times100\) evaluation grid:
+\begin{itemize}
+\item \textbf{Mean squared error (MSE)}: \(\frac{1}{M}\sum_{i=1}^M \bigl(\hat{C}_m(\mathbf{u}_i)-C(\mathbf{u}_i)\bigr)^2\).
+\item \textbf{Spearman correlation} between the vectors of true and estimated copula values across the evaluation grid.
+\item \textbf{Kolmogorov–Smirnov statistic} comparing the empirical distributions of true and estimated copula values.
+\end{itemize}
+
+Table~\ref{tab:metrics} summarises the results. Confidence intervals for the MSE are computed as the empirical 2.5th–97.5th percentiles across the 50 replications.
+
+\begin{table}[H]
+\centering
+\caption{Approximation quality of the Bernstein copula (\(n=3\,000\), \(m=30\), \(R=50\) replications). Values reported as mean \(\pm\) standard deviation; 95\% CI based on empirical percentiles.}
+\label{tab:metrics}
+\begin{tabular}{lcccccc}
+\toprule
+Copula & \(\theta\) & MSE (\(\times10^{-4}\)) & Spearman & KS & 95\% CI for MSE (\(\times10^{-4}\)) \\
+\midrule
+Clayton & 2.0 & \(0.31 \pm 0.09\) & \(0.9998\) & \(0.0173\) & \([0.29,\;0.34]\) \\
+Gumbel  & 2.0 & \(2.45 \pm 0.43\) & \(0.9997\) & \(0.0240\) & \([2.34,\;2.58]\) \\
+Frank   & 5.0 & \(22.96 \pm 1.83\) & \(0.9948\) & \(0.0876\) & \([22.48,\;23.46]\) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Results and figures}
+
+Figures~\ref{fig:contour_clayton}--\ref{fig:contour_frank} show the contour comparison for each copula family. Each figure contains six panels: the true CDF (left), the Bernstein approximation (centre), and their pointwise difference \(\hat{C}_m - C\) (right), with the simulated pseudo‑observations superimposed as scatter points.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{contour_Clayton_2.0.pdf}
+  \caption{Contour comparison for the Clayton copula (\(\theta=2.0\), \(n=3\,000\), \(m=30\)). Left: true CDF. Centre: Bernstein approximation. Right: pointwise difference \(\hat{C}_m - C\).}
+  \href{https://enriquecastilloron.github.io/mi-libro-interactivo/codigo/Bernsteincopulasbook.py}{\textcolor{blue}{Click here to download the Python software.}}
+  \label{fig:contour_clayton}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{contour_Gumbel_2.0.pdf}
+  \caption{Contour comparison for the Gumbel copula (\(\theta=2.0\), \(n=3\,000\), \(m=30\)).}
+  \label{fig:contour_gumbel}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{contour_Frank_5.0.pdf}
+  \caption{Contour comparison for the Frank copula (\(\theta=5.0\), \(n=3\,000\), \(m=30\)).}
+  \label{fig:contour_frank}
+\end{figure}
+
+Figures~\ref{fig:scatter_clayton}--\ref{fig:scatter_frank} show scatter plots of true vs. estimated copula values together with residual analysis. Departure from the identity line (shown in red) reflects approximation error.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{scatter_Clayton_2.0.pdf}
+  \caption{Scatter and residual analysis for the Clayton copula.}
+  \label{fig:scatter_clayton}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{scatter_Gumbel_2.0.pdf}
+  \caption{Scatter and residual analysis for the Gumbel copula.}
+  \label{fig:scatter_gumbel}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{scatter_Frank_5.0.pdf}
+  \caption{Scatter and residual analysis for the Frank copula.}
+  \label{fig:scatter_frank}
+\end{figure}
+
+\subsection{Discussion of numerical results}
+
+The simulation results lead to several clear conclusions. The Clayton copula achieves the best approximation, with an MSE of \(3.1\times10^{-5}\) and a KS statistic of \(0.017\). The lower‑tail dependence of Clayton, concentrated near \((0,0)\), is smooth enough for degree‑30 polynomials to resolve it accurately. The Gumbel copula is about one order of magnitude harder: its MSE of \(2.45\times10^{-4}\) is approximately eight times larger than that of Clayton. This reflects the steep rise of the Gumbel CDF near \((1,1)\); upper‑tail dependence concentrates probability mass in a region where the empirical copula is most variable due to data sparsity, and polynomial approximation of fixed degree is less accurate for rapidly varying functions. The Frank copula with \(\theta=5.0\) presents the greatest challenge, yielding an MSE of \(2.30\times10^{-3}\) and a KS of \(0.088\), roughly 75 times the Clayton error. At this parameter value, the Frank copula exhibits strong symmetric dependence across the entire unit square, producing a complex curvature that requires either a higher degree or a larger sample size to approximate well. Nevertheless, the Spearman correlation remains very high (\(0.9948\)), indicating that the overall rank structure is captured despite the larger pointwise error.
+
+The narrow 95\% confidence intervals reported in Table~\ref{tab:metrics}—spanning roughly \(\pm15\%\) of the mean MSE for all three families—demonstrate that the approximation quality is stable across replications and not driven by unusual samples. In practice, the choice of Bernstein degree \(m\) involves a bias‑variance trade‑off. With \(n=3\,000\) and \(m=30\), the bias is already small for Clayton and Gumbel. Further gains for Frank would require either increasing \(m\) beyond 30 (reducing bias at the cost of higher coefficient variance) or increasing \(n\) beyond 3\,000 (reducing coefficient variance). Cross‑validation on a held‑out subset is recommended for selecting \(m\) in applied work.
+
+\subsection{Challenges in comparing parametric and Bernstein copulas.}
+Comparing a parametric copula (such as Clayton, Gumbel or Frank) with a Bernstein copula approximation is far from a trivial exercise. The two approaches rest on fundamentally different philosophies: the parametric copula assumes a specific functional form dictated by a low‑dimensional parameter, while the Bernstein copula is a nonparametric estimator whose accuracy depends crucially on the choice of the polynomial degree \(m\) and the sample size \(n\). A naive comparison that simply computes, say, the mean squared error between the two surfaces would be unfair because it does not account for the bias–variance trade‑off inherent in the Bernstein estimator. More importantly, one must recognise that the Bernstein copula is designed to converge to the true copula as both \(n\) and \(m\) increase, whereas a misspecified parametric copula may never converge regardless of sample size. Thus, a meaningful comparison requires careful consideration of several issues: (i) the selection of \(m\) (e.g., via cross‑validation or by a rule such as \(m \approx n^{1/3}\)), (ii) the behaviour in the tails where the empirical copula is sparse, (iii) the sensitivity to ties or discrete margins, and (iv) the fact that Bernstein copulas automatically satisfy the copula properties, but their estimation variance grows with \(m\). Without addressing these points, any comparison risks misleading conclusions.
+
+\subsection{How these problems have been solved.}
+The selection of the Bernstein degree \(m\) is no longer arbitrary: a widely accepted rule is \(m \approx n^{1/3}\) in bivariate settings, which balances bias and variance. Cross‑validation on a held‑out subsample provides a data‑driven alternative. Tail sparsity is mitigated by using pseudo‑observations (normalised ranks) that spread the data uniformly over \([0,1]^2\), and by choosing \(m\) small enough to avoid excessive variance in the corners. Ties or discrete margins are handled by jittering or by using the empirical copula with the standard rank transformation before Bernstein smoothing. Variance inflation with increasing \(m\) is controlled by the fact that Bernstein copulas are linear in the grid coefficients; thus the variance can be estimated via bootstrap and used to select an optimal \(m\) where the integrated mean squared error is minimised. Finally, the comparison in this chapter is fair because the same data and the same evaluation grid are used for both the parametric copula (fitted by maximum likelihood) and the Bernstein copula (constructed from the empirical copula with \(m\) chosen via the \(n^{1/3}\) rule). The reported metrics (MSE, Spearman, KS) are computed on a separate fine grid, not on the training data, ensuring that overfitting is not rewarded. These solutions have become standard practice in nonparametric copula estimation.
+
+\section{Summary}
+
+The main results of this chapter are threefold. First, we have derived Archimedean copulas from the universal aggregation principles of Chapter~\ref{ch:Piforms}, providing an axiomatic foundation for these widely used families. Second, we have characterised the necessary and sufficient conditions on the generator \(\phi\), namely that \(\phi\) be a decreasing bijection from \([0,1]\) to \([0,\infty]\) with a completely monotone inverse. Third, we have shown that Bernstein copulas serve as universal approximators for any continuous copula, and we have validated this approximation numerically for the Clayton, Gumbel and Frank families.
+
+The conceptual connection between dimensional analysis, functional equations, and copula theory is now clear: the additive form that emerges from order‑independent aggregation forces the copula to be Archimedean. Parametric (Archimedean) and nonparametric (Bernstein) approaches are complementary: the former provides interpretable parameters and tail behaviour, while the latter offers flexibility and data‑driven adaptation. Together they form a unified framework for multivariate dependence modelling.
+
+The restriction to Archimedean copulas is a major reduction in complexity, and it provides an axiomatic derivation of these widely used families. With the dependence structure fixed, we now turn to a powerful probabilistic graphical model: Bayesian networks, which can be learnt locally and which extend the representation properties of copulas from univariate marginals to arbitrary multivariate marginals. This is the subject of Chapter~\ref{ch:bayesiannetworks}.
+
+The theory developed in this chapter will be applied and extended in the chapters that follow. The universal copula structures implied by the functional form of Chapter~\ref{ch:Piforms} will be derived explicitly, the connection between copulas and hyperbolic models will be established, and the use of copulas for converting deterministic models into random ones will be developed. The copula, introduced here as a mathematical object, will gradually reveal itself as the central organising concept of the entire modelling framework of this book.

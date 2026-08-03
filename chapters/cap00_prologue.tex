@@ -1,0 +1,113 @@
+\chapter*{Prologue}
+\addcontentsline{toc}{chapter}{Prologue}
+%\mtcaddchapter
+\noindent \textbf{Prologue}
+
+This book springs from a conviction and a shared frustration that have accompanied us for over four decades of research. This book explores whether a general equation of science might exist—a single mathematical framework capable of unifying deterministic and probabilistic models across diverse domains. The following chapters present a candidate framework and examine its potential.
+
+The \textbf{frustration} has been equally persistent. Over the years we have presented these results to very different audiences: pure mathematicians, statisticians, mechanical engineers, AI researchers, and data scientists. Although all work with multivariate models, their interests and evaluation criteria are nearly incompatible.
+
+\begin{itemize}
+\item The \textbf{mathematician} demands \textbf{complete rigor}: exhaustive proofs, regularity conditions, full existence and uniqueness demonstrations.
+\item The \textbf{statistician} seeks \textbf{robust inference}, exhaustive empirical validation, and systematic comparisons with classical methods.
+\item The \textbf{engineer} (or applied scientist) needs \textbf{immediate utility}: simple formulas, implementable algorithms, and results that improve designs or predictions today.
+\item The \textbf{AI researcher} looks for \textbf{scalability and generality}: architectures that learn functions rather than merely weights, and that remain interpretable.
+\item The \textbf{data analyst} seeks \textbf{meaning hidden in data}: discovering patterns, quantifying uncertainty, validating models, and extracting knowledge that supports informed decisions.
+\end{itemize}
+
+Convincing all five communities at once is nearly impossible. Each group tends to see as ``lack of rigor'' what others consider ``excess formalism hindering progress.''
+
+That brings us to the book's central dilemma: \textbf{To what extent should mathematical rigor, empirical validation, algorithms, and function learning be pursued in a work that is, above all, conceptual, methodological, and applied?}
+
+We know that rigor is \textbf{necessary}. Without it, any universal framework becomes a collection of attractive but fragile heuristics. The proofs we present---universal factorization of joint distributions via Bayesian networks, uniqueness of functional form under aggregation and order properties, exclusive compatibility of Archimedean copulas under certain structural conditions, and the generalization of Sklar's theorem for groups---are rigorous, and we believe them to be mathematically natural.
+
+Yet rigor can also become a \textbf{brake on progress} when demanded to the extreme on every page. A book written solely for the pure mathematician would be unreadable for the engineer who must solve real problems tomorrow. Conversely, a book that sacrificed every proof for immediate practicality would lose scientific credibility. Similar arguments apply to the other three demands.
+
+We have chosen a \textbf{deliberate balance}. This is neither a treatise on pure mathematics nor a engineering handbook. It is a work of \textbf{conceptual and methodological synthesis}. In it we offer:
+
+\begin{enumerate}
+\item The essential mathematical results with enough rigor to be convincing and reproducible.
+\item The central proofs (usually the most beautiful ones).
+\item Computational tools (Python, OpenBUGS) and real examples for immediate application.
+\item And, above all, the \textbf{big picture}: the forest seen from the summit, after years of traversing the individual trees of fatigue analysis, functional equations, dimensional analysis, and probabilistic networks.
+\end{enumerate}
+
+This book is \textit{not} a book on probability, functional equations, dimensional analysis, copulas, or Bayesian networks per se, and readers should not treat it as such. Moreover, its multidisciplinary nature means that genuine specialists in all these areas are needed if solid developments are desired.
+
+If, at any point, the mathematician reader misses an extra condition or theoretical extension, we ask for understanding: we have consciously omitted it so as not to break the guiding thread. If the engineer finds some sections too formal, we ask for patience: that rigor is precisely what guarantees the method will not collapse when applied to new problems. And if the statistician or AI researcher misses exhaustive comparisons with other approaches, please know that we have prioritized them only when they genuinely clarify the universal framework we propose.
+
+Our intention is not to be ``right'' before any particular community, but to \textbf{offer a common language} that enables mathematicians, statisticians, engineers, and AI researchers to dialogue and collaborate more fruitfully. We believe science advances faster when the distance between theory and application shrinks, without sacrificing either.
+
+
+\subsection*{Reading guide}
+\begin{itemize}
+    \item \textbf{For mathematicians:} read Chapters \ref{ch:chap1}, \ref{ch:buckinghamPi}, \ref{ch:functionalequations}, \ref{ch:Piforms}, \ref{ch:universality_conditions}, \ref{ch:gensclak}$\tilde{}$.
+    \item \textbf{For statisticians:} read Chapters \ref{ch:chap1}, \ref{ch:cdftransformation}, \ref{ch:buckinghamPi}, \ref{ch:functionalequations}, \ref{ch:Piforms}, \ref{ch:copulas}--\ref{ch:copula-models}, \ref{ch:bayesiannetworks}--\ref{ch:ComputationalMethodPosterior}, \ref{ch:gensclak}, \ref{ch:Opacity}, \ref{ch:newfunctionalnetworks}, \ref{ch:newaitool}, \ref{ch:newfunctionalnetworks}.
+    \item \textbf{For engineers:} read Chapters \ref{ch:chap1}, \ref{ch:historicalFoundations}, \ref{ch:buckinghamPi}, \ref{ch:cdftransformation}, \ref{ch:copulas}, \ref{ch:fatigue_foundations}, \ref{ch:copula-models}, \ref{ch:bayesiannetworks}, \ref{ch:OpenBUGS}, \ref{ch:weibull-hyperbola}, \ref{ch:Opacity}.
+    \item \textbf{For AI researchers and Data Analists:} read Chapters \ref{ch:chap1}, \ref{ch:cdftransformation}, \ref{ch:buckinghamPi}, \ref{ch:functionalequations}, \ref{ch:Piforms}, \ref{ch:universality_conditions}, \ref{ch:bayesiannetworks}, \ref{ch:ComputationalMethodPosterior}, \ref{ch:gensclak}, \ref{ch:newaitool}, \ref{ch:newfunctionalnetworks}.
+\end{itemize}
+
+This guide does not solve the problem but makes it explicit and helps the reader navigate.
+
+However, one of the messages of the book is that an interdisciplinary perspective is highly enriching and consistently leads to advances in all the fields involved. We should all make a greater effort to explore other disciplines, learn from them, and discover the wealth of interesting and beautiful ideas they contain.
+
+\subsection*{What this book actually does – fundamental novelties}
+
+Based on the conclusions of Chapter~\ref{ch:conclusions}, the framework presented here differs from traditional dimensional analysis in several respects:
+
+\begin{enumerate}
+    \item \textbf{From reduction to structural determination} – The Buckingham \(\pi\) theorem only reduces the number of variables. Functional equations go further: they determine the complete family of admissible functions from properties such as additivity, translation invariance or associativity. The functional form is no longer a matter of convenience; it follows logically from the phenomena under study.
+
+    \item \textbf{The primacy of order – the ECDF transformation} – Relative order carries more essential information than absolute magnitude. The empirical cumulative distribution function (ECDF) maps every variable to \([0,1]\), producing dimensionless quantiles. This transformation is non‑parametric, order‑preserving and invertible. It gives a universal interpretability scale (0.02 means “only 2\% lie below”) that works across medicine, finance, engineering and AI without domain‑specific knowledge.
+
+    \item \textbf{The universal functional form from aggregation and order independence} – Under the two natural conditions that variables can be aggregated sequentially and that the final result must be independent of the aggregation order, the function \(\phi\) is forced into the additive form above. This structure underlies generalized additive models, Archimedean copulas and Kolmogorov–Arnold networks – all as special cases of a single, axiomatically justified framework.
+
+
+
+    \item \textbf{Conditions that any equation must satisfy to deserve the name of general equation of science} –  The reader will find that each of the previous and following novelties satisfies these conditions — not by accident, but by design.
+
+
+    \item \textbf{Axiomatic derivation of Archimedean copulas} – Combining the universal functional form with Sklar’s theorem shows that only Archimedean copulas are compatible with both aggregation and order independence. This provides a theoretical foundation for a widely used family, not as an empirical convenience but as a logical necessity.
+
+    \item \textbf{Bayesian networks as universal stochastic models} – Any multivariate distribution admits a factorisation into conditional probabilities (the Rosenblatt transformation). The directed acyclic graph makes conditional independencies explicit, and by retaining hidden variables \emph{parametrically} (instead of marginalising them), the output becomes a distribution over distributions – a powerful tool for reasoning about epistemic uncertainty.
+
+    \item \textbf{Bayesian methods and “perfect samples”} – Monte Carlo, MCMC and importance sampling make possible what analytical methods forbid. The “perfect sample” (quasi‑Monte Carlo) method achieves \(O(M^{-2})\) convergence, 10–15 times better than stochastic \(O(M^{-1/2})\). This is not a theoretical luxury: it feeds modern AI methods by generating unlimited synthetic data from the posterior predictive distribution.
+
+    \item \textbf{Actions and interactions models} – For three dimensionless variables, the most general trilinear interaction model yields rectangular hyperbolas. When combined with a three‑parameter Weibull distribution, this becomes a probabilistic model whose percentile curves are confocal hyperbolas – a structure that appears naturally in fatigue, creep, fracture, wear and corrosion.
+
+    \item \textbf{Opacity as a magnifying glass} – Three‑dimensional data projected onto two‑dimensional plots hide structure. Modulating opacity as a function of distance from a reference value makes the forest transparent: trunks (asymptotes), branches (interaction coefficients), leaves (percentile curves) and fruits (predictions) become visible. This is an epistemic tool.
+
+    \item \textbf{Redefining input and output – learn once, query arbitrarily} – In conventional neural networks, input/output roles are fixed during training. Here we treat all variables equivalently, learn the full joint relationship (via the Bayesian network factorisation), and then designate any subset as input and any subset as output \textbf{at query time} without retraining. This changes the traditional AI paradigm: the same model can predict forward or backward in time, answer different queries by simply changing which nodes are evidence, and perform sensitivity analysis in milliseconds.
+
+    \item \textbf{Conditioning on positive‑probability events} – Classical conditioning on continuous variables is defined on an event of probability zero, causing theoretical and numerical difficulties. We introduce an alternative definition using events of strictly positive probability (denoted with a double vertical bar). This makes the entire Bayesian network machinery valid for continuous variables without pathologies.
+
+    \item \textbf{Generalized Sklar theorem for groups} – Classical copulas separate only univariate marginals from dependence. Our generalisation allows copula decomposition to apply to arbitrary multivariate marginals, showing that Bayesian networks are strictly more powerful than classical copulas: they extend the separation property to groups of variables of any size.
+
+    \item \textbf{Synthetic data and data‑driven AI} – Once the model is learned, generating synthetic data from the posterior predictive distribution becomes routine. Queries can be answered by ad‑hoc simulations using data‑alone methods, a crucial capability for validation and AI applications where large datasets are often required but not always available.
+\end{enumerate}
+
+This book is thus both an \textbf{invitation} and a \textbf{map}. An invitation to see multivariate problems differently: not as collections of isolated variables, but as ordered structures that admit a common representation. And a map showing the path we have traveled---from the first fatigue studies in the early 1980s to the current integration of Bayesian and functional networks---and pointing toward routes still waiting to be explored.
+
+The following figure provides a graphical overview of the book.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.98\textwidth]{BookGeneralView.png}
+\caption{A general description of what this book is}
+\label{fig:GeneralView}
+\end{figure}
+
+We hope that, after closing these pages, the reader will consider the possibility that a general equation of science might be within reach, and that the framework presented here offers a useful starting point for further exploration. Collaboration across all the mentioned fields is what we call for (shared data, open source code, refereeing work, etc.).
+
+\smallskip
+
+\begin{flushright}
+{\it Enrique Castillo}\\
+ORCID iD: 0000-0002-8570-0844
+
+\vspace{0.4em}
+
+{\it Alfonso Fernández-Canteli}\\
+ORCID iD: 0000-0001-8071-9223
+\end{flushright}
+

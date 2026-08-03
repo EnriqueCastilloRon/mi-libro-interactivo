@@ -1,0 +1,1229 @@
+\startcontents[chapter]
+\chapter{Introduction to Copulas and Their Properties}\label{ch:copulas}
+\minitocboxed
+
+\section*{Introduction and Motivation}\label{sec:introduction}
+This chapter is the first of a new part of the book titled ‘Treating With Random Variables’, which deserves a justification.
+
+Up to now we have dealt with functions understood as general functions without any specification about their deterministic or probabilistic character. In this part we clearly turn to random or stochastic problems. The reason is that most if not all real problems are stochastic in nature. Real‑world phenomena rarely evolve in a perfectly deterministic way: uncertainty is not an exception but a fundamental characteristic of most systems encountered in science, engineering, economics, and artificial intelligence. Randomness therefore provides the natural mathematical framework for modeling reality. Far from being a limitation, stochastic modeling offers a remarkably general perspective: deterministic models can be interpreted as particular cases of stochastic models in which the associated probability distributions are degenerate (Dirac measures). From this perspective, probability theory provides a unified framework capable of representing both deterministic and non‑deterministic phenomena.
+
+We must take this stochastic nature into account and cannot ignore it for long. This moves us to choose multivariate cumulative distribution functions (CDFs) as our target functions. The decision to choose the multivariate joint CDF as the function to be learned has two major advantages. First, it extends the set of candidate problems to stochastic processes and probability models. Second, the CDF defines the whole scope of relations among all variables involved. Indeed, when studying a random system composed of several variables, the joint CDF uniquely determines the probability law of the random vector. Consequently, any probabilistic statement concerning the system can be expressed in terms of the joint CDF. Once the joint CDF of all variables is known, any probabilistic question can, in principle, be answered: probabilities of events, conditional behaviors, expectations, and risk measures can all be derived from this single object. The joint CDF therefore represents the ultimate goal of multivariate modeling: it contains the full information about both the individual behavior of each variable and the interactions among them.
+
+Recognizing this fact clarifies one of the central questions of this book: \emph{what class of multivariate functions is sufficiently general to describe real interactions while remaining mathematically tractable?} Once joint CDFs are accepted as the universal objects of interest, the problem becomes both precise and conceptually illuminating. We are no longer searching for arbitrary multivariate functions, but for structures capable of representing the complete probabilistic behavior of complex systems.
+
+A multivariate distribution contains two fundamentally different components of information:
+\begin{itemize}
+\item the behavior of each variable individually;
+\item the structure describing how variables interact.
+\end{itemize}
+Understanding whether these two components can be separated — and if so, how — constitutes one of the key conceptual challenges in multivariate statistics. The development of this chapter shows that such a separation is not only possible, but mathematically natural. Any joint distribution can be decomposed into its marginal distributions and a function that captures exclusively the dependence structure among variables. This decomposition reveals that dependence itself can be studied as an independent mathematical object, possessing its own properties, representations, and universal forms.
+
+The mathematical concept that makes this separation possible is the notion of a \emph{copula}, see \cite{DuranteSempi2015}. In addition, to be consistent with our decision of using variables that have been transformed to dimensionless variables and to the interval
+$[0,1]$, this chapter introduces copulas, which are multivariate CDFs defined on the hypercube $[0,1]^n$. They permit separating the learning process into two independent parts: first learning the univariate marginals, then learning the copula function that captures the pure dependence structure. Copulas are invariant under strictly increasing transformations, so they depend only on the ranks (the order) of the data — directly connecting with the ECDF transformation of Chapter~\ref{ch:Piforms}. Consequently, they capture the pure interaction structure independently of scales, units, or marginal shapes.
+
+This idea connects directly with the principles developed in previous chapters. In Chapter~\ref{ch:cdftransformation}, the ECDF transformation mapped variables into their percentile representation in $[0,1]$, preserving order relations while removing dimensional effects. The present chapter shows that this transformation does not merely simplify marginal behavior — it reveals the mathematical object that contains the full dependence structure. From this perspective, copulas appear not as an isolated construction, but as the natural continuation of the search for universal multivariate representations. The results that follow show that dependence admits a structural representation consistent with the same aggregation principles introduced in Chapter~\ref{ch:Piforms}. In particular, Archimedean copulas emerge as probabilistic realizations of the general functional forms derived previously.
+
+We present Sklar's theorem, the Fréchet–Hoeffding bounds, conditional distributions via copulas, and the three classical Archimedean families (Clayton, Gumbel, Frank). The theory of copulas therefore provides both conceptual clarity and practical power: it establishes a rigorous framework for modeling interactions, simplifies the construction of multivariate models, and reveals deep structural connections between probability theory, functional equations, and modern statistical learning.
+
+\section{Densities and Distribution Functions and Their Relationships}\label{sec:distributions}
+\subsection{Joint and marginal pdf and cdf of a multivariate variable}\label{subsec:joint_marginal}
+\begin{definition}[Joint cumulative distribution function (CDF)]
+Let $(X_1,\ldots,X_n)$ be a random vector. Its joint cumulative distribution function (CDF) is defined as:
+\begin{equation}\label{eq:joint_cdf}
+\boxed{F(x_1,\ldots,x_n)
+= \mathbb{P}(X_1 \le x_1,\ldots,X_n \le x_n).}
+\end{equation}
+\end{definition}
+\begin{definition}[Joint probability density function (PDF)]
+ Assume that the $F$ above is absolutely continuous. Then, its joint probability density function (PDF) is defined as:
+\begin{equation}\label{eq:joint_pdf}
+\boxed{f(x_1,\ldots,x_n)
+= \frac{\partial^n F(x_1,\ldots,x_n)}{\partial x_1 \cdots \partial x_n}.}
+\end{equation}
+\end{definition}
+The marginal CDF of $(X_{i_1},\ldots,X_{i_k})$, for indices $\{i_1,\ldots,i_k\} \subset \{1,\ldots,n\}$, is obtained by setting the remaining variables to $+\infty$:
+\begin{equation}\label{eq:marginal_cdf}
+F_{i_1,\ldots,i_k}(x_{i_1},\ldots,x_{i_k})
+=
+\lim_{\substack{x_j \to +\infty \\ j \notin \{i_1,\ldots,i_k\}}} F(x_1,\ldots,x_n).
+\end{equation}
+provided the limits exist, which is guaranteed since cumulative distribution
+functions are right-continuous and non-decreasing in each argument.
+
+The corresponding marginal density is
+\begin{equation}\label{eq:marginal_pdf}
+f_{i_1,\ldots,i_k}(x_{i_1},\ldots,x_{i_k})
+=
+\int_{\mathbb{R}^{n-k}}
+f(x_1,\ldots,x_n)
+\,
+\mathrm{d}x_{j_1}\cdots\mathrm{d}x_{j_{n-k}}.
+\end{equation}
+
+Equations (\ref{eq:marginal_cdf}) and (\ref{eq:marginal_pdf}) permit obtaining marginals of any dimension from the joint marginals.
+
+Every multivariate model faces the same fundamental question: how do the variables
+\emph{interact}? How does the value of one variable affect the distribution of another?
+And how can this interaction be characterized, estimated, and communicated in a way that
+is both mathematically rigorous and practically useful? These questions are at the heart
+of multivariate statistics, and their answer — at least in a wide and important class of
+problems — is the subject of this chapter: \textbf{copulas}.
+
+The word \emph{copula} comes from the Latin for ``link'' or ``bond,'' and the concept
+lives up to its etymology. A copula is a function that \emph{links} the marginal
+distributions of individual variables into a joint distribution, isolating — and making
+explicit — the pure dependence structure that connects them. This separation of
+dependence from marginal behavior is not merely a mathematical convenience; it is a
+conceptual revolution in how we think about multivariate relationships.
+
+\subsection*{The central problem: dependence vs.\ marginal behavior}
+
+To appreciate why copulas matter, consider the following situation. Two variables $X_1$
+and $X_2$ have known marginal distributions — perhaps $X_1$ follows a log-normal
+distribution and $X_2$ follows a Pareto distribution. The question is: what is their
+joint behavior? In classical multivariate statistics, the answer would typically require
+specifying a parametric joint distribution — a multivariate normal, perhaps — which
+immediately constrains both the marginals and the dependence structure simultaneously,
+often artificially.
+
+Copulas dissolve this constraint. By Sklar's theorem — the cornerstone result of this
+chapter — \emph{any} joint distribution can be decomposed into its marginals and a
+copula that carries all information about their dependence. Conversely, any copula can
+be combined with \emph{any} choice of marginals to produce a valid joint distribution.
+
+The copula and the marginals can be specified independently, a property that provides substantial modeling flexibility.
+
+This has a remarkable theoretical implication, which we will prove and discuss at
+length: \textbf{Copulas are invariant under strictly increasing transformations of the marginals.
+Consequently, the dependence structure depends only on the relative ordering of the
+observations (their ranks) and not on the particular marginal scales}. Two random vectors with entirely different marginal
+distributions but the same copula have exactly the same dependence structure — the same
+correlations, the same tail behavior, the same conditional relationships. The units of
+measurement, the scale, the marginal shape: none of these affect the copula. This is
+the mathematical formalization of a principle introduced in
+Chapter~\ref{ch:cdftransformation}: what matters is not where a value falls in an
+absolute sense, but where it stands relative to its own population.
+
+\subsection*{Connection to previous chapters}
+
+This chapter is a natural continuation of the ideas developed earlier in this book.
+In Chapter~\ref{ch:cdftransformation}, we introduced the ECDF transformation,
+which maps every variable to its quantile or percentile in $[0,1]$. We noted that this
+transformation is order-preserving and therefore leaves all dependence relationships
+intact. That observation was the first hint of a deeper truth: the empirical probability integral transform produces approximately uniform marginals,
+converging to the population copula as sample size increases. Working with copulas is, in a precise sense, the natural continuation of working
+with percentile-transformed variables.
+
+In Chapter~\ref{ch:Piforms}, we showed that any function of dimensionless variables
+satisfying natural aggregation conditions must have the form
+$\phi(\pi_1,\ldots,\pi_n) = p(p_1(\pi_1) + \cdots + p_n(\pi_n))$.
+Archimedean copulas — one of the most important and widely used families — are
+\emph{exactly} of this form, with $p = \phi^{[-1]}$ and $p_j = \phi$ for all $j$. The
+framework of Chapter~\ref{ch:Piforms} thus provides the structural justification for
+why Archimedean copulas have the form they do, and the present chapter provides the
+probabilistic interpretation of that structure.
+
+\subsection*{What this chapter covers and what the reader will gain}
+
+The chapter develops the theory of copulas from its foundations to its most practically
+useful results. Starting from the formal definition, we proceed through Sklar's theorem,
+the Fréchet–Hoeffding bounds, the general formulas for conditional distributions, the
+factorization of joint densities into copula density and marginal densities, and the
+bivariate specialization of all these results. We then introduce Archimedean copulas as
+a concrete and computationally tractable family, with three classical examples — Clayton,
+Gumbel, and Frank — that cover a wide range of dependence behaviors.
+
+By the end of this chapter, the reader will understand:
+\begin{itemize}
+    \item Why the dependence structure of a multivariate distribution is entirely
+    captured by its copula, independently of the marginals.
+
+    \item How to move freely between a joint distribution and its copula, in both
+    directions, using Sklar's theorem.
+
+    \item How to compute conditional distributions, conditional densities, and
+    conditional copulas in the general multivariate case and in the bivariate
+    specialization.
+
+    \item Why all CDFs sharing the same copula have identical interaction structures
+    among all groups of variables — and what this means for model selection in
+    practice.
+
+    \item How Archimedean copulas connect to the general functional form derived in
+    Chapter~\ref{ch:Piforms}, and why this connection is not a coincidence.
+\end{itemize}
+
+\noindent These results are not only theoretically elegant — they have immediate and
+substantial consequences for modeling in finance, hydrology, reliability engineering,
+Bayesian networks, and artificial intelligence, as the final section of this chapter
+will discuss.
+
+\section{Definition and Basic Properties of Copulas}\label{sec:definition}
+\begin{definition}[Definition of Copula]
+\label{def:copula}
+A copula is a multivariate cumulative distribution function (cdf), $C(u_1,u_2,\ldots,u_n)$, that has uniform marginals, that is, all their univariate marginals are standard uniform distributions.
+\end{definition}
+
+Consequently, using a copula as a model implies, not only that all the data are reduced to the range $[0,1]$, but that they have uniform marginals.
+
+Fortunately, the empirical cdf function provides us with these properties and, in addition, gives us dimensionless variables.
+
+Alternatively, one can use the following equivalent definition.
+\begin{definition}[Alternative Definition of Copula]
+\label{def:copula_alternative}
+ A copula $C : [0,1]^n \to [0,1]$ is a function that satisfies the following properties:
+\begin{itemize}
+\item \textbf{Grounded:} $C(u_1,\ldots,u_n) = 0$ if $u_i = 0$ for any $i$.
+\item \textbf{Uniform marginals:} $C(1,\ldots,1,u_i,1,\ldots,1) = u_i$ for all $u_i \in [0,1]$.
+\item \textbf{$n$-increasing:} For any hyper-rectangle $[a_1,b_1] \times \ldots \times [a_n,b_n] \subset [0,1]^n$, the $C$-volume is non-negative, i.e., $\sum_{i_1 \in \{a_1, b_1\}} \ldots \sum_{i_n \in \{a_n, b_n\}} (-1)^{N(i_1, \ldots, i_n)} C(i_1, \ldots, i_n) \geq 0$, where $N(i_1, \ldots, i_n)$ counts the number of indices where $i_k = a_k$.
+\end{itemize}
+\end{definition}
+This alternative definition clarifies the conditions that have to be satisfied for the copula, that is a cdf be well defined.
+
+Figure \ref{fig:copulaIllustraion} illustrates the relevance of copulas and that marginal cdfs permit identiying the copula associated with a cdf and how many cdfs can be generated from the same copula.
+
+\begin{figure}[!h]
+\centering
+%\vec{\includegraphics}[width=0.8\textwidth]{CopulaIllustration.png}
+\begin{tikzpicture}[
+    scale=0.9,
+    transform shape,
+    font=\sffamily,
+    marginalbox/.style={
+        draw=blueborder, fill=boxbluebg, line width=1.5pt, rounded corners=5pt,
+        minimum width=3.2cm, minimum height=0.9cm, align=center, font=\bfseries\large
+    },
+    jointbox/.style={
+        rectangle, draw=#1, fill=white, line width=1.5pt, rounded corners=5pt,
+        minimum width=3.0cm, minimum height=1.5cm, align=center
+    },
+    linkarrow/.style={
+        -{Triangle[scale=0.8]}, draw=mainblue, line width=3.5pt
+    }
+]
+
+% Título principal
+\node (title) [align=center, text=mainblue, minimum width=12cm] {
+    \fontsize{20}{24}\selectfont\bfseries ONE COPULA -- INFINITELY MANY\\[6pt]
+    \fontsize{20}{24}\selectfont\bfseries JOINT DISTRIBUTIONS
+};
+
+% Cópula central
+\node (copula) [
+    draw=purpleborder, fill=boxpurplebg, line width=1.8pt, rounded corners=8pt,
+    minimum width=4.5cm, minimum height=4.5cm, align=center, below=2.2cm of title
+] {
+    \textbf{\Large COPULA}\\[4pt]
+    \fontsize{15}{18}\selectfont $C(u_1, \dots, u_n)$ \\[10pt]
+    \begin{tikzpicture}[scale=0.5, every node/.style={circle, draw=purpleborder, fill=purpleborder!30, line width=1.2pt, inner sep=0pt, minimum size=7pt}]
+        \node (n1) at (0,0.8) {};
+        \node (n2) at (1.5,1.5) {};
+        \node (n3) at (3,0.8) {};
+        \node (n4) at (0,-0.8) {};
+        \node (n5) at (1.5,-1.5) {};
+        \node (n6) at (3,-0.8) {};
+        \node (n7) at (1.5,0) {};
+        \draw[purpleborder, line width=1.2pt] (n1)--(n2) (n2)--(n3) (n1)--(n7) (n2)--(n7) (n3)--(n7)
+            (n4)--(n7) (n5)--(n7) (n6)--(n7) (n1)--(n4) (n4)--(n5) (n5)--(n6) (n3)--(n6);
+    \end{tikzpicture}
+};
+
+% --- COLUMNA IZQUIERDA (Different Marginals) ---
+% Cajas marginales
+\node (m3) [marginalbox, left=1.2cm of copula] {Lognormal};
+\node (m2) [marginalbox, above=0.35cm of m3] {Gamma};
+\node (m1) [marginalbox, above=0.35cm of m2] {Normal};
+\node (m4) [marginalbox, below=0.35cm of m3] {Bimodal};
+\node (m5) [marginalbox, below=0.35cm of m4] {Weibull};
+
+% Título izquierdo (justo encima de la caja superior)
+\node (left_title) [text=mainblue, font=\bfseries\large, above=0.4cm of m1.north, anchor=south] {Different Marginals};
+
+% --- COLUMNA DERECHA (Different Joint Distributions) ---
+% Cajas de distribuciones conjuntas (más separadas verticalmente)
+\node (j1) [jointbox=blueborder, right=1.2cm of copula, yshift=1.8cm] {
+    \begin{tikzpicture}[scale=0.3, baseline=-0.1cm]
+        \foreach \r in {0.3, 0.6, 1.0, 1.5, 2.1}
+            \draw[blueborder, line width=0.6pt, rotate=30] (0,0) ellipse (\r*1.8 and \r*0.9);
+    \end{tikzpicture}
+};
+\node (j2) [jointbox=greenborder, right=1.2cm of copula, yshift=0cm] {
+    \begin{tikzpicture}[scale=0.3, baseline=-0.1cm]
+        \foreach \r in {0.4, 0.8, 1.3, 1.8, 2.3}
+            \draw[greenborder, line width=0.6pt, samples=40, domain=0:360]
+                plot (\x:{\r*(1 + 0.15*sin(3*\x))});
+    \end{tikzpicture}
+};
+\node (j3) [jointbox=orangeborder, right=1.2cm of copula, yshift=-1.8cm] {
+    \begin{tikzpicture}[scale=0.3, baseline=-0.1cm]
+        \foreach \r in {0.3, 0.7, 1.2, 1.8, 2.4}
+            \draw[orangeborder, line width=0.6pt, domain=0:360, samples=50]
+                plot ({\r*cos(\x)*(1+0.2*cos(\x))}, {\r*sin(\x)*(1+0.1*sin(\x))});
+    \end{tikzpicture}
+};
+
+% Título derecho (justo encima de la caja superior derecha)
+\node (right_title) [text=mainblue, font=\bfseries\large, above=0.4cm of j1.north, anchor=south, align=center] {Different\\Joint Distributions};
+
+% --- FLECHAS DE CONEXIÓN ---
+% Izquierda -> cópula
+\foreach \m in {m1,m2,m3,m4,m5} {
+    \draw[linkarrow] (\m.east) -- ++(0.4cm,0) |- (copula.west);
+}
+% Cópula -> derecha
+\draw[linkarrow] (copula.east) -- ++(0.4cm,0) |- (j1.west);
+\draw[linkarrow] (copula.east) -- ++(0.4cm,0) |- (j2.west);
+\draw[linkarrow] (copula.east) -- ++(0.4cm,0) |- (j3.west);
+
+% --- BLOQUE INFERIOR COMBINADO ---
+\node (bottom) [draw=purpleborder, fill=boxpurplebg, line width=1.8pt, rounded corners=8pt,
+                minimum width=9cm, minimum height=2.2cm, align=center, font=\bfseries\large,
+                below=1.2cm of copula] {
+    Same Dependence Structure\\[6pt]
+    \normalfont\large Different Marginals $\rightarrow$ Different Joint Distributions
+};
+\draw[linkarrow] (copula.south) -- (bottom.north);
+
+\begin{scope}[on background layer]
+    \node[
+        draw=mainblue,
+        fill=orange!35,
+        line width=2.5pt,
+        rounded corners=12pt,
+        inner sep=22pt,
+        fit=(title) (copula) (left_title) (right_title)
+            (m1) (m2) (m3) (m4) (m5)
+            (j1) (j2) (j3) (bottom)
+    ] (frame) {};
+\end{scope}
+
+\end{tikzpicture}
+\caption{A graphical illustration of copulas showing that copulas reflect a wide class of cdf distributions that share the same interactions. }
+\label{fig:copulaIllustraion}
+\end{figure}
+
+
+
+
+
+Thus, copulas are widely used in various fields due to their ability to model dependence structures independently of marginal distributions. Key applications include: finance, insurance, hydrology, machine learning, reliability engineering, etc.
+
+\subsection*{Fréchet-Hoeffding lower and upper bounds}
+Any copula $C(u_1,u_2,\ldots,u_n)$ is bounded by the Fréchet-Hoeffding lower and upper bounds copulas:
+\begin{equation}
+W(u_1,\ldots,u_n) = \max\left\{\sum_{i=1}^n u_i - (n-1), 0\right\} \leq C(u_1,\ldots,u_n) \leq \min(u_1,\ldots,u_n) = M(u_1,\ldots,u_n).
+\label{eq:frechetbounds}
+\end{equation}
+
+The upper bound represents perfect positive dependence (comonotonicity), where $U_1 = U_2 = \cdots = U_n$ with probability 1, and is always a valid copula, while the lower bound attempts to model perfect negative dependence (countermonotonicity) defines a valid copula only in dimension two. For n ≥ 3, no copula exists that simultaneously attains the lower Fréchet bound for all arguments.
+
+Knowing explicit upper and lower bounds in terms of marginal distributions provides
+valuable information for both theoretical analysis and numerical computation. It can help to find upper and lower bounds, which are very useful to avoid certain problems in numerical methods.
+
+The previous sections suggest that the dependence structure should be expressible
+independently of the marginal distributions. The key question is therefore whether
+every multivariate distribution admits such a decomposition, and whether this
+decomposition is unique.
+
+The remarkable answer is affirmative. Sklar's theorem establishes that any joint
+distribution can be expressed as the composition of its marginal distributions with a
+copula. Conversely, any copula combined with any set of marginals generates a valid
+joint distribution.
+
+Thus, the separation between marginal behavior and interaction structure is not a
+modeling assumption but a mathematical fact.
+
+This structural decomposition also connects with the representation principles
+underlying Kolmogorov and Arnold type models and functional networks. In those frameworks,
+multivariate relationships are expressed as compositions of univariate functions and
+aggregation operators. Archimedean copulas follow precisely this structure:
+\[
+C(u_1,\ldots,u_n) = \phi^{[-1]}(\phi(u_1)+\cdots+\phi(u_n)),
+\]
+which corresponds to an additive aggregation in transformed coordinates.
+
+This correspondence indicates that the functional structures derived from invariance
+and aggregation principles are not limited to deterministic modeling. They also appear
+naturally in probability theory when one seeks representations of dependence that are
+stable under monotone transformations. Copulas therefore provide the probabilistic
+counterpart of the structural representations developed earlier in the book.
+
+\section{Sklar's Theorem}\label{sec:sklar}
+Sklar's Theorem provides the fundamental connection between joint distributions and copulas, see \cite{Sklar1959}, \cite{Schweizer1983}, \cite{Sklar1996} and \cite{Joe2014}.
+\begin{theorem}[Sklar's Theorem]
+\label{thm:sklar}
+For any multivariate cumulative distribution function (CDF) $F(x_1,\ldots, x_n)$ with marginal CDFs $F_1(x_1),\ldots,F_n(x_n)$, there exists a copula $C : [0,1]^n \to [0,1]$ such that:
+\begin{equation}
+F(x_1,\ldots, x_n) = C(F_1(x_1),\ldots,F_n(x_n)).
+\label{eq:sklarforward}
+\end{equation}
+If the marginal distributions $F_1,\ldots,F_n$ are continuous, then the copula $C$ is unique and is given by
+\begin{equation}
+C(u_1,\ldots,u_n) = F(F_1^{-1}(u_1),\ldots,F_n^{-1}(u_n)),
+\label{eq:sklarinverse}
+\end{equation}
+where $F_i^{-1}$ is the quantile function (inverse CDF) of the $i$-th marginal.
+\end{theorem}
+
+If the marginals are not continuous, the copula is uniquely determined only on the
+range of the marginal distributions.
+
+Expressions~\eqref{eq:sklarforward} and~\eqref{eq:sklarinverse} permit moving from the copula to the associated CDF and vice versa, respectively. Though the copula associated with a continuous CDF is unique, an infinite number of CDFs shares the same copula. The degrees of freedom in constructing joint distributions sharing the same copula
+lie entirely in the choice of marginal distributions, that is, \textbf{what is important are not the variable values, but their rank.} The reader should dedicate some time to think about this property if it is the first time such breaking and surprising property comes to its mind.
+Consequently, this theorem allows the separation of the dependence structure (captured by the copula) from the marginal distributions, that is, the contribution of interactions among variables from the influence of individual variables on the joint distribution.
+
+\textbf{In fact, all multivariate distributions sharing the same copula possess the same dependence
+structure in the sense that any measure of dependence invariant under strictly
+increasing marginal transformations takes the same value. This is a very relevant result, because it reduces the search space for the best solution when one looks for adequate models to be used in real practice.}
+
+\section{From Distributions to Copulas and Back}\label{subsec:conversion}
+In this section we show how the copula associated with a cdf can be obtained and vice versa. Both are very interesting problems in statistical practice. As indicated, one can eliminate the inluence of marginal transformations while keeping the whole multivariate dependence structure.
+
+The joint probability density function (PDF), assuming the joint distribution $F$ is absolutely continuous with marginal density functions $f_1(x_1),\ldots, f_n(x_n)$, is given by
+\begin{equation}
+\boxed{
+f(x_1,\ldots, x_n)
+= c_{1,\ldots,n}(F_1(x_1),\ldots,F_n(x_n)) \cdot \prod_{i=1}^n f_i(x_i),
+\label{eq:jointdensity}
+}
+\end{equation}
+provided that the joint distribution is absolutely continuous and the copula is
+n-times differentiable,
+where
+\begin{equation}
+\boxed{c(u_1,\ldots,u_n)
+= \frac{\partial^n C(u_1,\ldots,u_n)}{\partial u_1 \cdots \partial u_n}
+}
+\end{equation}
+is the copula density. Note that since the copula cdf $C()$ is a cdf and the density $c()$ is a real density, all the formulas for cdf and pdf are valid for copulas, in particular those in this chapter.
+
+From (\ref{eq:jointdensity}), we also get
+\begin{equation}
+\boxed{
+ c(u_1,\ldots,u_n)
+= \frac{f(F^{-1}(u_1),\ldots, F^{-1}(u_n))}{\prod_{i=1}^n f_i(F^{-1}(u_i))}
+}
+\label{eq:copuladensity}
+\end{equation}
+\textbf{The copula density can be interpreted as the Radon–Nikodym derivative of the joint
+distribution with respect to the product measure of the marginals. Consequently, it
+acts as a likelihood ratio measuring deviation from independence. A remarkable property that permits understanding what the copula density means.}
+
+Formulas \ref{eq:jointdensity} and \ref{eq:copuladensity} permit moving from a pdf to its copula density and vice versa, respectively.
+
+For the $i$-th variable, the marginal CDF is obtained by setting all other arguments to 1 in the copula:
+\begin{equation}
+F_i(x_i) = C(1,\ldots,1,F_i(x_i),1,\ldots,1).
+\end{equation}
+This reflects the property that the copula preserves the marginal distributions as originally defined.
+
+
+Figure \ref{fig:RelSklarTh} explains the role of Sklar's theorem and its practical relevance.
+
+\begin{figure}[!h]
+\centering
+%\includegraphics[width=0.8\textwidth]{CopulaIMAGE.png}
+\begin{tikzpicture}
+
+    % Marco exterior
+    \node[
+        outer box,
+        fill=blue!8,
+        text width=7.8cm,
+        minimum height=12.3cm
+    ] (container) {};
+
+    % Título
+    \node[
+        anchor=north,
+        yshift=-15pt,
+        text=mainblue,
+        font=\bfseries\Large,
+        align=center
+    ] (title) at (container.north) {
+        DEPENDENCE STRUCTURE\\VIA COPULAS
+    };
+
+    % Bloque 1
+    \node[
+        blue box,
+        fill=blue!15,
+        yshift=-2.9cm
+    ] (b1) at (container.north) {
+        \textbf{Marginal Distributions}\\[2pt]
+        $F_1(u_1), F_2(u_2), \dots, F_n(u_n)$
+    };
+
+    % Bloque 2
+    \node[
+        blue box,
+        fill=cyan!15,
+        below=0.6cm of b1
+    ] (b2) {
+        \textbf{Uniform Variables}\\[2pt]
+        $u_i = F_i(q_i)\in[0,1]$
+    };
+
+    % Bloque 3
+    \node[
+        purple box,
+        fill=violet!18,
+        below=0.6cm of b2
+    ] (b3) {
+        \textbf{Copula $C(u_1,\dots,u_n)$}\\
+        \vspace{1pt}
+        \small \textbf{Captures Dependence Only}
+    };
+
+    % Bloque 4
+    \node[
+        purple box,
+        fill=magenta!12,
+        below=0.6cm of b3
+    ] (b4) {
+        \textbf{Dependence Structure}\\
+        \vspace{1pt}
+        \small \textbf{(Independent of Marginals)}
+    };
+
+    % Bloque 5
+    \node[
+        blue box,
+        fill=green!12,
+        text width=7.2cm,
+        below=0.6cm of b4
+    ] (b5) {
+        \textbf{Joint Distribution}\\[2pt]
+        $H(q_1,\dots,q_n)=C(F_1(q_1),\dots,F_n(q_n))$
+    };
+
+    % Flechas
+    \draw[downarrow] (b1.south) -- (b2.north);
+    \draw[downarrow] (b2.south) -- (b3.north);
+    \draw[downarrow] (b3.south) -- (b4.north);
+    \draw[downarrow] (b4.south) -- (b5.north);
+
+\end{tikzpicture}
+\caption{Illustration of the practical importance of Sklar theorem.}
+\label{fig:RelSklarTh}
+\end{figure}
+
+\section{Conditional Distributions in the General Case}\label{sec:conditional_general}
+Conditional distributions play a central role in applications, particularly in
+Bayesian networks and probabilistic models used in artificial intelligence.
+
+\begin{definition}[Joint conditional cumulative distribution function]
+Assume that $F$ is absolutely continuous. For $1 \le k < n$, the conditional CDF of
+$(X_1,\ldots,X_k)$ given $(X_{k+1},\ldots,X_n) = (x_{k+1},\ldots,x_n)$ is defined as:
+\begin{equation}\label{eq:conditional_cdf_def}
+F_{1,\ldots,k \mid k+1,\ldots,n}(x_1,\ldots,x_k \mid x_{k+1},\ldots,x_n)
+= \mathbb{P}\left[X_1\le x_1, \ldots, X_k \le x_k \mid X_{k+1}=x_{k+1},\ldots, X_n = x_n\right].
+\end{equation}
+\end{definition}
+This can be expressed in terms of the joint CDF as:
+\begin{equation}\label{eq:conditional_cdf_via_joint}
+F_{1,\ldots,k \mid k+1,\ldots,n}(x_1,\ldots,x_k \mid x_{k+1},\ldots,x_n)
+=
+\frac{\displaystyle
+\frac{\partial^{n-k} F(x_1,\ldots,x_k, x_{k+1},\ldots,x_n)}{\partial x_{k+1} \cdots \partial x_n}
+}{
+\displaystyle
+\frac{\partial^{n-k} F(+\infty,\ldots,+\infty, x_{k+1},\ldots,x_n)}{\partial x_{k+1} \cdots \partial x_n}
+}.
+\end{equation}
+\begin{definition}[Joint conditional probability density function]
+For $1 \le k < n$, the conditional PDF of $(X_1,\ldots,X_k)$ given
+$(X_{k+1},\ldots,X_n) = (x_{k+1},\ldots,x_n)$ is defined as:
+\begin{equation}\label{eq:conditional_pdf_def}
+f_{1,\ldots,k \mid k+1,\ldots,n}(x_1,\ldots,x_k \mid x_{k+1},\ldots,x_n)
+=
+\frac{\partial^k}{\partial x_1 \cdots \partial x_k}
+F_{1,\ldots,k \mid k+1,\ldots,n}(x_1,\ldots,x_k \mid x_{k+1},\ldots,x_n).
+\end{equation}
+\end{definition}
+
+Equivalently, it can be expressed as the ratio of joint to marginal densities:
+\begin{equation}\label{eq:conditional_pdf_ratio}
+f_{1,\ldots,k \mid k+1,\ldots,n}(x_1,\ldots,x_k \mid x_{k+1},\ldots,x_n)
+=
+\frac{
+f(x_1,\ldots,x_n)
+}{
+f_{k+1,\ldots,n}(x_{k+1},\ldots,x_n)
+},
+\end{equation}
+where the marginal density is given by:
+\begin{equation}\label{eq:marginal_density}
+f_{k+1,\ldots,n}(x_{k+1},\ldots,x_n)
+=
+\int_{\mathbb{R}^k}
+f(x_1,\ldots,x_k, x_{k+1},\ldots,x_n) \, \mathrm{d}x_1 \cdots \mathrm{d}x_k.
+\end{equation}
+
+\begin{remarkbox}
+\begin{remarkT}
+The relationship between the conditional CDF and PDF can also be expressed as:
+\begin{equation}\label{eq:cdf_from_pdf}
+F_{1\ldots k \mid k+1\ldots n}(x_1\ldots x_k \mid x_{k+1}\ldots x_n)
+=\!\!
+\int_{-\infty}^{x_1} \!\!\!\! \ldots \!\!\!\! \int_{-\infty}^{x_k}
+f_{1,\ldots,k \mid k+1,\ldots,n}(t_1,\ldots,t_k \mid x_{k+1},\ldots,x_n)
+\, \mathrm{d}t_1 \cdots \mathrm{d}t_k.
+\end{equation}
+\end{remarkT}
+\end{remarkbox}
+
+\subsection{Conditional pdf and cdf expressed via copulas}
+The conditional density of $(X_1,\ldots,X_k)$ given $(X_{k+1},\ldots,X_n) = (x_{k+1},\ldots,x_n)$ is
+\begin{equation}\label{eq:conditional_density_copula}
+f_{1,\ldots,k \mid k+1,\ldots,n}(x_1,\ldots,x_k \mid x_{k+1},\ldots,x_n)
+= c\bigl(u_1,\ldots,u_k \mid u_{k+1},\ldots,u_n\bigr)
+\cdot \prod_{i=1}^k f_i(x_i),
+\end{equation}
+where $u_i = F_i(x_i)$ for $i=1,\ldots,n$, and the conditional copula density is defined as
+\begin{equation}\label{eq:conditional_copula_density}
+c(u_1,\ldots,u_k \mid u_{k+1},\ldots,u_n)
+:= \frac{
+c(u_1,\ldots,u_n)
+}{
+c(u_{k+1},\ldots,u_n)
+},
+\end{equation}
+with $c(u_{k+1},\ldots,u_n)$ being the marginal copula density of $(U_{k+1},\ldots,U_n)$ is strictly positive.
+
+Of special relevance to implement the conditional probability factors of Bayesian networks are the formulas
+\begin{equation}\label{eq:conditional_BN}
+f_{k\mid 1,\ldots,k-1}(x_k\mid x_{1},\ldots,x_{k-1})
+= c\bigl(F_k(x_k)\mid F_1(x_1),\ldots,F_{k-1}(x_{k-1})\bigr)
+\cdot f_k(x_k),
+\end{equation}
+and
+\begin{equation}\label{eq:conditional_BN1}
+c(u_k\mid u_{1},\ldots,u_{k-1})
+:= \frac{
+c(u_1,\ldots,u_k)}{
+c(u_{1},\ldots,u_{k-1})
+},
+\end{equation}
+
+\subsubsection*{Conditional Distribution Function (Copula Derivative Form)}
+
+Let $(U_1,\ldots,U_n)$ be a random vector with copula $C$, assumed to be
+absolutely continuous with respect to Lebesgue measure.
+For $k \in \{2,\ldots,n\}$, suppose that the partial derivatives of $C$ of order
+$k-1$ exist and are continuous, and that
+\[
+\frac{\partial^{k-1} C(u_1,\ldots,u_{k-1}, \mathbf{1}_{n-k+1})}
+{\partial u_1\cdots\partial u_{k-1}}
+> 0.
+\]
+
+\begin{theorem}[Conditional Copula Distribution Function]
+The conditional distribution function of $U_k$ given
+$(U_1,\ldots,U_{k-1})=(u_1,\ldots,u_{k-1})$ is
+\begin{equation}\label{eq:conditional_copula_cdf}
+C(u_k \mid u_1,\ldots,u_{k-1})
+=
+\frac{
+\displaystyle
+\frac{\partial^{k-1} C(u_1,\ldots,u_{k-1}, u_k, \mathbf{1}_{n-k})}
+{\partial u_1\cdots\partial u_{k-1}}
+}{
+\displaystyle
+\frac{\partial^{k-1} C(u_1,\ldots,u_{k-1}, \mathbf{1}_{n-k+1})}
+{\partial u_1\cdots\partial u_{k-1}}
+},
+\qquad u_k \in [0,1],
+\end{equation}
+where $\mathbf{1}_m$ denotes a vector of $m$ components equal to $1$ and assuming that C is k-times continuously differentiable on $(0,1)^n$.
+\end{theorem}
+
+\begin{corollary}[Conditional Copula Density]
+Under the same assumptions, the conditional density of $U_k$ given
+$(U_1,\ldots,U_{k-1})=(u_1,\ldots,u_{k-1})$ is given by
+\begin{equation}\label{eq:conditional_copula_densitya}
+c(u_k \mid u_1,\ldots,u_{k-1})
+=
+\frac{
+\displaystyle
+\frac{\partial^{k} C(u_1,\ldots,u_{k-1}, u_k, \mathbf{1}_{n-k})}
+{\partial u_1\cdots\partial u_{k}}
+}{
+\displaystyle
+\frac{\partial^{k-1} C(u_1,\ldots,u_{k-1}, \mathbf{1}_{n-k+1})}
+{\partial u_1\cdots\partial u_{k-1}}
+},
+\qquad u_k \in (0,1).
+\end{equation}
+\end{corollary}
+
+\begin{remarkbox}
+\begin{remarkT}[Connection with Vine and Pair-Copula Constructions]
+The conditional copula distribution function in
+\eqref{eq:conditional_copula_cdf} plays a central role in vine copula models.
+In particular, for regular vines, conditional distribution functions of the
+form $C(u_k \mid u_1,\ldots,u_{k-1})$ are evaluated recursively and serve as inputs to higher-order pair-copulas.
+This representation allows high-dimensional dependence structures to be
+constructed from bivariate copulas and their associated conditional
+distributions. See, for example, the pair-copula construction introduced by
+Aas et al.~\cite{Aas2009}.
+\end{remarkT}
+\end{remarkbox}
+
+\begin{remarkbox}
+\begin{remarkT}[Interpretation]
+The appearance of partial derivatives of the copula reflects the fact that
+conditioning on continuous random variables requires densities rather than
+probabilities. Since copula densities are obtained as derivatives of the copula
+function, conditional copula distributions naturally admit representations in
+terms of ratios of partial derivatives. This mirrors the classical identity
+\[
+\text{conditional distribution}
+=
+\frac{\text{joint distribution}}{\text{marginal distribution},
+}
+\]
+expressed at the copula level.
+\end{remarkT}
+\end{remarkbox}
+
+
+\section{Examples of Copulas}\label{sec:examplesa}
+\subsection{Examples of Archimedean copulas}\label{subsec:archimedean}
+In this subsection we introduce a very important and well known type of copulas, the Archimedean copulas.
+\begin{definition}[Archimedean copulas]
+\label{def:archimedean}
+An Archimedean copula is a function $C : [0,1]^n \to [0,1]$ that can be expressed in the form
+\begin{equation}
+C(u_1, u_2, \dots, u_n) = \phi^{[-1]}(\phi(u_1) + \phi(u_2) + \dots, + \phi(u_n)),
+\label{eq:archimedeandef}
+\end{equation}
+where $\phi : [0,1] \to [0,\infty]$ is a strictly decreasing, convex, and continuous generator function with $\phi(1) = 0$, and $\phi^{[-1]}$ is the generalized inverse defined as
+\begin{equation}
+\phi^{[-1]}(t) = \begin{cases}
+\phi^{-1}(t) & \text{if } 0 \leq t \leq \phi(0), \\
+0 & \text{if } t > \phi(0).
+\end{cases}
+\label{eq:generalizedinverse}
+\end{equation}
+The generator $\phi$ must be completely monotone on $[0,∞)$ in order to ensure that the function defines a valid copula in dimension $n$.
+\end{definition}
+
+The function $\phi$ defines the properties of the copula, and each type of Archimedean copula is determined by a specific generator function.
+
+The readers can easily identify here the associative and the corresponding function, $f() \equiv \phi()$, in equation~\eqref{eq:archimedeandef}.
+
+Three interesting examples of one-parameter Archimedean copulas are:
+\subsubsection*{Clayton Copula}
+The Clayton copula has distribution function and generator function:
+\begin{align}
+C(u, v) &= (u^{-\theta} + v^{-\theta} - 1)^{-1/\theta}, \quad \theta \in [-1,\infty) \setminus \{0\} \\
+\phi(t) &= \frac{1}{\theta}(t^{-\theta} - 1).
+\end{align}
+\subsubsection*{Gumbel Copula}
+The Gumbel copula has distribution function and generator function:
+\begin{align}
+C(u, v) &= \exp\left(-\left[(-\ln u)^\theta + (-\ln v)^\theta\right]^{1/\theta}\right), \quad \theta \in [1,\infty) \\
+\phi(t) &= (-\ln t)^\theta.
+\end{align}
+\subsubsection*{Frank Copula}\label{FrankCopula}
+The Frank copula has distribution function and generator function:
+\begin{align}
+C(u, v) &= -\frac{1}{\theta} \ln\left(1 + \frac{(e^{-\theta u} - 1)(e^{-\theta v} - 1)}{e^{-\theta} - 1}\right), \quad \theta \in \mathbb{R} \setminus \{0\} \\
+\phi(t) &= -\ln\left(\frac{e^{-\theta t} - 1}{e^{-\theta} - 1}\right).
+\end{align}
+\section{The Bivariate Case: Specialization of General Formulas}\label{sec:bivariate}
+Let $(X_1,X_2)$ be a bivariate random vector with joint CDF $F_{X_1,X_2}(x_1,x_2)$ and marginals $F_{X_1}(x_1)$, $F_{X_2}(x_2)$. This section presents the specialization of the general multidimensional formulas from previous sections to the case $n=2$, $k=1$.
+\subsection{Conditional cdf via joint distribution}\label{subsec:bivariate_conditional_cdf}
+Applying \eqref{eq:conditional_cdf_via_joint} with $n=2$, $k=1$ gives the conditional CDF of $X_2$ given $X_1=x_1$:
+\begin{equation}\label{eq:bivariate_conditional_cdf}
+F_{X_2\mid X_1}(x_2\mid x_1) = \frac{\displaystyle \frac{\partial}{\partial x_1} F_{X_1,X_2}(x_1,x_2)}{f_{X_1}(x_1)},
+\end{equation}
+where $f_{X_1}(x_1) = \frac{d}{dx_1} F_{X_1}(x_1)$ is the marginal density of $X_1$. This formula represents the probability that $X_2 \le x_2$ given that $X_1$ takes the specific value $x_1$, expressed in terms of the joint distribution.
+
+\textbf{Conditions:} Assume that:
+\begin{itemize}
+\item The joint distribution $F_{X_1,X_2}$ is absolutely continuous with respect to the Lebesgue measure on $\mathbb{R}^2$.
+\item The marginal distribution $F_{X_1}$ is absolutely continuous, so it admits a density $f_{X_1}$ with $f_{X_1}(x_1) = \frac{d}{dx_1}F_{X_1}(x_1)$.
+\item The partial derivative $\frac{\partial}{\partial x_1}F_{X_1,X_2}(x_1,x_2)$ exists and is continuous in a neighborhood of the conditioning point $(x_1,x_2)$.
+\item $f_{X_1}(x_1) > 0$ at the point of conditioning.
+\end{itemize}
+
+Under these conditions, the conditional distribution function of $X_2$ given $X_1=x_1$ is well-defined and given by the formula above. Equivalently,
+\[
+F_{X_2\mid X_1}(x_2\mid x_1)
+=
+\lim_{h\downarrow 0}
+\frac{\mathbb{P}(X_2\le x_2,\;x_1<X_1\le x_1+h)}
+{\mathbb{P}(x_1<X_1\le x_1+h)}.
+\]
+\subsection{Conditional cdf via copula}\label{subsec:bivariate_copula_cdf}
+By Sklar's Theorem \ref{thm:sklar}, with continuous marginals we have:
+\begin{equation}\label{eq:bivariate_sklar}
+F_{X_1,X_2}(x_1,x_2) = C(F_{X_1}(x_1), F_{X_2}(x_2)),
+\end{equation}
+where $C()$ is the unique copula. If $C()$ is continuously differentiable in its first argument, then applying \eqref{eq:conditional_copula_cdf} with $n=2$, $k=1$ yields:
+\begin{equation}\label{eq:bivariate_conditional_copula_cdf}
+F_{X_2\mid X_1}(x_2\mid x_1) = \left.\frac{\partial}{\partial u} C(u,v)\right|_{u=F_{X_1}(x_1),\,v=F_{X_2}(x_2)}.
+\end{equation}
+This defines the conditional copula distribution function:
+\begin{equation}\label{eq:bivariate_conditional_copula}
+C(v\mid u) = \frac{\partial}{\partial u} C(u,v),
+\end{equation}
+so that \eqref{eq:bivariate_conditional_copula_cdf} becomes:
+\begin{equation}\label{eq:bivariate_conditional_copula_form}
+\boxed{F_{X_2\mid X_1}(x_2\mid x_1) = C_{2|1}\!\left(F_{X_2}(x_2)\mid F_{X_1}(x_1)\right)}.
+\end{equation}
+The function $C(v\mid u)$ represents the conditional distribution of the probability integral transform $V = F_{X_2}(X_2)$ given $U = F_{X_1}(X_1) = u$.
+
+\textbf{Conditions:} Assume that the marginal distributions $F_{X_1}$ and $F_{X_2}$ are continuous. Then by Sklar's theorem there exists a unique copula $C:[0,1]^2\to[0,1]$ such that the representation above holds.
+
+\textbf{Additional condition for the conditional representation:} Assume further that the copula $C$ is continuously differentiable with respect to its first argument.
+
+\begin{remarkbox}
+\begin{remarkT}
+For each fixed $u\in(0,1)$, the function $v\mapsto C(v\mid u)$ is itself a distribution function on $[0,1]$, representing the conditional distribution of $V=F_{X_2}(X_2)$ given $U=F_{X_1}(X_1)=u$.
+\end{remarkT}
+\end{remarkbox}
+\subsection{Conditional density via copula}\label{subsec:bivariate_conditional_density}
+Assuming absolute continuity and $f_{X_1}(x_1)>0$, the conditional density from \eqref{eq:conditional_pdf_ratio} with $n=2$, $k=1$ is:
+\begin{equation}\label{eq:bivariate_conditional_density}
+f_{X_2\mid X_1}(x_2\mid x_1) = \frac{f_{X_1,X_2}(x_1,x_2)}{f_{X_1}(x_1)},
+\end{equation}
+where $f_{X_1,X_2}$ is the joint density. This represents the likelihood of $X_2$ taking value $x_2$ given $X_1 = x_1$.
+
+
+\textbf{Conditions:} Assume that $(X_1,X_2)$ is absolutely continuous with joint density
+$f_{X_1,X_2}$ and marginal densities $f_{X_1}$ and $f_{X_2}$. This means:
+\begin{itemize}
+\item $f_{X_1,X_2}:\mathbb{R}^2\to[0,\infty)$ is a measurable function such that
+\[
+F_{X_1,X_2}(x_1,x_2) = \int_{-\infty}^{x_1}\int_{-\infty}^{x_2} f_{X_1,X_2}(s,t)\,dt\,ds.
+\]
+\item The marginal densities satisfy $f_{X_i}(x_i) = \int_{-\infty}^{\infty} f_{X_1,X_2}(x_1,x_2)\,dx_j$ for $i\neq j$.
+\item $f_{X_1}(x_1) > 0$ at the point of conditioning.
+\end{itemize}
+Under these conditions,
+\[
+f_{X_1,X_2}(x_1,x_2)
+=
+\frac{\partial^2}{\partial x_1\,\partial x_2}
+F_{X_1,X_2}(x_1,x_2),
+\]
+and the conditional density of $X_2$ given $X_1=x_1$ is as shown above.
+\subsection{Copula density representation}\label{subsec:bivariate_copula_density}
+Using the copula density representation from \eqref{eq:jointdensity} and \eqref{eq:conditional_BN} with improved notation:
+\begin{equation}\label{eq:bivariate_copula_density_representation}
+f_{X_1,X_2}(x_1,x_2) = c(F_{X_1}(x_1), F_{X_2}(x_2)) \cdot f_{X_1}(x_1) f_{X_2}(x_2),
+\end{equation}
+where $c(u,v) = \frac{\partial^2}{\partial u \partial v} C(u,v)$ is the copula density. Substituting into \eqref{eq:bivariate_conditional_density} gives the bivariate version of \eqref{eq:conditional_BN}:
+\begin{equation}\label{eq:bivariate_conditional_via_copula}
+\boxed{f_{X_2\mid X_1}(x_2\mid x_1) = c(F_{X_1}(x_1), F_{X_2}(x_2)) \cdot f_{X_2}(x_2)}.
+\end{equation}
+This shows how the conditional density factorizes into the copula density (capturing dependence) and the marginal density of $X_2$. When $X_1$ and $X_2$ are independent, $C(u,v)=uv$, so $c(u,v)=1$, recovering $f_{X_2\mid X_1}(x_2\mid x_1)=f_{X_2}(x_2)$.
+
+\textbf{Conditions:} Assume that:
+\begin{itemize}
+\item The copula $C$ is twice continuously differentiable on $(0,1)^2$.
+\item The marginal distributions $F_{X_1}$ and $F_{X_2}$ are absolutely continuous with densities $f_{X_1}$ and $f_{X_2}$, respectively.
+\item The joint distribution is absolutely continuous.
+\end{itemize}
+Under these conditions, the copula density exists and is given by $c(u,v) = \frac{\partial^2}{\partial u\,\partial v} C(u,v)$.
+
+\begin{table}[htpb]
+\centering
+\small
+\caption{Formulas: General case $\rightarrow$ Bivariate specialization}\label{tab:bivariate_specializations}
+\begin{tabular}{|c|}
+\hline
+\textbf{Joint CDF via copula} \\
+\hline
+\textit{General (Multidimensional):} \\[2pt]
+$F(x_1,\ldots,x_n) = C_{1,\ldots,n}(F_1(x_1),\ldots,F_n(x_n))$ \\[6pt]
+\textit{Bivariate Specialization ($n=2$, $k=1$):} \\[2pt]
+$F_{X_1,X_2}(x_1,x_2) = C(F_{X_1}(x_1), F_{X_2}(x_2))$ \\[4pt]
+\hline
+\textbf{Conditional CDF via derivatives} \\
+\hline
+\textit{General (Multidimensional):} \\[2pt]
+$F_{1,\ldots,k|k+1,\ldots,n}(\cdot)=\dfrac{\partial^{n-k}F/\partial x_{k+1}\cdots\partial x_n}{\partial^{n-k}F(\infty,\ldots)/\partial x_{k+1}\cdots\partial x_n}$ \\[6pt]
+\textit{Bivariate Specialization ($n=2$, $k=1$):} \\[2pt]
+$F_{X_2|X_1}(x_2|x_1) = \dfrac{\partial F_{X_1,X_2}(x_1,x_2)/\partial x_1}{f_{X_1}(x_1)}$ \\[4pt]
+\hline
+\textbf{Conditional CDF via copula} \\
+\hline
+\textit{General (Multidimensional):} \\[2pt]
+$C(u_k|u_1,\ldots,u_{k-1})=\dfrac{\partial^{k-1}C(u_1,\ldots,u_k,1,\ldots)/\partial u_1\cdots\partial u_{k-1}}{\partial^{k-1}C(u_1,\ldots,1,\ldots)/\partial u_1\cdots\partial u_{k-1}}$ \\[6pt]
+\textit{Bivariate Specialization ($n=2$, $k=1$):} \\[2pt]
+$C_{2|1}(v|u) = \dfrac{\partial C(u,v)}{\partial u}$ \\[4pt]
+\hline
+\textbf{Joint PDF via copula density} \\
+\hline
+\textit{General (Multidimensional):} \\[2pt]
+$f(x_1,\ldots,x_n) = c_{1,\ldots,n}(F_1(x_1),\ldots,F_n(x_n))\prod_{i=1}^n f_i(x_i)$ \\[6pt]
+\textit{Bivariate Specialization ($n=2$, $k=1$):} \\[2pt]
+$f_{X_1,X_2}(x_1,x_2) = c(F_{X_1}(x_1),F_{X_2}(x_2))f_{X_1}(x_1)f_{X_2}(x_2)$ \\[4pt]
+\hline
+\textbf{Conditional PDF via copula} \\
+\hline
+\textit{General (Multidimensional):} \\[2pt]
+$f_{1,\ldots,k|k+1,\ldots,n}(\cdot)=c_{1,\ldots,k|k+1,\ldots,n}(F_1,\ldots,F_k|F_{k+1},\ldots)\prod_{i=1}^k f_i(x_i)$ \\[6pt]
+\textit{Bivariate Specialization ($n=2$, $k=1$):} \\[2pt]
+$f_{X_2|X_1}(x_2|x_1) = c(F_{X_1}(x_1),F_{X_2}(x_2))f_{X_2}(x_2)$ \\[4pt]
+\hline
+\textbf{Conditional copula density} \\
+\hline
+\textit{General (Multidimensional):} \\[2pt]
+$c_{1,\ldots,k|k+1,\ldots,n}(u_1,\ldots,u_k|u_{k+1},\ldots)=\dfrac{c_{1,\ldots,n}(u_1,\ldots,u_n)}{c_{k+1,\ldots,n}(u_{k+1},\ldots)}$ \\[6pt]
+\textit{Bivariate Specialization ($n=2$, $k=1$):} \\[2pt]
+$c_{2|1}(v|u)=\dfrac{c(u,v)}{c_1(u)}=c(u,v)$ \\[4pt]
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Marginal and conditional copula densities}\label{subsec:bivariate_copula_densities}
+The marginal copula density of $U_1 = F_{X_1}(X_1)$ is simply 1 (uniform distribution). The conditional copula density from \eqref{eq:conditional_copula_densitya} with $n=2$, $k=1$ becomes:
+\begin{equation}\label{eq:bivariate_conditional_copula_density}
+c(v|u) = \frac{c(u,v)}{c(u)} = c(u,v) = \frac{c(u,v)}{c(v)} = c(u|v)  ,
+\end{equation}
+since $c(u) = c(v) = 1$ for $u \in [0,1]$. This shows that in the bivariate case, the expression of both conditional copula densities coincides and equals the expression of the joint copula density.
+
+\textbf{This is a relevant result that deserves mentioning, because of its general and universal character.}
+
+\subsection{Summary of bivariate specializations}\label{subsec:bivariate_summary}
+Table~\ref{tab:bivariate_specializations} presents the explicit bivariate formulas derived from their general multidimensional counterparts. Table~\ref{tab:bivariate_interpretations} provides their interpretations and relationships to the general case.
+
+
+\begin{table}[htpb]
+\centering
+\footnotesize
+\caption{Interpretations of bivariate formulas}\label{tab:bivariate_interpretations}
+\begin{tabular}{|p{0.44\textwidth}|p{0.25\textwidth}|p{0.23\textwidth}|}
+\hline
+\textbf{Formula} & \textbf{Mathematical Meaning} & \textbf{Connection to General Case} \\
+\hline
+\hline
+$F_{X_1,X_2}(x_1,x_2)=C(F_{X_1}(x_1),F_{X_2}(x_2))$ & Joint CDF expressed via copula linking marginals & Special case of Sklar's theorem for $n=2$ \\
+\hline
+$F_{X_2|X_1}(x_2|x_1)=\dfrac{\partial F_{X_1,X_2}/\partial x_1}{f_{X_1}(x_1)}$ & Conditional CDF via derivative of joint CDF & $\partial^{n-k}F/\partial x_{k+1}\cdots$ with $n=2,k=1$ gives $\partial F/\partial x_1$ \\
+\hline
+$C(v|u)=\dfrac{\partial C(u,v)}{\partial u}$ & Conditional copula as partial derivative & $\partial^{k-1}C/\partial u_1\cdots$ with $k=1$ gives $\partial C/\partial u$ \\
+\hline
+$f_{X_1,X_2}(x_1,x_2)=c(F_{X_1}(x_1),F_{X_2}(x_2))f_{X_1}(x_1)f_{X_2}(x_2)$ & Joint density factorized into copula density × marginal densities & Direct $n=2$ case of general factorization \\
+\hline
+$f_{X_2|X_1}(x_2|x_1)=c(F_{X_1}(x_1),F_{X_2}(x_2))f_{X_2}(x_2)$ & Conditional density = copula density × marginal density & $k=1$ case of general conditional PDF via copula \\
+\hline
+$c(v|u)=c(u,v)$ & In bivariate case, conditional copula density equals joint copula density & Because $c_1(u)=1$ for uniform marginals \\
+\hline
+\end{tabular}
+\end{table}
+
+
+\subsection{Examples of bivariate conditional copulas}\label{subsec:bivariate_examples}
+Using the notation $C(v|u) = \frac{\partial}{\partial u} C(u,v)$, we compute for common copula families:
+\subsubsection*{Clayton Conditional Copula}
+For the Clayton copula $C(u,v) = (u^{-\theta} + v^{-\theta} - 1)^{-1/\theta}$:
+\begin{equation}
+C(v|u) = u^{-\theta-1}(u^{-\theta} + v^{-\theta} - 1)^{-1-1/\theta}.
+\end{equation}
+\subsubsection*{Gumbel Conditional Copula}
+For the Gumbel copula $C(u,v) = \exp\left(-\left[(-\ln u)^\theta + (-\ln v)^\theta\right]^{1/\theta}\right)$:
+\begin{equation}
+C(v|u) = \frac{1}{u} C(u,v) \left(\frac{-\ln u}{\left[(-\ln u)^\theta + (-\ln v)^\theta\right]^{1/\theta}}\right)^{\theta-1}.
+\end{equation}
+\subsubsection*{Frank Conditional Copula}
+For the Frank copula $C(u,v) = -\frac{1}{\theta} \ln\left(1 + \frac{(e^{-\theta u} - 1)(e^{-\theta v} - 1)}{e^{-\theta} - 1}\right)$:
+\begin{equation}
+C(v|u) = \frac{e^{-\theta u}(e^{-\theta v} - 1)}{(e^{-\theta} - 1) + (e^{-\theta u} - 1)(e^{-\theta v} - 1)}.
+\end{equation}
+These formulas demonstrate how the conditional distribution of $V$ given $U=u$ varies with the dependence parameter $\theta$ in each copula family.
+
+
+\section{Summary, Achievements, and Relevance of the Results}
+
+This chapter has developed the theory of copulas from its axiomatic foundations to
+its most practically useful results. The journey has been both mathematically rich
+and conceptually transformative. This final section collects the main achievements,
+highlights their significance, and draws the connections to the broader framework of
+this book and to applications across science, engineering, and artificial intelligence.
+
+\subsection*{What has been achieved}
+
+The chapter has established the following results, each with independent value:
+
+\begin{enumerate}
+
+\item \textbf{A rigorous definition of dependence structure.} copulas provide a mathematically rigorous and widely accepted framework for
+characterizing dependence independently of marginal behavior.
+
+\item \textbf{Sklar's theorem: the master decomposition.} Every joint distribution
+with continuous marginals decomposes uniquely into a copula and its marginal
+distributions. This decomposition is exact and invertible: the copula captures
+everything about the interaction among variables, and the marginals capture everything
+about each variable in isolation. Nothing is lost; nothing overlaps.
+
+\item \textbf{The rank principle, made rigorous.} All joint distributions sharing the
+same copula — and there are infinitely many of them — have identical interaction
+structures among every subgroup of variables. This validates and sharpens the
+intuition introduced in Chapter~\ref{ch:cdftransformation}: what matters is not the
+value of a variable but its rank. Units, scales, and marginal shapes are irrelevant
+to dependence.
+
+\item \textbf{Fréchet–Hoeffding bounds.} Every copula is bounded between the
+comonotonicity copula $M$ (perfect positive dependence) and the lower bound $W$
+(perfect negative dependence in the bivariate case). These bounds are not merely
+theoretical limits — they provide computable upper and lower bounds for joint
+probabilities and expectations, which are directly useful in risk analysis and
+numerical methods.
+
+\item \textbf{Conditional distributions via copulas.} The general formulas for
+conditional CDFs and PDFs, expressed in terms of copula derivatives, provide a
+systematic and computationally tractable framework for probabilistic inference in
+any dimension. The bivariate specialization yields explicit, closed-form expressions
+for the three major Archimedean families.
+
+\item \textbf{Factorization of joint densities.} The joint density factorizes as
+the product of the copula density and the marginal densities
+(equation~\eqref{eq:jointdensity}). The copula density has a striking interpretation:
+it is the likelihood ratio of the joint density to the density under independence.
+A copula density equal to one everywhere means independence; deviations from one
+measure and localize dependence.
+
+\item \textbf{Archimedean copulas as a universal and structured family.} The
+Archimedean family — defined by a single generator function $\phi$ — produces a
+rich and flexible class of dependence structures through a formula that is precisely
+the universal aggregation form of Chapter~\ref{ch:Piforms}. Clayton, Gumbel, and
+Frank copulas illustrate how a single parameter can interpolate between independence
+and perfect dependence, with each family capturing different tail behavior.
+
+\item \textbf{Vine and pair-copula constructions.} The conditional copula formulas
+derived here are the building blocks of vine copulas, which decompose high-dimensional
+dependence into a cascade of bivariate copulas. This provides a tractable and highly
+flexible approach to high-dimensional modeling that is actively used in finance,
+hydrology, and other fields.
+
+\end{enumerate}
+
+\subsection{The deeper significance: a new language for dependence}
+
+Beyond the individual results listed above, this chapter introduces a \textbf{new
+language} for describing multivariate relationships — one that is simultaneously more
+general, more flexible, and more interpretable than classical approaches.
+
+In the classical framework, specifying a multivariate distribution means choosing a
+parametric family — multivariate normal, multivariate $t$, etc. — that constrains
+both the marginals and the dependence structure together, often for reasons of
+mathematical convenience rather than substantive modeling. The copula framework
+dismantles this constraint: marginals and dependence are modeled separately, chosen
+on their own merits, and assembled through Sklar's theorem into a joint distribution
+that can capture virtually any behavior.
+
+This flexibility has a philosophical dimension as well. The copula of a joint
+distribution is an \emph{invariant}: it does not change when the individual variables
+are subjected to strictly increasing transformations. Applying the ECDF
+transformation of Chapter~\ref{ch:cdftransformation} to all variables does not alter
+the copula — it simply makes it visible, by converting all marginals to uniform. The
+copula is what remains when everything else — units, scales, marginal shapes — has
+been stripped away. It is the \emph{pure relational content} of a multivariate
+distribution.
+
+\subsection{Connection to the framework of this book}
+
+The results of this chapter are not isolated. They connect deeply to the preceding and
+following chapters.
+
+The ECDF transformation of Chapter~\ref{ch:cdftransformation} produces
+variables with uniform marginals — exactly the inputs that copulas require. Working
+with copulas is thus the natural next step after applying the percentile
+transformation: it is the theory of the joint structure of percentile-transformed
+data.
+
+The general functional form of Chapter~\ref{ch:Piforms} is instantiated here in the
+family of Archimedean copulas. The generator function $\phi$ plays the role of the
+univariate functions $p_j$, and the outer function $\phi^{[-1]}$ plays the role of
+$p$. The aggregation structure is identical. This is not a coincidence: Archimedean
+copulas are, precisely, the copulas consistent with the order-independent aggregation
+principle. The framework of this book thus provides an axiomatic derivation of
+Archimedean copulas as a necessary — not merely convenient — functional form.
+
+
+Figure \ref{fig:CopulaIMAGE} illustrates the relevance of the copula concept.
+
+\begin{figure}[!h]
+\centering
+%\includegraphics[width=0.8\textwidth]{CopulaIMAGE.png}
+\begin{tikzpicture}[
+    scale=0.6,
+    transform shape,
+    font=\sffamily,
+    % Cajas de las disciplinas
+    appbox/.style={
+        rectangle,
+        draw=#1border,
+        fill=#1bg,
+        line width=1.8pt,
+        rounded corners=10pt,
+        minimum width=11.5cm,
+        minimum height=2.0cm,
+        text width=8.6cm,
+        align=left,
+        inner sep=12pt,
+        font=\LARGE
+    },
+    % Estilo base para los círculos contenedores de iconos
+    iconcircle/.style={
+        circle,
+        fill=#1,
+        minimum size=1.6cm,
+        line width=1pt,
+        draw=white,
+        align=center
+    }
+]
+
+    % --- TÍTULO PRINCIPAL ---
+    \node (title) [align=center, text=mainblue, minimum width=11.5cm] {
+        \fontsize{20}{24}\selectfont\bfseries USES OF ADDITIVE SEPARABLE\\[4pt]
+        \fontsize{20}{24}\selectfont\bfseries FUNCTIONS
+    };
+
+    % --- FÓRMULA MATEMÁTICA PRINCIPAL ---
+    \node (formula) [draw=orange!70!yellow, fill=yellow!11, rounded corners=8pt, line width=1.8pt,
+          minimum width=11.5cm, minimum height=2.4cm, align=center, below=0.6cm of title] {
+        \fontsize{16}{20}\selectfont $\bm{\phi(x_1, \ldots, x_n)}$
+        \fontsize{16}{20}\selectfont $\bm{= p \left( \sum_{i=1}^n f_i(x_i) \right)}$
+    };
+
+    % --- BLOQUES DE APLICACIÓN ---
+
+    % 1. PHYSICS
+    \node (b1) [appbox=green, below=0.7cm of formula] {
+        \textbf{\LARGE PHYSICS}\\[3pt]
+        \textcolor{textgray}{\small Constitutive laws, scaling, similarity, transport phenomena.}
+    };
+    \node (i1) [iconcircle=greenborder, left=-0.9cm of b1.west] {
+        \begin{tikzpicture}[scale=0.35, baseline=-0.1cm]
+            \draw[white, line width=1.2pt] (0,0) circle (0.3);
+            \draw[white, line width=1pt, rotate=0] (0,0) ellipse (1.3 and 0.4);
+            \draw[white, line width=1pt, rotate=60] (0,0) ellipse (1.3 and 0.4);
+            \draw[white, line width=1pt, rotate=-60] (0,0) ellipse (1.3 and 0.4);
+            \fill[white] (0,0) circle (0.15);
+        \end{tikzpicture}
+    };
+
+    % 2. DECISION THEORY
+    \node (b2) [appbox=orange, below=0.6cm of b1] {
+        \textbf{\LARGE DECISION THEORY}\\[3pt]
+        \textcolor{textgray}{\small Utility aggregation, scoring rules, preference modeling.}
+    };
+    \node (i2) [iconcircle=orangeborder, left=-0.9cm of b2.west] {
+        \begin{tikzpicture}[scale=0.38, baseline=-0.2cm, white, line width=1.2pt]
+            \draw (0,-0.9) -- (0,0.8);
+            \draw (-1.1,0.5) -- (1.1,0.5);
+            \draw (-0.5,-0.9) -- (0.5,-0.9);
+            \draw (-1.1,0.5) -- (-1.6,-0.2) -- (-0.6,-0.2) -- cycle;
+            \draw (-1.6,-0.2) arc (180:360:0.5 and 0.15) -- cycle;
+            \draw (1.1,0.5) -- (0.6,-0.2) -- (1.6,-0.2) -- cycle;
+            \draw (0.6,-0.2) arc (180:360:0.5 and 0.15) -- cycle;
+        \end{tikzpicture}
+    };
+
+    % 3. MACHINE LEARNING
+    \node (b3) [appbox=blue, below=0.6cm of b2] {
+        \textbf{\LARGE MACHINE LEARNING}\\[3pt]
+        \textcolor{textgray}{\small Additive models, explainability, interpretable architectures.}
+    };
+    \node (i3) [iconcircle=blueborder, left=-0.9cm of b3.west] {
+        \begin{tikzpicture}[scale=0.4, baseline=-0.25cm, white, line width=1pt]
+            % Dibujo simplificado de una red neuronal
+            \foreach \x in {0,1,2} {
+                \foreach \y in {0,1} {
+                    \fill[white] ({(\x-1)*0.8}, {\y*0.8-0.4}) circle (0.08);
+                }
+            }
+            \foreach \x in {0,1} {
+                \foreach \y in {0,1} {
+                    \draw[white] ({(\x-1)*0.8}, {\y*0.8-0.4}) -- ({(\x)*0.8}, {\y*0.8-0.4});
+                }
+            }
+            \draw[white] (-0.8,0.4) -- (0,0) -- (0.8,0.4);
+            \draw[white] (-0.8,-0.4) -- (0,0) -- (0.8,-0.4);
+            \draw[white] (0,0) -- (0,0.8);
+        \end{tikzpicture}
+    };
+
+    % --- BANNER INFERIOR DE CONCLUSIÓN ---
+    \node (footer) [fill=darknavy, text=white, font=\bfseries\LARGE, align=center,
+          minimum width=11.5cm, minimum height=1.3cm, rounded corners=6pt, below=0.8cm of b3] {
+        UNIFIED MATHEMATICAL STRUCTURE\\
+        \fontsize{11}{13}\selectfont\normalfont WITH BROAD APPLICATIONS
+    };
+
+    % --- MARCO EXTERIOR AUTOMÁTICO (incluye todos los iconos) ---
+    \begin{scope}[on background layer]
+        \node[
+            draw=mainblue,
+            fill=brown!45,
+            line width=2.5pt,
+            rounded corners=12pt,
+            inner sep=18pt,
+            fit=(title) (formula) (b1) (i1) (b2) (i2) (b3) (i3) (footer)
+        ] (frame) {};
+    \end{scope}
+
+\end{tikzpicture}
+\caption{Illustration of the relevance of functional equations in deriving valid models}
+\label{fig:CopulaIMAGE}
+\end{figure}
+
+
+\subsection{Relevance for applications}
+
+The practical consequences of the results of this chapter are wide-ranging:
+
+\noindent\textbf{Finance and risk management.} Copulas are the standard tool for
+modeling the joint behavior of financial assets, credit risks, and insurance losses.
+The ability to specify tail dependence independently of marginal distributions is
+critical for accurate assessment of portfolio risk, systemic risk, and extreme-event
+scenarios. The Clayton copula's lower tail dependence and the Gumbel copula's upper
+tail dependence capture qualitatively different crisis behaviors that no Gaussian model
+can reproduce.
+
+\noindent\textbf{Hydrology and environmental science.} Multivariate extreme events —
+floods, droughts, storms — require models that capture the joint behavior of several
+variables (river discharge, rainfall, wind speed) whose marginal distributions are
+highly non-Gaussian. Copulas allow each marginal to be fitted independently while
+their joint extremal dependence is modeled through the copula, yielding more accurate
+estimates of joint exceedance probabilities.
+
+\noindent\textbf{Reliability engineering.} System reliability depends on the joint
+failure behavior of its components. Copulas permit flexible modeling of component
+dependence — including the asymmetric and tail-dependent structures that are common
+in engineering applications — without restricting the marginal failure distributions.
+
+\noindent\textbf{Bayesian networks and probabilistic graphical models.} The
+conditional copula formulas derived in this chapter — particularly
+equations~\eqref{eq:conditional_BN} and~\eqref{eq:conditional_BN1} — are the
+natural building blocks for copula-based Bayesian networks. They allow the
+conditional probability factors of any Bayesian network to be specified through
+copulas, combining the interpretability of graphical models with the flexibility of
+copula-based dependence modeling.
+
+\noindent\textbf{Artificial intelligence and machine learning.} The factorization of
+joint densities into copula density and marginals provides a principled approach to
+density estimation, generative modeling, and anomaly detection. The connection between
+Archimedean copulas and the general functional form of Chapter~\ref{ch:Piforms}
+suggests that copula-based models are not only flexible and interpretable, but
+structurally justified by the same axiomatic framework that underlies functional
+networks and Kolmogorov and Arnold representations.
+
+
+\section{Closing Remark}
+We have seen how copulas provide a mathematically rigorous and practically flexible framework for multivariate dependence. The ECDF transformation of Chapter~\ref{ch:cdftransformation} produces uniform marginals — exactly the inputs that copulas require.
+
+The implication of all the above is relevant: \textbf{We need to learn only multivariate copulas, not the cdfs any more}. This problem is much easier, because univariate marginals are easily learnt.
+
+The next chapter (Chapter~\ref{ch:ArchimedeanCopulas}) narrows the class of copulas to those compatible with our general aggregation structure, leading to Archimedean copulas as the only admissible choice.
+
+
+

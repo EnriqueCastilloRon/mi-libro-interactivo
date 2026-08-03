@@ -1,0 +1,379 @@
+\startcontents[chapter]
+\chapter{Copula-based stochastic models for fatigue}
+\label{ch:copula-models}
+\minitocboxed
+
+\section*{Motivation}
+
+In the previous chapters we have developed a complete theory of multilinear dependence (Chapters \ref{ch:trajectory_models} and \ref{ch:dependence_structure}), a trivariate Weibull–Hyperbola model (Chapter \ref{ch:weibull-hyperbola}), and a general method for constructing families of joint distributions from conditional specifications (Chapter \ref{ch:castillo-canteli}). All these approaches share the same underlying structure: the equality of the full conditional distributions and the multilinearity of the common argument.
+
+We now explore a complementary and very powerful alternative: copulas. Copulas provide a flexible and rigorous framework for modelling dependence between variables, completely separating marginal behaviour from the dependence structure. This separation is especially valuable in fatigue problems, where:
+
+\begin{itemize}
+    \item Laboratory data often have fixed marginals (controlled stress levels), but the dependence structure is what really matters.
+    \item In service, the load marginals can be completely different, and the copula allows reusing the dependence learned in the laboratory.
+    \item Copulas offer a wide range of families (Archimedean, elliptical, extreme-value) that can adapt to different types of dependence.
+\end{itemize}
+
+In this chapter we focus on the Frank copula, an Archimedean copula that is particularly suitable for fatigue applications because:
+
+\begin{itemize}
+    \item It can model both positive and negative dependence.
+    \item It is radially symmetric (treats positive and negative dependence symmetrically).
+    \item It has no tail dependence (both upper and lower tail dependence coefficients are zero), which often aligns with the physical behaviour of fatigue data, where an extreme stress does not necessarily imply an extreme life beyond the monotonic inverse relationship captured by the marginals.
+\end{itemize}
+
+We present a systematic four-step methodology: transformation to pseudo-observations, estimation of the Frank copula, simulation in the copula domain, and back-transformation to the physical space. We apply this methodology to four case studies: two simulated datasets (hyperbolic and Beta-based) and two real datasets (Holmen and Maennig). For each case, we show four-panel plots that illustrate the fit and predictive capability of the model.
+
+\section{The Frank copula}
+\label{sec:frank-copula}
+
+Although copulas were introduced in previous chapters, we recall the definition of the bivariate Frank copula. The Frank copula belongs to the Archimedean family and is defined as:
+
+\begin{equation}
+C_\theta(u,v) = -\frac{1}{\theta} \ln\left[1 + \frac{(e^{-\theta u} - 1)(e^{-\theta v} - 1)}{e^{-\theta} - 1}\right], \qquad \theta \in \mathbb{R}\setminus\{0\},
+\label{eq:frank-copula}
+\end{equation}
+
+where \(u,v \in [0,1]\) are the cumulative probabilities (uniform marginals). The parameter \(\theta\) controls the strength and direction of the dependence:
+
+\begin{itemize}
+    \item \(\theta \to 0\): independence (the copula tends to \(uv\)).
+    \item \(\theta > 0\): positive dependence (large values of \(u\) tend to be associated with large values of \(v\)).
+    \item \(\theta < 0\): negative dependence (large values of \(u\) tend to be associated with small values of \(v\)).
+\end{itemize}
+
+The density of the Frank copula is:
+\[
+c_\theta(u,v) = \frac{\partial^2 C_\theta(u,v)}{\partial u\,\partial v} = \frac{\theta\,e^{-\theta(u+v)}(e^{-\theta}-1)}{\left[(e^{-\theta}-1)+(e^{-\theta u}-1)(e^{-\theta v}-1)\right]^2}.
+\]
+
+\subsection{Conditional distribution and conditional quantile}
+
+For many applications, we need the conditional distribution of \(V\) given \(U = u\):
+\begin{equation}
+C_{V|U}(v|u) = \frac{\partial C_\theta(u,v)}{\partial u} = \frac{e^{-\theta u}(e^{-\theta v} - 1)}{e^{-\theta} - 1 + (e^{-\theta u} - 1)(e^{-\theta v} - 1)}.
+\label{eq:frank-conditional}
+\end{equation}
+
+The conditional quantile (the inverse of \eqref{eq:frank-conditional}) is:
+\begin{equation}
+Q_{V|U}(p|u) = -\frac{1}{\theta}\ln\left[1+\frac{(e^{-\theta}-1)\,p}{e^{-\theta u}-p\,(e^{-\theta u}-1)}\right],
+\label{eq:frank-quantile}
+\end{equation}
+where \(p \in (0,1)\) is the conditional probability level. This formula is the basis for synthetic data simulation and for the construction of percentile curves.
+
+\subsection{Relation with Kendall's \(\tau\)}
+
+The parameter \(\theta\) of the Frank copula is related to Kendall's \(\tau\) by:
+\begin{equation}
+\tau(\theta) = 1 - \frac{4}{\theta}\left[1 - \frac{1}{\theta}\int_0^\theta \frac{t}{e^t - 1}\,dt\right].
+\label{eq:tau-frank}
+\end{equation}
+This relationship is monotone and allows estimating \(\theta\) from the sample Kendall's \(\tau\), which is computed directly from the data. Numerical inversion of \eqref{eq:tau-frank} is performed using Brent's root-finding method or another similar algorithm.
+
+\section{Methodology: four steps for copula-based modelling}
+\label{sec:methodology-copula}
+
+The four case studies follow the same systematic procedure, consisting of four stages.
+
+\subsection{Step 1: transformation to the unit square using normalised ranks}
+
+Given a sample \(\{(N_i,\Delta\sigma_i)\}_{i=1}^n\), we remove marginal effects by transforming each variable to the unit interval using normalised ranks (pseudo-observations). Let \(X_i = N_i\) and \(Y_i = \Delta\sigma_i\). The pseudo-observations are defined as:
+\begin{equation}
+U_i = \frac{\operatorname{rank}(X_i)}{n+1}, \qquad V_i = \frac{\operatorname{rank}(Y_i)}{n+1}.
+\label{eq:pseudo-obs}
+\end{equation}
+The pairs \((U_i,V_i)\) are approximately distributed on \((0,1)^2\) with uniform marginals, regardless of the original marginal distributions. This transformation isolates the dependence structure.
+
+\subsection{Step 2: estimation of the Frank copula}
+
+Once we have the pseudo-observations \((U_i,V_i)\), we estimate the parameter \(\theta\) of the Frank copula. The most common method is maximum likelihood estimation (MLE). For the Frank copula, the log-likelihood function is:
+\begin{equation}
+\ell(\theta) = \sum_{i=1}^n \ln c_\theta(U_i,V_i),
+\label{eq:frank-loglik}
+\end{equation}
+where \(c_\theta(u,v) = \partial^2 C_\theta(u,v)/\partial u \partial v\) is the copula density.
+
+Alternatively, one can use the relationship between Kendall's rank correlation coefficient \(\tau\) and \(\theta\). Kendall's \(\tau\) is computed directly from the pseudo-observations, and \(\theta\) is obtained by numerically inverting \eqref{eq:tau-frank}. This inversion is performed using Brent's root-finding method. In our Python implementation, we adopt the Kendall's \(\tau\) approach for its computational simplicity and robustness, although in practice MLE is recommended for large samples.
+
+\subsection{Step 3: simulation of synthetic data in the copula domain}
+
+After estimating \(\hat{\theta}\), we can generate synthetic pairs \((U_{\text{sim}}, V_{\text{sim}})\) in the unit square. For each desired synthetic point:
+\begin{enumerate}
+    \item Draw \(U_{\text{sim}}\) from a uniform distribution on \((0,1)\).
+    \item Draw a probability level \(p\) from a uniform distribution on \((0,1)\).
+    \item Compute \(V_{\text{sim}}\) using the conditional quantile function \eqref{eq:frank-quantile}:
+    \[
+    V_{\text{sim}} = Q_{V|U=U_{\text{sim}}}(p) = -\frac{1}{\hat{\theta}}\ln\left[1+\frac{(e^{-\hat{\theta}}-1)\,p}{e^{-\hat{\theta}U_{\text{sim}}}-p\,(e^{-\hat{\theta}U_{\text{sim}}}-1)}\right].
+    \]
+\end{enumerate}
+This produces synthetic data \((U_{\text{sim}}, V_{\text{sim}})\) that preserve the dependence structure estimated from the original data.
+
+\subsection{Step 4: back-transformation to the original physical space}
+
+The final step maps the synthetic pairs \((U_{\text{sim}}, V_{\text{sim}})\) back to the physical quantities \((N_{\text{sim}}, \Delta\sigma_{\text{sim}})\) using the marginal quantile functions:
+\begin{equation}
+N_{\text{sim}} = Q_N(U_{\text{sim}}), \qquad \Delta\sigma_{\text{sim}} = Q_{\Delta\sigma}(V_{\text{sim}}).
+\label{eq:retransform}
+\end{equation}
+The quantile functions \(Q_N\) and \(Q_{\Delta\sigma}\) are obtained either from parametric fits (for example, Weibull for \(N\), uniform for \(\Delta\sigma\) when tests use fixed stress levels) or directly from the empirical distribution of the original data.
+
+\subsection{Important note: marginal distributions for testing versus design}
+
+A crucial point must be emphasised. In the \textbf{learning stage} (copula calibration), the marginal distribution of \(\Delta\sigma\) corresponds to the specific experimental protocol used in the laboratory tests. For example, in the Holmen dataset, tests were performed at five fixed levels of \(\Delta\sigma\) with 15 specimens each. Under such a test plan, the empirical marginal of \(\Delta\sigma\) is discrete and uniform over the tested levels, i.e., each of the 75 observations has probability \(1/75\). This marginal is appropriate for describing the test conditions, but does not necessarily represent the actual service loading.
+
+In the \textbf{design stage}, however, the marginal distribution of \(\Delta\sigma\) must reflect the actual load history that the component will experience during its service life. This may be a completely different distribution (for example, a Rayleigh distribution for wind loads, a Gumbel distribution for wave heights, or an empirical distribution from measured data). Thanks to the separation property of copulas, we can reuse the same estimated dependence structure (the Frank copula with its \(\theta\)) while replacing the marginal of \(\Delta\sigma\) with the appropriate design load marginal. This modularity is one of the most powerful features of the copula approach.
+
+\section{Case study 1: simulated hyperbolic S–N model}
+\label{sec:case1-hyperbolic}
+
+The first dataset is generated synthetically from an explicit analytical relationship that mimics realistic fatigue behaviour with heteroscedasticity and non-Gaussian dependence. We assume that the conditional CDFs of \(N\) given \(\Delta\sigma\) follow a family of hyperbolic S–N curves:
+\begin{equation}
+N = B + \frac{\lambda + \delta \cdot [-\ln(1-p)]^{1/\beta}}{\Delta\sigma - C},
+\end{equation}
+where:
+\begin{itemize}
+    \item \(B, C, \lambda, \delta, \beta\) are model parameters,
+    \item \(p \sim U(0,1)\) represents the random selection of the curve (each specimen is assigned a random hyperbola),
+    \item \(\Delta\sigma\) is sampled uniformly over a specified range.
+\end{itemize}
+Equivalently, the product \((N-B)(\Delta\sigma - C)\) follows a Weibull distribution with scale \(\lambda\), shape \(\beta\), and location \(\delta\). This construction induces a strong nonlinear inverse dependence between stress range and fatigue life. For the simulation, we use the parameters: \(B = 20\), \(C = 300\), \(\lambda = 1000\), \(\delta = 1000\), \(\beta = 4\), with \(\Delta\sigma\) sampled uniformly between \(1.2 \times C\) and \(600\). The sample size is \(n = 1000\).
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.62\textwidth]{fig_01_original_data.png}
+\includegraphics[width=0.37\textwidth]{fig_02_original_empirical_copula.png}\\
+\includegraphics[width=0.62\textwidth]{fig_04_original_simulation_vs_data.png}
+\includegraphics[width=0.37\textwidth]{fig_03_original_frank_fit.png}
+\caption{Case 1 (simulated hyperbolic data). Top-left: original data with Frank copula percentile curves. Top-right: empirical copula (pseudo-observations). Bottom-right: fitted Frank copula with theoretical conditional quantiles. Bottom-left: original data (blue) versus synthetic data (ochre) generated from the Frank copula. The hyperbolic nature of the underlying S–N family is evident in the curved percentile lines. \href{https://raw.githubusercontent.com/EnriqueCastilloRon/mi-libro-interactivo/main/codigo/Examples4Python.py}{\textcolor{blue}{Click here to download the Python software.}}}
+\label{fig:case1}
+\end{figure}
+
+Figure~\ref{fig:case1} shows the results. The strong positive dependence (\(\tau = 0.715\)) is correctly captured, and the synthetic data closely match the original ones. The percentile curves follow the hyperbolic trend, demonstrating that the Frank copula can model nonlinear inverse relationships.
+
+\section{Case study 2: simulated Beta distribution model}
+\label{sec:case2-beta}
+
+The second simulated model uses Beta distributions to generate fatigue data with a different dependence structure:
+\begin{equation}
+\Delta\sigma = 1 - F_{\text{Beta}}(N; \alpha = 3, \beta = 3 + 5p),
+\end{equation}
+where \(p \sim U(0,1)\) and \(N \sim U(0,1)\). Here \(F_{\text{Beta}}(\cdot; \alpha, \beta)\) denotes the CDF of the Beta distribution. As \(p\) increases, the parameter \(\beta\) increases, shifting the Beta distribution and creating a systematic dependence between \(N\) and \(\Delta\sigma\). The sample size is also \(n = 1000\).
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.62\textwidth]{fig_05_beta_parametric_data.png}
+\includegraphics[width=0.37\textwidth]{fig_06_beta_parametric_empirical_copula.png}\\
+\includegraphics[width=0.62\textwidth]{fig_08_beta_parametric_simulation_vs_data.png}
+\includegraphics[width=0.37\textwidth]{fig_07_beta_parametric_frank_fit.png}
+\caption{Case 2 (simulated Beta model). Layout as in Figure~\ref{fig:case1}. This dataset presents moderate negative dependence (\(\tau = -0.348\)), which is also well captured by the Frank copula (negative \(\theta\)). Bootstrap uncertainty bands (when selected) provide a measure of confidence in the percentile estimates. \href{https://raw.githubusercontent.com/EnriqueCastilloRon/mi-libro-interactivo/main/codigo/Examples4Python.py}{\textcolor{blue}{Click here to download the Python software.}}}
+\label{fig:case2}
+\end{figure}
+
+Figure~\ref{fig:case2} presents the results. Unlike the hyperbolic case, the Beta model produces negative dependence (larger \(N\) tends to correspond to larger \(\Delta\sigma\) in this artificial construction). The Frank copula successfully models this negative dependence, as shown by the fitted conditional quantile curves. This demonstrates the versatility of the Frank family.
+
+\section{Case study 3: Holmen real fatigue data}
+\label{sec:case3-holmen}
+
+The Holmen dataset consists of fatigue test results for a specific material under constant amplitude loading. The data include:
+\begin{itemize}
+    \item \(\Delta\sigma\) values: 0.950, 0.900, 0.825, 0.750, 0.675 (15 specimens each, total \(n = 75\)),
+    \item \(N\) values: cycles to failure ranging from 37 to 14,373,000 cycles.
+\end{itemize}
+For the real data, we fit parametric marginal distributions: a Weibull distribution for \(\log(N)\) (since fatigue life typically has a log-normal or Weibull distribution) and a uniform distribution for \(\Delta\sigma\) (reflecting the fixed stress levels used in the tests).
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.62\textwidth]{fig_09_holmen_data.png}
+\includegraphics[width=0.37\textwidth]{fig_10_holmen_empirical_copula.png}\\
+\includegraphics[width=0.62\textwidth]{fig_12_holmen_simulation_vs_data.png}
+\includegraphics[width=0.37\textwidth]{fig_11_holmen_frank_fit.png}
+\caption{Case 3 (Holmen real data). Layout as before. The discrete horizontal bands in the top-left panel correspond to the five fixed \(\Delta\sigma\) levels used in the experiments. The Frank copula captures the very strong positive dependence (\(\tau = 0.892\)). The bottom-left panel shows excellent agreement between original and synthetic data. \href{https://raw.githubusercontent.com/EnriqueCastilloRon/mi-libro-interactivo/main/codigo/Examples4Python.py}{\textcolor{blue}{Click here to download the Python software.}}}
+\label{fig:case3}
+\end{figure}
+
+Figure~\ref{fig:case3} illustrates the Holmen results. Despite the limited number of stress levels and the discrete nature of \(\Delta\sigma\), the Frank copula provides a good fit. The synthetic data generated from the copula reproduce the scatter pattern observed in the laboratory tests. This case demonstrates how copulas can be used even when the experimental design involves only a few stress levels.
+
+\section{Case study 4: Maennig real fatigue data}
+\label{sec:case4-maennig}
+
+The Maennig dataset represents a more extensive fatigue testing programme with:
+\begin{itemize}
+    \item \(\Delta\sigma\) values ranging from 285 to 385 MPa (many levels, total \(n = 300\)),
+    \item \(N\) values ranging from 51,000 to over 12 million cycles.
+\end{itemize}
+As with Holmen, we model \(\log(N)\) with a Weibull distribution and \(\Delta\sigma\) with a uniform distribution over the tested range.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.62\textwidth]{fig_13_maennig_data.png}
+\includegraphics[width=0.37\textwidth]{fig_14_maennig_empirical_copula.png}\\
+\includegraphics[width=0.62\textwidth]{fig_16_maennig_simulation_vs_data.png}
+\includegraphics[width=0.37\textwidth]{fig_15_maennig_frank_fit.png}
+\caption{Case 4 (Maennig real data). The wider range of \(\Delta\sigma\) values provides more information for copula fitting. The Frank copula captures the very strong positive dependence (\(\tau = 0.911\)) with high fidelity. The synthetic data (ochre points) almost perfectly overlap the original data cloud. \href{https://raw.githubusercontent.com/EnriqueCastilloRon/mi-libro-interactivo/main/codigo/Examples4Python.py}{\textcolor{blue}{Click here to download the Python software.}}}
+\label{fig:case4}
+\end{figure}
+
+Figure~\ref{fig:case4} shows the Maennig results. This larger and more continuous dataset confirms the ability of the Frank copula to model real fatigue behaviour. The percentile curves provide a probabilistic design tool directly usable in engineering practice.
+
+\section{Construction of conditional S–N percentile curves}
+\label{sec:percentile-curves}
+
+Traditional S–N curves give the number of cycles to failure for a fixed stress level. In our copula framework, we construct conditional percentile curves of \(\Delta\sigma\) given \(N\) (or vice versa). For a fixed probability level \(p\) (for example, \(p = 0.05\) for a conservative 5\% curve), the curve \(\Delta\sigma_p(N)\) is obtained as follows:
+
+\begin{enumerate}
+    \item Define a grid of stress values \(\{\Delta\sigma_j\}\) in the physical space.
+    \item Map each \(\Delta\sigma_j\) to the copula space using the marginal CDF: \(v_j = F_{\Delta\sigma}(\Delta\sigma_j)\).
+    \item For each \(v_j\), compute the corresponding copula conditional quantile:
+    \[
+    u_j = Q_{U|V=v_j}(p) = -\frac{1}{\theta}\ln\left[1+\frac{(e^{-\theta}-1)\,p}{e^{-\theta v_j}-p\,(e^{-\theta v_j}-1)}\right].
+    \]
+    \item Map \(u_j\) back to the physical space using the marginal quantile function of \(N\): \(N_j = Q_N(u_j)\).
+\end{enumerate}
+
+The set of points \(\{(N_j,\Delta\sigma_j)\}\) defines the conditional percentile curve. Low percentiles (for example, \(p = 0.01, 0.05\)) correspond to conservative scenarios (short fatigue life for a given stress), while high percentiles (for example, \(p = 0.95, 0.99\)) represent adverse conditions.
+
+In the case study figures, these curves are overlaid on the original data, showing how the copula captures the trend of the point cloud.
+
+\section{Summary of dependence parameters}
+\label{sec:dependence-parameters}
+
+The Frank copula parameter \(\theta\) and the corresponding Kendall's \(\tau\) for each case are summarised in Table~\ref{tab:dependence}.
+
+\begin{table}[htpb]
+\centering
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Case & \(n\) & \(\tau\) & \(\theta\) & Interpretation \\
+\midrule
+1: Simulated hyperbolic & 1000 & 0.715 & 11.84 & Strong positive dependence \\
+2: Simulated Beta & 1000 & -0.348 & -3.86 & Moderate negative dependence \\
+3: Holmen real & 75 & 0.892 & 22.46 & Very strong positive dependence \\
+4: Maennig real & 300 & 0.911 & 25.81 & Very strong positive dependence \\
+\bottomrule
+\end{tabular}
+\caption{Dependence parameters for the four case studies. The strong positive dependence in the real fatigue data (Cases 3–4) reflects the physical reality: higher stress ranges generally lead to shorter fatigue lives. The negative dependence in Case 2 is an artefact of the specific Beta model used.}
+\label{tab:dependence}
+\end{table}
+
+\section{Software implementation and downloadable code}
+\label{sec:software-implementation}
+
+The four case studies have been implemented in Python. The code is structured to be modular and easily adaptable to other datasets. Key features include:
+
+\begin{itemize}
+    \item Automatic computation of pseudo-observations via normalised ranks.
+    \item Estimation of Kendall's \(\tau\) and inversion to obtain the Frank copula parameter \(\theta\).
+    \item Generation of synthetic data in the copula domain and back-transformation to the physical space.
+    \item Three methods for handling distribution tails and quantifying uncertainty:
+    \begin{enumerate}
+        \item Ad hoc marginal extension (simple linear extrapolation beyond observed ranges),
+        \item Ad hoc extension with bootstrap uncertainty bands,
+        \item Bootstrap uncertainty bands only (more robust).
+    \end{enumerate}
+    \item Automatic generation of four-panel figures as shown in Figures~\ref{fig:case1} to~\ref{fig:case4}.
+\end{itemize}
+
+The complete Python code can be downloaded by clicking the link provided in the figure captions. The code runs in Google Colab or any standard Python environment with NumPy, SciPy, and Matplotlib installed.
+
+\section{Discussion of results}
+\label{sec:discussion-results}
+
+The four case studies collectively demonstrate the versatility and robustness of the Frank copula for modelling fatigue data.
+
+\paragraph{Case 1 (simulated hyperbolic).} The strong positive dependence (\(\tau = 0.715\)) is captured with high precision. The synthetic data generated from the copula reproduce the hyperbolic curvature observed in the original data. The percentile curves follow the expected trend: lower percentiles correspond to shorter fatigue lives for a given stress range.
+
+\paragraph{Case 2 (simulated Beta).} This artificial example shows that the Frank copula can also handle negative dependence (\(\tau = -0.348\)). Although negative dependence is not typical of real fatigue behaviour, this case validates the flexibility of the method. Bootstrap uncertainty bands (when selected) provide a realistic measure of estimation uncertainty.
+
+\paragraph{Case 3 (Holmen real).} Despite the discrete nature of \(\Delta\sigma\) (only five levels) and the small sample size (\(n = 75\)), the Frank copula produces a satisfactory fit. The very strong positive dependence (\(\tau = 0.892\)) aligns with physical expectations. The synthetic data mimic the scatter observed in the laboratory tests, and the percentile curves offer a probabilistic design tool even with limited data.
+
+\paragraph{Case 4 (Maennig real).} This larger dataset (\(n = 300\)) with a continuous range of \(\Delta\sigma\) values provides a rigorous test of the copula model. The excellent agreement between original and synthetic data (bottom-left panel of Figure~\ref{fig:case4}) confirms that the Frank copula adequately represents the dependence structure. The very high \(\tau = 0.911\) indicates an almost monotonic inverse relationship between stress range and fatigue life, characteristic of many metallic materials.
+
+Overall, the copula-based approach successfully separates marginal behaviour from dependence, allowing modular estimation and extrapolation. The Python implementation, with its optional tail extrapolation and bootstrap bands, provides a practical tool for engineers and researchers.
+
+\section{Connection with the Castillo–Canteli method and multilinear models}
+\label{sec:connection-cc}
+
+It is instructive to compare the copula-based approach with the Castillo–Canteli method (Chapter \ref{ch:castillo-canteli}) and the multilinear models (Chapters \ref{ch:trajectory_models} and \ref{ch:dependence_structure}).
+
+\subsection{Similarities}
+
+\begin{itemize}
+    \item Both approaches separate the dependence structure from the marginal behaviour.
+    \item Both allow reusing the dependence learned in the laboratory under service conditions.
+    \item Both provide direct sampling methods (conditional in the Castillo–Canteli case, via conditional quantiles in the copula case).
+\end{itemize}
+
+\subsection{Differences}
+
+\begin{itemize}
+    \item The Castillo–Canteli method starts from a full conditional specification (\(F_{\Pi_i|\boldsymbol{\Pi}_{-i}} = F(\phi)\)) and constructs the joint density by multiplying by an arbitrary marginal. Copulas, on the other hand, work directly with the dependence through the function \(C\), without the need to specify a full conditional.
+    \item Multilinear models impose a concrete algebraic structure (\(\phi\) multilinear). Frank copulas do not impose such a structure; the dependence is parametrised by \(\theta\) and can be more flexible.
+    \item Copulas are naturally bivariate (although multivariate extensions exist), while the Castillo–Canteli method and multilinear models are intrinsically multivariate.
+\end{itemize}
+
+\subsection{Complementarity}
+
+Both approaches can be combined. For example, one can use a copula to model the dependence between load descriptors in service, and then use the Castillo–Canteli method to construct the complete joint distribution. Or one can use the multilinear structure as the basis for the function \(\phi\) in the Castillo–Canteli method, and then model the marginals with copulas. This flexibility is one of the strengths of the general framework presented in this book.
+
+\section{Extensions and future work}
+\label{sec:extensions}
+
+The copula-based approach presented in this chapter can be extended in several directions:
+
+\begin{enumerate}
+    \item \textbf{Multivariate copulas:} Instead of the bivariate Frank copula, one can use multivariate copulas (for example, Archimedean copulas in \(n\) dimensions, vine copulas, or elliptical copulas) to model dependence among more than two variables (e.g., \(\Delta\sigma, R, \sigma_M\) and \(N\) simultaneously).
+
+    \item \textbf{Time-dependent copulas:} For applications where the load varies over time, one can use copulas with time-varying parameters or dynamic copula models (for example, copulas with \(\theta_t\) evolving according to a stochastic process).
+
+    \item \textbf{Bayesian copula models:} Prior distributions can be assigned to the copula parameters (\(\theta\)) and the marginal parameters, allowing updating with inspection data and quantification of epistemic uncertainty.
+
+    \item \textbf{Copulas with tail dependence:} In some materials, there may be tail dependence (for example, extreme stresses tend to be associated with extremely short lives). In that case, copulas with tail dependence (Clayton, Gumbel, etc.) can be used instead of the Frank copula.
+
+    \item \textbf{Integration with the Weibull–Hyperbola model:} The copula can be used to model the dependence among the residuals of the Weibull–Hyperbola model (Chapter 4), thus providing a non-Gaussian extension of the model.
+\end{enumerate}
+
+\section{Concluding remarks}
+\label{sec:concluding-remarks}
+
+This chapter has demonstrated the effectiveness of Frank copulas for modelling the dependence between the stress range \(\Delta\sigma\) and the fatigue life \(N\) in both simulated and real fatigue data. The four case studies follow a consistent four-step methodology: transformation to pseudo-observations, estimation of the Frank copula, simulation in the copula domain, and back-transformation to the physical space using marginal quantile functions.
+
+The key conclusions include:
+
+\begin{enumerate}
+    \item The Frank copula successfully captures a wide range of dependence structures (positive, negative, strong, moderate) as reflected by the estimated values of \(\theta\) and Kendall's \(\tau\).
+    \item The separation of marginals from dependence allows modular modelling: the copula learned from laboratory tests (with fixed \(\Delta\sigma\) levels) can later be combined with any design load marginal that represents actual service conditions.
+    \item Conditional percentile curves provide a probabilistic generalisation of S–N curves, directly usable for safe-life design, inspection planning, and risk assessment.
+    \item The Python implementation is robust, easy to use, and includes options for tail extrapolation and bootstrap uncertainty bands.
+\end{enumerate}
+
+The copula-based approach is complementary to the multilinear models and the Castillo–Canteli method presented in previous chapters. Together, they provide a complete set of tools for dependence modelling in fatigue and other multivariate problems.
+
+\section*{Chapter conclusions}
+
+In this chapter we have:
+
+\begin{itemize}
+    \item Introduced the Frank copula and its properties (positive and negative dependence, radial symmetry, absence of tail dependence).
+    \item Developed a systematic four-step methodology for copula-based modelling: transformation to pseudo-observations, estimation of \(\theta\) (by MLE or via Kendall's \(\tau\)), simulation in the copula domain, and back-transformation to the physical space.
+    \item Applied the methodology to four case studies:
+        \begin{itemize}
+            \item Simulated hyperbolic S–N model (strong positive dependence, \(\tau = 0.715\)),
+            \item Simulated Beta model (moderate negative dependence, \(\tau = -0.348\)),
+            \item Holmen real data (very strong positive dependence, \(\tau = 0.892\)),
+            \item Maennig real data (very strong positive dependence, \(\tau = 0.911\)).
+        \end{itemize}
+    \item Shown the construction of conditional percentile curves from the copula.
+    \item Summarised the dependence parameters in a table.
+    \item Described the Python implementation and downloadable code.
+    \item Discussed the connection with the Castillo–Canteli method and multilinear models, highlighting similarities, differences, and complementarity.
+    \item Pointed out future extensions: multivariate, time-dependent, Bayesian, and tail-dependent copulas.
+\end{itemize}
+
+This chapter concludes the part of the book devoted to dependence models. The concepts and tools developed — multilinearity, interaction spectrum, Castillo–Canteli method, copulas — constitute a complete and flexible set for the stochastic modelling of multivariate systems, with applications that go far beyond fatigue.
+
+
+\section*{Bridge to the next chapter}
+
+The four case studies presented in this chapter — two simulated and two real — demonstrate the versatility and power of the Frank copula for modelling the dependence between the stress range \(\Delta\sigma\) and the fatigue life \(N\). However, the Frank copula, like all Archimedean copulas, captures dependence only at the level of univariate marginals. What if we need to model conditional independencies among groups of variables, or learn the dependence structure locally, one variable at a time? The next chapter introduces Bayesian networks — a universal framework that factorises any joint distribution into a product of conditional probabilities, each depending only on a small set of parent variables. Bayesian networks not only generalise the separation property of copulas from univariate to multivariate marginals, but also provide efficient inference algorithms (variable elimination, belief propagation, junction tree) that scale to high-dimensional problems. The copula machinery we have built here will reappear within those conditional factors, linking the two frameworks into a coherent whole. 

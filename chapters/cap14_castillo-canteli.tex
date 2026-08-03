@@ -1,0 +1,322 @@
+\startcontents[chapter]
+\chapter{Castillo–Canteli models for families of joint distributions}
+\label{ch:castillo-canteli}
+\minitocboxed
+
+\section*{Motivation}
+
+In the previous chapters we established that the equality of all full conditional distributions,
+\[
+F_{\Pi_i|\boldsymbol{\Pi}_{-i}}(\pi_i|\boldsymbol{\pi}_{-i}) = F\bigl(G(\pi_1,\ldots,\pi_n)\bigr),\qquad i=1,\ldots,n,
+\]
+forces the common argument \(G\) to be a multilinear function (Theorem~\ref{thm:multilinear}). We have seen how this result leads to the trivariate Weibull–Hyperbola model (Chapter~\ref{ch:weibull-hyperbola}) and how the interaction spectrum decomposes dependence into irreducible contributions (Chapter~\ref{ch:dependence_structure}).
+
+We now step back to present a constructive method that allows generating entire families of joint probability distributions that satisfy the equality of the conditionals. The Castillo–Canteli method is extraordinarily simple and powerful:
+
+If one fixes a response variable \(i\), any joint density that satisfies the condition \(F_{\Pi_i|\boldsymbol{\Pi}_{-i}} = F(G)\) can be constructed as the product of the specified conditional density and a completely arbitrary marginal density for the remaining variables.
+
+This construction reveals several key aspects:
+
+\begin{itemize}
+    \item The \emph{modularity} of the approach: the dependence structure (encoded in \(G\) and \(F\)) is separated from the marginal distributions of the covariates, which can be arbitrary.
+    \item The fundamental distinction between \emph{laboratory models} and \emph{service models}: in the laboratory, the covariates are fixed by the experimenter, so their distribution is artificial. In service, the distribution of the covariates is what really matters for reliability, and it can be replaced thanks to the separation property.
+    \item The \emph{recursive extension} of the method, which allows constructing complex hierarchical models from simple conditional specifications, connecting with the world of Bayesian networks and vine copulas.
+\end{itemize}
+
+This chapter presents the method in detail, with examples and a discussion of its connection with copulas and Bayesian networks. The aim is to provide the reader with a general tool for constructing probabilistic models in any situation where one variable is naturally considered as the response and one wishes to specify its full conditional distribution.
+
+\section{Fundamental hypothesis}
+\label{sec:cc-hypothesis}
+
+Let \((\Pi_1,\ldots,\Pi_n)\) be a vector of continuous random variables. Denote by \(\boldsymbol{\Pi}_{-i}\) the vector of all variables except \(\Pi_i\). The following hypothesis is assumed throughout:
+
+\textbf{Hypothesis: }Equality of the expressions of the full conditional CDFs.
+
+There exist an invertible cumulative distribution function \(F\) (belonging to a location‑scale family) and a function \(G:\mathbb{R}^n\to\mathbb{R}\) such that for all \(i=1,\ldots,n\) and all \((\pi_1,\ldots,\pi_n)\)
+\[
+F_{\Pi_i|\boldsymbol{\Pi}_{-i}}(\pi_i|\boldsymbol{\pi}_{-i}) = F\bigl(G(\pi_1,\ldots,\pi_n)\bigr).
+\]
+
+From the fundamental multilinear theorem (Theorem~\ref{thm:multilinear}) we know that under this hypothesis \(G\) must be a multilinear polynomial:
+\[
+G(\pi_1,\ldots,\pi_n) = \sum_{A\subseteq\{1,\ldots,n\}} c_A \prod_{i\in A} \pi_i,
+\]
+where the sum runs over all subsets of \(\{1,\ldots,n\}\) (including the empty set, with the empty product defined as 1). The coefficients \(c_A\) are real constants.
+
+This hypothesis is not an abstract existence claim; it forces a concrete finite‑dimensional algebraic structure. Thus, in the remainder of this chapter we take a given multilinear function \(G\) and a given univariate CDF \(F\) (with density \(f=F'\)) as the building blocks.
+
+It is important to emphasise that this hypothesis refers to the equality of the expressions of the conditional distributions, not to the equality of the variables or their physical roles. This equality is a structural property that, as we have seen, has profound algebraic consequences.
+
+\section{Construction for a fixed response variable}
+\label{sec:cc-construction}
+
+Fix an index \(i\in\{1,\ldots,n\}\). From this hypothesis, the conditional CDF of \(\Pi_i\) given all other variables is \(F(G(\boldsymbol{\pi}))\). Differentiating with respect to \(\pi_i\) gives the conditional density:
+\[
+f_{\Pi_i|\boldsymbol{\Pi}_{-i}}(\pi_i|\boldsymbol{\pi}_{-i}) = \frac{\partial}{\partial\pi_i}F\bigl(G(\boldsymbol{\pi})\bigr) = F'\bigl(G(\boldsymbol{\pi})\bigr)\,\frac{\partial G(\boldsymbol{\pi})}{\partial\pi_i} = f\bigl(G(\boldsymbol{\pi})\bigr)\,\frac{\partial G(\boldsymbol{\pi})}{\partial\pi_i}.
+\]
+
+Now let \(g_i(\boldsymbol{\pi}_{-i})\) be any joint probability density function for the vector \(\boldsymbol{\Pi}_{-i}\) (i.e., the marginal density of all variables except \(\Pi_i\)). The product
+\begin{equation}
+\boxed{
+f^{(i)}(\pi_1,\ldots,\pi_n) \;=\; f_{\Pi_i|\boldsymbol{\Pi}_{-i}}(\pi_i|\boldsymbol{\pi}_{-i})\; g_i(\boldsymbol{\pi}_{-i}) \;=\; f\bigl(G(\boldsymbol{\pi})\bigr)\,\frac{\partial G(\boldsymbol{\pi})}{\partial\pi_i}\; g_i(\boldsymbol{\pi}_{-i})
+}
+\label{eq:joint_i}
+\end{equation}
+is a valid joint probability density for the full vector \(\boldsymbol{\Pi}\). Indeed:
+\begin{itemize}
+    \item For each fixed \(\boldsymbol{\pi}_{-i}\), the function \(\pi_i \mapsto f^{(i)}(\pi_i,\boldsymbol{\pi}_{-i})\) integrates to \(g_i(\boldsymbol{\pi}_{-i})\) because the conditional density integrates to 1.
+    \item Integrating over \(\boldsymbol{\pi}_{-i}\) gives \(\int g_i(\boldsymbol{\pi}_{-i})\,d\boldsymbol{\pi}_{-i}=1\).
+\end{itemize}
+Hence, no additional compatibility conditions are needed. The construction is always consistent, regardless of the choice of \(g_i\).
+
+We denote by \(\mathcal{C}_i(G,F)\) the set of all joint densities of the form \eqref{eq:joint_i} obtained by varying \(g_i\) over all valid probability densities on \(\mathbb{R}^{n-1}\). The index \(i\) indicates which variable is treated as the “response” (the one whose conditional distribution is specified), while the remaining variables are “covariates” whose joint distribution can be chosen arbitrarily.
+
+\begin{remarkbox}
+\begin{remarkT}
+The construction \eqref{eq:joint_i} is completely general and does not require the marginal \(g_i\) to have any relation to \(G\) or \(F\). This contrasts with traditional joint modelling approaches, where all conditionals must be compatible. Here, only one conditional is specified; the others are implicitly determined by the choice of \(g_i\).
+\end{remarkT}
+\end{remarkbox}
+
+\section{The complete Castillo–Canteli family}
+\label{sec:cc-family}
+
+Since the index \(i\) can be any of the \(n\) variables, we obtain \(n\) distinct joint subfamilies \(\mathcal{C}_1(G,F),\ldots,\mathcal{C}_n(G,F)\). The complete Castillo–Canteli family is defined as their union:
+\[
+\boxed{\;\mathcal{C}(G,F) \;=\; \bigcup_{i=1}^{n} \mathcal{C}_i(G,F)\; }.
+\]
+
+Every density belonging to \(\mathcal{C}(G,F)\) satisfies the hypothesis for the specific index \(i\) used in its construction. However, a density constructed from index \(i\) will generally not satisfy the hypothesis for index \(j\neq i\), unless the chosen marginal \(g_i\) is specially adapted. It is important to note that this condition is not imposed in the Castillo–Canteli framework.
+
+In applications, this is not a drawback but an advantage: the family \(\mathcal{C}(G,F)\) is intended for situations where one variable is naturally distinguished (e.g., fatigue life in fatigue analysis, the response variable in a given model), and we only require that its full conditional CDF given the others has the prescribed form. The remaining variables are free to follow any joint distribution. In fact, the model is a conditional model, not a joint model. Consequently, the framework possesses substantially more degrees of freedom than a joint one.
+
+\begin{remarkbox}
+\begin{remarkT}
+If one desires a joint density that satisfies the hypothesis for all \(i\) simultaneously (i.e., all full conditionals equal to \(F(G)\)), then the density should belong to the intersection \(\bigcap_{i=1}^n \mathcal{C}_i(G,F)\), not to the union \(\bigcup_{i=1}^n \mathcal{C}_i(G,F)\). In general, this intersection may be overly restrictive or even empty. The Castillo–Canteli method deliberately chooses the union, because in practice we only need one variable (the one we want to predict) to have the specified conditional.
+\end{remarkT}
+\end{remarkbox}
+
+\subsection{Relation to the chain rule and Bayesian networks}
+
+It is instructive to compare the Castillo–Canteli construction with the usual factorisation of a joint density via the chain rule:
+\[
+f(\pi_1,\ldots,\pi_n) = f(\pi_n|\pi_{n-1},\ldots,\pi_1) \cdots f(\pi_2|\pi_1)\,f(\pi_1).
+\]
+In the chain rule, each factor is a conditional density given only a subset of the other variables (typically the predecessors). There is no requirement that those conditionals have any particular relation among themselves. The factorisation always exists and is unique for a given ordering.
+
+In contrast, the Castillo–Canteli construction uses full conditionals (given all other variables) and imposes that they all share the same functional form \(F(G)\). For a fixed \(i\), we write the joint density as a product of only two factors: the full conditional pdf of \(\Pi_i|\boldsymbol{\Pi}_{-i}\), which is shared, and the marginal of \(\boldsymbol{\Pi}_{-i}\). This is not a factorisation in the sense of the chain rule; it is a different way of constructing a joint density that guarantees the specified full conditional pdf for \(\Pi_i\). The advantage is that the full conditional pdfs of the other variables are not controlled — they are implicitly determined by the chosen marginal. This is perfectly acceptable when the modeller only cares about the conditional distribution of one particular variable, the \(i\)-th one, which is our case here.
+
+In terms of Bayesian networks, the Castillo–Canteli construction corresponds to a complete graph (all variables are connected) but with a very specific parametrisation: all full conditional distributions share the same function \(F(G)\). This is much more restrictive than a general Bayesian network, but in return it provides a parsimonious parametrisation and a clear geometric interpretation.
+
+\section{Illustrative examples}
+\label{sec:cc-examples}
+
+We illustrate the construction with simple cases.
+
+\subsection{Bivariate case (\(n=2\))}
+
+Let \(G(\pi_1,\pi_2) = 1 + \pi_1 + \pi_2 + \frac12\pi_1\pi_2\) and let \(F\) be the standard logistic CDF, \(F(t)=1/(1+e^{-t})\). Then
+\[
+f(t) = \frac{e^{-t}}{(1+e^{-t})^2},\qquad \frac{\partial G}{\partial\pi_1}=1+\tfrac12\pi_2.
+\]
+Choose \(g_1(\pi_2)\) as a standard normal density \(\varphi(\pi_2)\). The joint density constructed from \(i=1\) is
+\[
+f^{(1)}(\pi_1,\pi_2) = \frac{e^{-G(\pi_1,\pi_2)}}{(1+e^{-G(\pi_1,\pi_2)})^2}\; (1+\tfrac12\pi_2)\; \varphi(\pi_2).
+\]
+This density has the property that the conditional of \(\Pi_1\) given \(\Pi_2\) is logistic with parameter \(G\). The marginal of \(\Pi_2\) is standard normal. The conditional of \(\Pi_2\) given \(\Pi_1\) is not logistic (unless a different \(g_2\) is chosen).
+
+If instead we construct from \(i=2\) with a marginal \(g_2(\pi_1)=\varphi(\pi_1)\), we obtain a different joint density:
+\[
+f^{(2)}(\pi_1,\pi_2) = \frac{e^{-G(\pi_1,\pi_2)}}{(1+e^{-G(\pi_1,\pi_2)})^2}\; (1+\tfrac12\pi_1)\; \varphi(\pi_1).
+\]
+The two densities \(f^{(1)}\) and \(f^{(2)}\) are different unless the marginals are specially chosen (e.g., both normal with appropriate parameters). Their union \(\mathcal{C}(G,F)\) contains many possible bivariate distributions, all sharing the same bilinear \(G\) and the same \(F\).
+
+\subsection{Three‑dimensional example with independent covariates}
+
+Take \(n=3\), \(G(\pi_1,\pi_2,\pi_3) = \pi_1 + \pi_2 + \pi_3\) (no interactions), and \(F\) the standard normal CDF \(\Phi\). Then
+\[
+f(G) = \frac{1}{\sqrt{2\pi}} e^{-G^2/2},\qquad \frac{\partial G}{\partial\pi_1}=1.
+\]
+Choose \(g_1(\pi_2,\pi_3) = \varphi(\pi_2)\varphi(\pi_3)\) (independent standard normals). Then
+\[
+f^{(1)}(\pi_1,\pi_2,\pi_3) = \varphi(\pi_1+\pi_2+\pi_3)\cdot 1 \cdot \varphi(\pi_2)\varphi(\pi_3),
+\]
+which is a joint density where \(\Pi_1\) given \((\Pi_2,\Pi_3)\) is normal with mean \(-\pi_2-\pi_3\) and variance 1, while \(\Pi_2\) and \(\Pi_3\) are independent standard normals. This is a simple linear regression model.
+
+Now construct from \(i=2\) with \(g_2(\pi_1,\pi_3)=\varphi(\pi_1)\varphi(\pi_3)\):
+\[
+f^{(2)}(\pi_1,\pi_2,\pi_3) = \varphi(\pi_1+\pi_2+\pi_3)\cdot 1 \cdot \varphi(\pi_1)\varphi(\pi_3),
+\]
+which is a different joint density (the roles of \(\Pi_1\) and \(\Pi_2\) are interchanged). Both belong to \(\mathcal{C}(G,F)\) because \(G\) is symmetric.
+
+\subsection{Case with interactions: Weibull–Hyperbola model}
+
+Recall the trivariate Weibull–Hyperbola model from Chapter~\ref{ch:weibull-hyperbola}. There, the function \(G\) is the simplified multilinear argument:
+\[
+G(\pi_1,\pi_2,\pi_3) = C_1\pi_1 + C_{12}\pi_1\pi_2 + C_{13}\pi_1\pi_3 + \pi_2\pi_3 + C_{123}\pi_1\pi_2\pi_3,
+\]
+and \(F\) is the Weibull CDF \(\mathcal{W}(\lambda,\delta,\beta)\). The conditional density of \(\Pi_3\) given \((\Pi_1,\Pi_2)\) is
+\[
+f_{\Pi_3|\Pi_1,\Pi_2}(\pi_3|\pi_1,\pi_2) = f\bigl(G(\pi_1,\pi_2,\pi_3)\bigr)\,\frac{\partial G}{\partial\pi_3},
+\]
+where \(\partial G/\partial\pi_3 = C_{13}\pi_1 + \pi_2 + C_{123}\pi_1\pi_2\).
+
+According to the Castillo–Canteli method, any joint density that has this conditional for \(\Pi_3\) is obtained by multiplying by an arbitrary marginal \(g_3(\pi_1,\pi_2)\):
+\[
+f^{(3)}(\pi_1,\pi_2,\pi_3) = f\bigl(G(\pi_1,\pi_2,\pi_3)\bigr)\,(C_{13}\pi_1 + \pi_2 + C_{123}\pi_1\pi_2)\,g_3(\pi_1,\pi_2).
+\]
+In Chapter~\ref{ch:weibull-hyperbola}, this construction was used to generate synthetic data: \((\pi_1,\pi_2)\) were sampled from \(g_3\) (which could be uniform, experimental, or service) and then \(\pi_3\) was generated from the Weibull conditional. This is precisely the practical application of the Castillo–Canteli method.
+
+\section{Connection with copulas}
+\label{sec:cc-copulas}
+
+The Castillo–Canteli method has a natural connection with copula theory. After applying the probability integral transform to each variable, we obtain uniform marginals \(U_i = F_i(\Pi_i)\) on \([0,1]\). The multilinear function becomes
+\[
+G^*(u_1,\ldots,u_n) = G\bigl(F_1^{-1}(u_1),\ldots,F_n^{-1}(u_n)\bigr).
+\]
+Then the conditional CDF of \(U_i\) given \(U_{-i}\) is
+\[
+F_{U_i|U_{-i}}(u_i|\mathbf{u}_{-i}) = F\bigl(G^*(u_1,\ldots,u_n)\bigr).
+\]
+
+For a copula \(C\), this conditional CDF is given by a ratio of partial derivatives. Hence, any copula that is compatible with a Castillo–Canteli construction must satisfy
+\[
+\frac{\partial^{n-1}C}{\partial u_1\cdots\partial u_{i-1}\partial u_{i+1}\cdots\partial u_n} \Big/ \text{(normalisation)} = F(G^*).
+\]
+
+A simple way to guarantee this is to postulate a copula of the form \(C = K(G^*)\) with a monotone increasing function \(K\). Then the conditional copula becomes proportional to \(K'(G^*)\,\partial G^*/\partial u_i\). The Castillo–Canteli method provides a direct sampling algorithm: generate the covariates \(\mathbf{u}_{-i}\) from any joint density (e.g., independent uniforms) and then generate \(u_i\) from the CDF \(F(G^*)\). This is often more convenient than working with the explicit copula function.
+
+\subsection{Relation to the form \(C=K(G^*)\) from Chapter 3}
+
+In Chapter~\ref{ch:dependence_structure} we saw that copulas compatible with the multilinear structure take the form \(C(u_1,\ldots,u_n)=K(G^*(u_1,\ldots,u_n))\). The Castillo–Canteli method provides a constructive interpretation of this form: if we choose \(K=F\) (the same function as in the conditional), then the copula is simply \(C=F(G^*)\). In this case, the copula density is
+\[
+c(u_1,\ldots,u_n) = f(G^*)\,\frac{\partial^nG^*}{\partial u_1\cdots\partial u_n},
+\]
+provided the mixed derivative is non‑negative. This is a particular family of multilinear copulas, but the Castillo–Canteli method is more general because it allows choosing any \(K\) (or equivalently, any monotone transformation) as long as the resulting copula is valid.
+
+\section{Recursive (hierarchical) construction}
+\label{sec:cc-recursion}
+
+The construction presented in Section~\ref{sec:cc-construction} builds a joint density for \(n\) variables by fixing one variable as the response and choosing an arbitrary joint density for the remaining \(n-1\) covariates. This naturally suggests a recursive (hierarchical) procedure: the joint density of the covariates can itself be constructed using the same principle, provided the required conditional structure is maintained at each level.
+
+\subsection{Idea of the recursion}
+
+Let \(G(\pi_1,\ldots,\pi_n)\) be a multilinear function and \(F\) a fixed univariate CDF. Suppose we want to construct an \(n\)-dimensional density that satisfies the hypothesis for a specific ordering of variables, say \(\Pi_1\) given \(\Pi_2,\ldots,\Pi_n\). Instead of choosing an arbitrary \(g_1(\pi_2,\ldots,\pi_n)\), we can construct \(g_1\) recursively by applying the Castillo–Canteli method to the \((n-1)\)-dimensional vector \((\Pi_2,\ldots,\Pi_n)\) with an appropriate reduced multilinear function \(G_{-1}\) and the same \(F\). This yields a chain of conditional specifications.
+
+More formally, for a chosen permutation \((i_1,i_2,\ldots,i_n)\) of the indices, we define recursively:
+\begin{align}
+f(\pi_{i_n}) &= h_{i_n}(\pi_{i_n}) \quad \text{(arbitrary marginal density for the last variable)},\\
+f(\pi_{i_{n-1}},\pi_{i_n}) &= f_{\Pi_{i_{n-1}}|\Pi_{i_n}}(\pi_{i_{n-1}}|\pi_{i_n})\; f(\pi_{i_n}),\\
+f(\pi_{i_{n-2}},\pi_{i_{n-1}},\pi_{i_n}) &= f_{\Pi_{i_{n-2}}|\Pi_{i_{n-1}},\Pi_{i_n}}(\pi_{i_{n-2}}|\pi_{i_{n-1}},\pi_{i_n})\; f(\pi_{i_{n-1}},\pi_{i_n}),\\
+&\vdots\\
+f(\pi_1,\ldots,\pi_n) &= f_{\Pi_{i_1}|\Pi_{i_2},\ldots,\Pi_{i_n}}(\pi_{i_1}|\pi_{i_2},\ldots,\pi_{i_n})\; f(\pi_{i_2},\ldots,\pi_{i_n}).
+\end{align}
+
+At each step, the conditional density is taken from the Castillo–Canteli prescription:
+\[
+f_{\Pi_{i_k}|\Pi_{i_{k+1}},\ldots,\Pi_{i_n}}(\pi_{i_k}|\pi_{i_{k+1}},\ldots,\pi_{i_n}) = f\bigl(G_k(\pi_{i_k},\ldots,\pi_{i_n})\bigr)\;
+\frac{\partial G_k(\pi_{i_k},\ldots,\pi_{i_n})}{\partial\pi_{i_k}},
+\]
+where \(G_k\) is a multilinear function that must be compatible with the original \(G\). A natural choice is to take \(G_k\) as the restriction of \(G\) to the subset \(\{i_k,\ldots,i_n\}\), i.e.,
+\[
+G_k(\pi_{i_k},\ldots,\pi_{i_n}) = G(0,\ldots,0,\pi_{i_k},\ldots,\pi_{i_n}),
+\]
+setting the omitted variables to zero (or any fixed constant). This ensures that at the top level the full conditional of \(\Pi_{i_1}\) given the others is equal to \(F(G)\), as required.
+
+\subsection{Advantages of the recursion in the Castillo–Canteli framework}
+
+The recursive perspective offers several advantages:
+
+\begin{enumerate}
+    \item \textbf{Modular construction.} The joint distribution is built step by step, starting from one variable and adding one variable at a time. This is analogous to specifying a Bayesian network with a total ordering, where the conditional distribution of each node depends only on its successors (or predecessors). The recursion guarantees a final consistent and normalised joint density.
+
+    \item \textbf{Reduction of free choices.} Instead of choosing an arbitrary \((n-1)\)-dimensional density \(g_i\) (which can be daunting in high dimensions), the recursive method allows the modeller to specify only univariate marginals (or low‑dimensional conditionals) at each level. The remaining dependence is imposed by the multilinear structure.
+
+    \item \textbf{Connection with vine copulas and pair‑copula constructions.} The recursive Castillo–Canteli families can be seen as a special case of vine copulas where all pair copulas are derived from the same function \(F\) and a multilinear argument. This simplifies specification and estimation, because the entire dependence structure is governed by a single parametric function \(G\).
+
+    \item \textbf{Computational efficiency.} Sampling from a recursively constructed density is straightforward: starting from the last variable (with a simple marginal), we sequentially generate the remaining variables using their conditional CDFs \(F(G_k)\). No costly rejections or MCMC are needed.
+
+    \item \textbf{Theoretical insight.} The recursion clarifies the hierarchical nature of the equal‑full‑conditionals hypothesis. If a joint density satisfies \(F_{\Pi_i|\boldsymbol{\Pi}_{-i}} = F(G)\) for all \(i\), then every marginal distribution of a subset must satisfy a similar property with respect to a reduced multilinear function. This self‑coherence property is essential for proving existence and uniqueness results.
+
+    \item \textbf{Extensibility to infinite dimensions.} Recursive definitions extend naturally to stochastic processes. One can define a sequence \(\{\Pi_t\}_{t=1}^\infty\) such that for each \(t\), the conditional distribution of \(\Pi_t\) given all past and future variables depends only on a multilinear function of a finite set of neighbours. This leads to new classes of Markov‑like processes with long‑range dependence.
+\end{enumerate}
+
+\subsection{Bivariate recursive example}
+
+Consider again the bivariate case (\(n=2\)) with \(G(\pi_1,\pi_2)=\pi_1+\pi_2\) and \(F\) the standard normal CDF \(\Phi\). The recursive construction proceeds as follows:
+
+\begin{enumerate}
+    \item Choose an arbitrary marginal density for \(\Pi_2\), e.g., \(f(\pi_2)=\varphi(\pi_2)\) (standard normal).
+    \item Define the conditional density of \(\Pi_1\) given \(\Pi_2\) using the Castillo–Canteli formula:
+    \[
+    f_{\Pi_1|\Pi_2}(\pi_1|\pi_2) = \varphi(\pi_1+\pi_2)\cdot 1.
+    \]
+    \item The joint density is \(f(\pi_1,\pi_2)=\varphi(\pi_1+\pi_2)\,\varphi(\pi_2)\).
+\end{enumerate}
+
+If instead we wanted a symmetric joint density (where both full conditionals are normal with the same \(G\)), we would need to choose the marginal \(f(\pi_2)\) such that the resulting joint density also satisfies the hypothesis for \(i=2\). This leads to an integral equation whose solution is known to be the bivariate normal distribution with equal variances and correlation \(-1/2\). The recursive method, without additional restrictions, produces the most general family where only one conditional is controlled.
+
+\section{Implications for laboratory and service modelling}
+\label{sec:cc-lab-service}
+
+The Castillo–Canteli method provides a formal justification for the distinction between laboratory and service models that we have emphasised throughout the previous chapters.
+
+\subsection{Laboratory model}
+
+In the laboratory, the experimenter controls the load descriptors (e.g., \(\sigma_M\) and \(R\)). Under these conditions, the relevant quantity is the conditional distribution of life \(N\) given the load descriptors. The Castillo–Canteli method tells us that any joint density compatible with the laboratory data must have the form
+\[
+f^{(i)}(\pi_1,\ldots,\pi_n) = f\bigl(G(\boldsymbol{\pi})\bigr)\,\frac{\partial G}{\partial\pi_i}\,g_i(\boldsymbol{\pi}_{-i}),
+\]
+where \(g_i\) is the empirical distribution of the load descriptors in the experiment (e.g., a discrete uniform distribution over the tested stress levels). This \(g_i\) is artificial and should not be confused with the service load distribution.
+
+\subsection{Service model}
+
+In service, the load descriptors are random and their distribution \(g_i^{\text{serv}}\) reflects the actual operating conditions. Thanks to the modularity of the Castillo–Canteli method, we can reuse exactly the same conditional structure (the same \(G\) and the same \(F\)) and simply replace \(g_i\) by \(g_i^{\text{serv}}\). The service joint density is then
+\[
+f^{\text{serv}}(\pi_1,\ldots,\pi_n) = f\bigl(G(\boldsymbol{\pi})\bigr)\,\frac{\partial G}{\partial\pi_i}\,g_i^{\text{serv}}(\boldsymbol{\pi}_{-i}).
+\]
+
+This is the practical realisation of the separation between structural dependence and marginal behaviour. The dependence (encoded in \(G\) and \(F\)) is learned in the laboratory and is invariant; the marginals of the covariates are adapted to the application context.
+
+\section{Final remarks and relation to previous chapters}
+\label{sec:cc-conclusion}
+
+The Castillo–Canteli method offers a simple and constructive way to generate multivariate distributions that satisfy the equality of a given full conditional CDF. The key steps are:
+
+1. Assume (or prove) that all full conditional CDFs are equal to \(F(G)\) with \(G\) multilinear.
+2. For each variable \(i\), form the joint density as the product of the conditional density \(f(G)\,\partial G/\partial\pi_i\) and an arbitrary joint density \(g_i\) for the remaining variables.
+3. The complete family \(\mathcal{C}(G,F)\) is the union of these \(n\) families.
+
+This approach separates the dependence structure (encoded in \(G\) and \(F\)) from the marginal behaviour of the covariates, which remains completely free. It is particularly useful in regression settings, reliability engineering, and any situation where one variable is naturally considered as the response.
+
+\subsection{Connection with the Weibull–Hyperbola model (Chapter 4)}
+
+The trivariate Weibull–Hyperbola model of Chapter~\ref{ch:weibull-hyperbola} is a particular case of the Castillo–Canteli method: there, \(i=3\) (life \(N\) is the response), \(G\) is the simplified multilinear argument, \(F\) is the Weibull CDF, and \(g_3(\pi_1,\pi_2)\) is the joint distribution of the load descriptors (in laboratory or service). The Castillo–Canteli method therefore provides a general justification for the estimation and prediction strategy used in that chapter.
+
+\subsection{Connection with the interaction spectrum (Chapter 3)}
+
+The interaction spectrum of Chapter~\ref{ch:dependence_structure} decomposes \(G\) into interactions of different orders. The Castillo–Canteli method uses \(G\) as a whole, but the interpretation of the coefficients \(a_A\) as main effects, pairs, triples, etc., remains valid. Indeed, the choice of \(g_i\) may influence which interactions are more relevant in practice, but the fundamental structure remains unchanged.
+
+\subsection{Connection with copulas (Chapter 6)}
+
+The connection with copulas has been established in Section~\ref{sec:cc-copulas}. The Castillo–Canteli method provides a way to construct copulas of the form \(C=K(G^*)\) via conditional sampling. In Chapter~\ref{ch:copula-models}, we will explore this connection in detail and see how Frank copulas and other families can be used to model dependence in fatigue and other problems.
+
+\subsection{Future extensions}
+
+Extensions to recursive (hierarchical) models, where the marginals themselves are required to satisfy the same property, lead to more restricted families that are not treated here in detail but can be found in the specialised literature. It is also possible to extend the method to discrete or mixed variables, although the formulation presented here has focused on the continuous case.
+
+\section*{Chapter conclusions}
+
+In this chapter we have presented the Castillo–Canteli method as a general tool for constructing families of joint distributions from a single conditional specification. The main contributions are:
+
+\begin{itemize}
+    \item The identification of the fundamental hypothesis: equality of all full conditional distributions, with \(G\) multilinear.
+    \item The construction for a fixed response variable: \(f^{(i)}(\boldsymbol{\pi}) = f(G)\,\partial G/\partial\pi_i\,g_i(\boldsymbol{\pi}_{-i})\), with \(g_i\) arbitrary.
+    \item The definition of the complete family \(\mathcal{C}(G,F)\) as a union over \(i\), and the discussion of why the union is preferred over the intersection.
+    \item The connection with the chain rule and Bayesian networks, highlighting the differences and advantages of the full‑conditional approach.
+    \item Illustrative examples in 2D and 3D, including the Weibull–Hyperbola model as a special case.
+    \item The connection with copulas, showing how the method provides a direct sampling algorithm.
+    \item The recursive (hierarchical) extension, which allows building complex models step by step with univariate marginals.
+    \item The formal justification of the distinction between laboratory and service models, and how to reuse the dependence structure in different contexts.
+\end{itemize}
+
+This chapter provides the conceptual bridge between the deterministic multilinear structure (Chapters 2 and 3) and the complete stochastic models (Chapter 4 and 6). In the next chapter, Chapter~\ref{ch:copula-models}, we will explore a complementary alternative based on copulas, which offers even greater flexibility for dependence modelling in fatigue and other domains. 

@@ -1,0 +1,529 @@
+\startcontents[chapter]
+\chapter{Form of Buckingham's Functions}
+\label{ch:Piforms}
+\minitocboxed
+
+
+\section*{Introduction and Motivation}
+
+One of the most celebrated results in the history of applied mathematics is the
+Buckingham Pi theorem: given any physically meaningful relation among $n$ dimensional
+variables involving $k$ independent physical dimensions, that relation can always be
+rewritten in terms of $n - k$ dimensionless groups $\pi_1, \pi_2, \ldots, \pi_{n-k}$.
+This reduction is not a simplification — it is an exact equivalence. It eliminates
+redundancy, exposes the true degrees of freedom of the problem, and makes models
+independent of the arbitrary choice of unit systems.
+
+And yet, powerful as it is, the Buckingham theorem, as already has been indicated, leaves the most difficult question
+unanswered: \emph{what is the form of the function}
+$\phi(\pi_1, \pi_2, \ldots, \pi_{n-k})$?
+The theorem guarantees that such a function exists, but says nothing about its
+structure. In practice, this gap is filled by guesswork, tradition, or curve-fitting
+— a state of affairs that is both scientifically unsatisfying and practically limiting.
+
+\textbf{This chapter tries to close that gap.}
+
+The central result we derive here is that the functional form of $\phi$ is not
+arbitrary. Under two conditions that any reasonable physical or mathematical relation
+ought to satisfy — the ability to incorporate variables sequentially, and independence
+of the result from the order in which they are added — the structure of $\phi$ is
+uniquely determined, up to a family of univariate transformations. Specifically, we
+will show that $\phi$ must have the form:
+\begin{equation}\label{eq:seqorderIndep}
+\boxed{\phi(\pi_1,\pi_2,\ldots,\pi_{n-k}) = p\!\left[p_1(\pi_1) + p_2(\pi_2) + \cdots +
+p_{n-k}(\pi_{n-k})\right],}
+\end{equation}
+where $p, p_1, p_2, \ldots, p_{n-k}$ are strictly monotonic univariate functions.
+Under the assumptions of sequential aggregation and order independence, it is shown that the function φ must take that form and the entire complexity of a
+multivariate relation among $n-k$ variables reduces to $n - k + 1$ functions of a
+single argument each. Outside those assumptions, other functional forms are possible.
+
+This chapter is structured as follows. Section~\ref{sec:agg_properties} introduces the aggregation conditions and expresses them as
+functional equations. Section~\ref{sec:uniqueness} derives the general solution and establishes
+the uniqueness of the representation up to affine transformations.
+Section~\ref{sec:multivariate_form} presents the resulting universal multivariate form and its most
+important special cases. Section~\ref{sec:ai_implications} discusses the functional network
+architecture implied by the main result, and the chapter closes with a discussion of
+the broader impact of these findings across science, engineering, and artificial
+intelligence.
+
+\section{Aggregation Properties and Order Independence}\label{sec:agg_properties}
+
+Since the function $\phi(\pi_1,\pi_2,\ldots,\pi_{n-k})$ is in principle very general,
+reasonable and interpretable conditions must be imposed so that the resulting function
+behaves in a sound and useful manner. Fortunately, a small set of weak conditions
+leads to a relatively simple but powerful structure.
+
+\textbf{The main idea} consists of building $\phi$ by sequentially aggregating the
+effects of the variables one by one — or in groups — and requiring that this process
+be independent of the order in which the variables are incorporated.
+
+\textbf{Assumption 1:} It is possible to aggregate the effects of variables,
+one by one or in groups, into the joint effect of the corresponding union group; and
+
+
+\textbf{Assumption 2:} The result must be independent of the order in which the aggregation is performed.
+
+This assumption is entirely natural: a well-posed physical relation should not depend
+on the arbitrary order in which its variables are considered. Functional equations
+not only state this property with mathematical clarity, but allow the identification
+of the functional form of $\phi$ through their solutions — without any arbitrary
+assumption on its structure.
+
+\subsection*{The three-variable case}
+
+To fix ideas, consider a function of three arguments, $\phi(\pi_1,\pi_2,\pi_3)$, where $\pi_i \in I_i \subseteq \mathbb{R}$ are real-valued dimensionless variables defined on intervals $I_i$. Order independence requires that this function can be written in three equivalent forms:
+\begin{equation}
+\boxed{\phi(\pi_1,\pi_2,\pi_3) = F[G(\pi_1,\pi_2),\pi_3]
+= K[\pi_1,N(\pi_2,\pi_3)]
+= L[\pi_2,M(\pi_1,\pi_3)],}
+\label{eq:agg1}
+\end{equation}
+where $F, G, K, N, L, M : I \times I \to I$ are two-argument aggregation functions — the unknowns of equation~(\ref{eq:agg1}). Each representation corresponds to a different aggregation order:(a) first combining $(\pi_1,\pi_2)$ then adding $\pi_3$; (b) first combining $(\pi_2,\pi_3)$ then adding $\pi_1$; and (c) first combining $(\pi_1,\pi_3)$ then adding $\pi_2$. The requirement that all three yield the same value is precisely the order-independence condition expressed as a functional equation.
+
+\begin{theorem}\label{thm:threevar_full}
+The general continuous solution of equation~(\ref{eq:agg1}), for functions defined on intervals $I_i \subseteq \mathbb{R}$ and under the assumption that all functions involved are continuous and strictly monotonic on their respective domains, is given by (see~\cite{castillo2004functional}):
+\begin{align}\label{eq:generalform}
+F(\pi_1,\pi_2) &= k[f(\pi_1) + g(\pi_2)], \quad G(\pi_1,\pi_2) = f^{-1}[p(\pi_1) + q(\pi_2)],\nonumber\\
+K(\pi_1,\pi_2) &= k[p(\pi_1) + n(\pi_2)], \quad N(\pi_1,\pi_2) = n^{-1}[q(\pi_1) + g(\pi_2)],\nonumber\\
+L(\pi_1,\pi_2) &= k[q(\pi_1) + m(\pi_2)], \quad M(\pi_1,\pi_2) = m^{-1}[p(\pi_1) + g(\pi_2)],
+\end{align}
+and
+\begin{equation}\label{genform}
+\phi(\pi_1,\pi_2,\pi_3) =k\left(f(\pi_1) + q(\pi_2) + g(\pi_3)\right),
+\end{equation}
+where $k, f, g, p, q, n, m$ are strictly monotonic, continuous, and invertible real-valued functions of a single argument, each defined on appropriate subdomains of $\mathbb{R}$ such that all compositions and inverse functions appearing above are well-defined. Differentiability can additionally be assumed when needed, though it is not required for the core result. Compatibility of the function ranges is also assumed throughout.
+\end{theorem}
+
+The proof can be seen in \cite{aczel1964functional} and \cite{castillo2004functional}.
+
+\textbf{A key observation}: The theorem not only provides the structure of all functions $F, G, K, N, L, M$ and $\phi$ but shows that they can be written in terms of two-argument functions, too. In addition they share the same structural form — each is expressed as a monotonic function of the \emph{sum} of single-argument functions. This is not an assumption; it is a \emph{theorem}.
+
+\section{Uniqueness and Representation Theorems}\label{sec:uniqueness}
+
+The representation in terms of single-argument functions is not unique. The following
+theorem characterizes the full family of equivalent representations.
+
+\begin{theorem}[Uniqueness of representation]
+\label{thm:uniqueness}
+Let $\alpha < \beta$ be real constants, and suppose $F: I_1 \times I_2 \to [\alpha,\beta]$
+admits two representations:
+\begin{eqnarray}
+F(\pi_1,\pi_2) &=& f_1[g_1(\pi_1) + h_1(\pi_2)]\nonumber\\
+ &=& f_2[g_2(\pi_1) + h_2(\pi_2)], \quad \pi_1 \in I_1,\ \pi_2 \in I_2,
+\label{eq:tworepresentations}
+\end{eqnarray}
+where $f_i, g_i$, and $h_i$ ($i = 1,2$) are continuous and strictly monotonic. Then
+the two representations are related by affine transformations:
+\begin{equation}
+f_2(\pi_1) = f_1\!\left(\frac{\pi_1 - a - b}{c}\right); \quad g_2(\pi_1) = cg_1(\pi_1) + a; \quad h_2(\pi_2) = ch_1(\pi_2) + b,
+\label{eq:uniquenessrelations}
+\end{equation}
+for some constants $a, b \in \mathbb{R}$ and $c \neq 0$.
+\end{theorem}
+
+The constants $a, b, c$ can always be chosen so that the image of $F$ equals any
+prescribed interval $[\alpha,\beta]$, including the canonical case $[0,1]$.
+This uniqueness result is structurally significant: any two valid representations
+differ only by an affine reparametrization of the constituent functions, confirming
+that the form derived from Assumption 1 is intrinsic to the aggregation structure, not
+an artifact of a particular choice.
+
+This theorem can be extended to the case of $n$-dimensional functions.
+
+\section{The General Multivariate Form}\label{sec:multivariate_form}
+
+\begin{theorem}[General Functional Form]\label{thm:universal}
+Under Assumptions 1 and 2, if $\phi$ and all bivariate aggregation
+functions are continuous and strictly monotonic in each argument, then
+any function $\phi$ of $n$ dimensionless variables must be of the form:
+\begin{equation}\label{genform1}
+\boxed{\phi(\pi_1,\pi_2,\dots,\pi_n) = p\bigl(p_1(\pi_1) + p_2(\pi_2)
++ \cdots + p_n(\pi_n)\bigr)},
+\end{equation}
+where $p,p_1,\dots,p_n$ are continuous, strictly monotonic, and
+invertible onto their ranges. Moreover, invertibility of $p$ and
+$p_1,\dots,p_n$ is not an assumption but a consequence: it follows
+from continuity and strict monotonicity via the intermediate value
+theorem.
+\end{theorem}
+
+\begin{proof}
+We proceed by induction on $n$. For $n=3$, Theorem \ref{thm:threevar_full}
+gives the result. Assume the form holds for $n-1$. Write
+\[
+\phi(\pi_1,\dots,\pi_n) = F[\phi_1(\pi_1,\dots,\pi_{n-1}), \pi_n]
+\]
+by aggregating the first $n-1$ variables first. By the induction
+hypothesis,
+\[
+\phi_1(\pi_1,\dots,\pi_{n-1}) = q\Bigl(\sum_{i=1}^{n-1} q_i(\pi_i)\Bigr),
+\]
+where $q$ is continuous and strictly monotonic, hence invertible onto
+its range by the intermediate value theorem. Therefore
+\[
+\phi(\pi_1,\dots,\pi_n) = F\Bigl[q\Bigl(\sum_{i=1}^{n-1}
+q_i(\pi_i)\Bigr),\, \pi_n\Bigr].
+\]
+Applying the three-variable result to $F[q(\cdot), \pi_n]$, and using
+that $q$ is invertible so that $q(\cdot)$ can be absorbed into the
+outer function, yields
+\[
+\phi(\pi_1,\dots,\pi_n) = p\Bigl(\sum_{i=1}^{n-1} q_i(\pi_i)
++ p_n(\pi_n)\Bigr).
+\]
+Relabeling $q_i$ as $p_i$ completes the induction.
+\end{proof}
+
+\subsection{Normalization and canonical form}
+\label{subsec:normalization}
+
+An obvious extension of Theorem~\ref{thm:uniqueness} shows that the representation $\phi(\pi_1,\dots,\pi_n)=p\bigl(\sum\limits_{i=1}^n p_i(\pi_i)\bigr)$ is unique only up to affine transformations of the univariate functions:
+\[
+\tilde p_i(t) = c\,p_i(t) + a_i,\qquad \tilde p(s) = p\!(s - \sum\limits_{i=1}^n a_i/c).
+\]
+This non-uniqueness is harmless in practice. By imposing simple normalization conditions we can select a canonical representation without affecting the functional form or the conclusions.
+
+For example, we may fix:
+\[
+p_i(0)=0,\quad p_i(1)=1\quad\text{for all }i,
+\]
+or, in the copula context, $\phi(1)=0$ and $\phi(0)=\infty$ together with an additional condition such as $\phi(1/2)=1$ to fix the scale.  Under such normalizations the representation becomes unique.
+
+\textbf{This is the central result of the chapter.} Under the sole requirement of
+order-independent sequential aggregation, \emph{every} admissible $\phi$ of $n-k$
+dimensionless variables must take the form~(\ref{eq:generalform}), involving exactly
+$n-k+1$ univariate functions. All aggregation functions, whether involving two, three,
+or more arguments, are expressed exclusively in terms of single-argument components —
+a surprising and deeply significant structural fact. Notably, this class includes
+weighted arithmetic means as a special case.
+
+This functional form has appeared recently in the machine learning literature;
+see~\cite{liu2025kan}, where its connection to the Kolmogorov–Arnold representation
+theorem~\cite{kolmogorov1956,kolmogorov1957,braun2009} is discussed. The present
+derivation provides an independent, physically motivated foundation for the same form.
+
+Since we work with $[0,1]^n$ in our models, an important further tool is Sobol's
+theorem~\cite{Sobol1969,Sobol2001}, which permits sensitivity analysis of individual
+effects and interactions among variables for square-integrable functions on this domain.
+
+\section{Implications for AI and Network Design}\label{sec:ai_implications}
+
+Equation~(\ref{genform1}) not only characterizes the functional form of $\phi$
+but also \textbf{suggests a natural network architecture} for learning it; see
+also~\cite{Castillo:98,CASTILLOG:98,CASTILLOCGP:99,CastilloCGP:00,CASTILLOHLP:08}.
+In this functional network, the activation functions $p_1, p_2, \ldots, p_{n-k}$ and
+$p$ are the quantities to be learned — in contrast to standard neural networks, where
+connection weights are learned and activation functions are fixed. Here, the weights
+are all equal to one and the activation functions carry all the model's expressive
+power.
+
+Since $p$ is invertible, it can be absorbed into the left-hand side by redefining
+$\phi \leftarrow p^{-1}(\phi)$, reducing~(\ref{eq:generalform}) to a plain sum of
+univariate terms. As demonstrated in Chapter~\ref{ch:functionalequations}, the sum
+is merely one representative of the broader class of associative operations — any
+associative function (such as the product) can replace the sum without affecting the
+validity of the derivation.
+
+\section{Resulting Universal Multivariate Functions}
+
+The results of the previous sections establish that $\phi(\pi_1,\pi_2,\ldots,\pi_n)$
+must satisfy:
+\begin{equation}\label{eq:mainresult}
+\boxed{\phi(\pi_1,\pi_2,\ldots,\pi_n) = p\!\left(\sum_{j=1}^n p_j(\pi_j)\right),}
+\end{equation}
+involving arbitrary strictly monotonic and invertible single-argument functions
+$p : \sum_j p_j(I_j) \to J$ and $p_j : I_j \to \mathbb{R}$, $j = 1, \ldots, n$.
+
+Figure \ref{fig:AdditiveGeneralFunction} illustrates the structure of the general function that satisfies the two constraints and reminds the properties that led to this particular structure.
+
+\begin{figure}[!htpb]
+\centering
+%\includegraphics[width=0.8\textwidth]{AdditiveGeneralFunctionIMAGE.png}
+\begin{tikzpicture}[
+    scale=0.8,
+    transform shape,
+    node distance=0.5cm and 0.4cm,
+    propbox/.style={
+        draw=#1border, fill=#1bg,
+        rounded corners=5pt, line width=1.6pt,
+        minimum width=3.8cm, minimum height=4.5cm,
+        text width=3.2cm, align=center, inner sep=8pt
+    },
+    checknode/.style={
+        circle, draw=#1!70!black, fill=#1,
+        minimum size=1.1cm, text=white,
+        font=\bfseries\LARGE, line width=1pt
+    }
+]
+    \node[text=mainblue, font=\bfseries\Large, align=center] (title) at (0,4.5)
+        {FORM OF BUCKINGHAM FUNCTIONS};
+    \node[draw=orange!70!yellow, fill=yellow!25, rounded corners=8pt, line width=1.8pt,
+          minimum width=12.2cm, minimum height=3cm, align=center, font=\Large, below=0.6cm of title] (formula) {
+        \fontsize{14}{16}\selectfont $\bm{\phi(\Pi_1,\ldots,\Pi_{n-k}) = p\Big( p_1(\Pi_1) + \ldots + p_{n-k}(\Pi_{n-k}) \Big)}$
+    };
+    \node[propbox=green, below=1.2cm of formula] (c2) {
+        {\bfseries ADDITIVE\\[2pt] STRUCTURE} \\[12pt]
+        \small Additive composition inside a single function $p(\cdot)$.
+    };
+    \node[propbox=blue, left=of c2] (c1) {
+        {\bfseries ORDER\\[2pt] INDEPENDENCE} \\[12pt]
+        \small Result does not depend on the order of the variables.
+    };
+    \node[propbox=orange, right=of c2] (c3) {
+        {\bfseries DIMENSIONAL\\[2pt] REDUCTION} \\[12pt]
+        \small Only dimensionless groups appear in the model.
+    };
+    \node[checknode=green!70!black] at ([yshift=-0.4cm]c1.south) {$\checkmark$};
+    \node[checknode=orange] at ([yshift=-0.4cm]c2.south) {$\checkmark$};
+    \node[checknode=blue!70!cyan] at ([yshift=-0.4cm]c3.south) {$\checkmark$};
+    \node[fill=darknavy, text=white, font=\bfseries\Large, minimum width=12.4cm,
+          minimum height=1.1cm, rounded corners=5pt, anchor=south] at (0,-8.2) {
+        GENERAL -- SIMPLE -- UNIVERSAL
+    };
+    \begin{scope}[on background layer]
+        \filldraw[
+            fill=green!35,
+            draw=mainblue,
+            line width=2.5pt,
+            rounded corners=10pt
+        ]
+            ($(title.north) + (-6.5, 0.8)$)
+            rectangle
+            ($(0,-8.4) + (6.5, 0)$);
+    \end{scope}
+\end{tikzpicture}
+\caption{Illustration of the general functional form derived from aggregation and order-independence properties: the Buckingham function reduces to a monotone transformation of a sum of univariate functions.}
+\label{fig:AdditiveGeneralFunction}
+\end{figure}
+
+This expression will be used in subsequent chapters to learn multidimensional functions
+across a wide range of application areas. In particular, equation~(\ref{eq:mainresult})
+will be used to justify Archimedean copulas.
+
+\subsection*{Notable special cases}
+
+A particularly elegant special case arises when $p_j(v) = p^{-1}(v)$ for all $j$:
+\begin{equation}
+\phi(\pi_1,\pi_2,\ldots,\pi_n) = \pi_1 \oplus \pi_2 \oplus \ldots \oplus \pi_n = p\left(p^{-1}(\pi_1) + p^{-1}(\pi_2) + \dots, p^{-1}(\pi_n)  \right),
+\label{eq:associativemodel}
+\end{equation}
+where $\oplus$ denotes any associative binary operation, such as addition or
+multiplication. The multiplicative version is commonly employed in engineering for
+designing reduced-scale laboratory models.
+
+A model with particularly strong interpretability properties is the
+\textbf{weighted aggregation form}:
+\begin{equation}
+\phi(\pi_1,\pi_2,\ldots,\pi_n) = p\!\left(\sum_{j=1}^n w_j\, p_j(\pi_j)\right), \quad \sum_{j=1}^n w_j = 1, \quad 0 \leq w_j \leq 1,
+\label{eq:weightedmodel}
+\end{equation}
+where the weights $w_j$ quantify the relative contribution of each variable to the
+overall function. This is the consequence of the same two aggregation properties
+combined with a homogeneity condition on the weights. Equation~(\ref{eq:weightedmodel})
+is also reminiscent of Archimedean copulas (see Chapter~\ref{ch:copulas}), for which
+all $p_j = p^{-1}$.
+
+\subsection{Network structure implied by the general equation~(\ref{eq:mainresult})}
+
+Formula~(\ref{eq:mainresult}) immediately suggests the network structure shown in
+Figure~\ref{fig:functionalnetwork1}.
+
+\begin{figure}[!htpb]
+\centering
+\includegraphics[width=0.8\textwidth]{RedBayesianaClaude3_con_fondo.png}
+\caption{\label{fig:functionalnetwork1}Functional network structure based on
+expression~(\ref{eq:mainresult}). Each internal node applies a learned univariate
+activation function; the aggregation is performed by summation followed by the outer
+function $p$.}
+\end{figure}
+
+This architecture is important not only because it visualizes equation~(\ref{eq:mainresult})
+as a network, but because it provides a clear interpretation of the role of each neuron
+— an interpretability that standard neural networks lack. It also suggests that what
+matters are the \textbf{activation functions}, not the connection weights, raising
+questions about the conventional network paradigm.
+
+
+\section{Relevance and Impact of the Results}
+
+The results derived in this chapter establish, from first principles and without
+arbitrary assumptions, the general functional form that any well-posed multivariate
+relation among dimensionless variables must adopt.
+
+The space of continuous functions of $n$ variables is, in any practical sense,
+infinite-dimensional: approximating a general function on a bounded domain requires
+exponentially many parameters as $n$ grows — the infamous \emph{curse of
+dimensionality}. Yet equation~(\ref{eq:seqorderIndep}) shows that, under natural
+aggregation conditions, this complexity collapses entirely — the multivariate function
+is completely characterized by a finite collection of univariate functions.
+This is not magic; it is the consequence of a structural constraint that was always
+implicit in the problem but had not been made explicit. Functional equations are the
+tool that makes it explicit.
+
+The derivation relies on \textbf{functional equations} — equations in which the unknowns
+are functions rather than variables, and the constraints are identities that must hold
+for all values of the arguments. Hopefully, the reader is already familiar with this
+technique from Chapter~\ref{ch:functionalequations}. Here, the order-independence
+condition translates directly into a functional equation whose general solution yields
+the structure of $\phi$ without any additional assumptions.
+
+
+\subsection{A justified, not assumed, model structure}
+
+Equation~(\ref{eq:mainresult}) is not postulated — it is \emph{derived}. The only
+ingredients are the two aggregation properties of Assumption 1. This stands in sharp
+contrast to the usual practice in modeling, where functional forms are chosen by
+convention, analogy, or computational convenience, with no structural justification.
+After the ECDF transformation of Chapter~\ref{ch:cdftransformation}, all variables
+are dimensionless, so the modeler's functional form is not a matter of choice but of
+logical consequence: it is constrained to the class of equation~(\ref{eq:mainresult}).
+
+The functional network of Figure~\ref{fig:functionalnetwork1} is universal in two
+senses: it applies to any relation satisfying the aggregation conditions, and by
+Theorem~\ref{thm:uniqueness} the representation is essentially unique up to affine
+reparametrization — so it is the \emph{only} architecture consistent with the stated
+conditions. Each activation function $p_j$ carries the nonlinear behavior of one
+variable; the outer function $p$ controls the global response. Both have direct
+physical or statistical meaning that can be inspected, validated, and communicated —
+a property that most black-box neural networks lack entirely.
+
+Equation~(\ref{eq:mainresult}) reduces the learning problem from an exponentially
+complex multivariate task to the estimation of $n+1$ univariate functions
+$p, p_1, \ldots, p_n$, scaling linearly rather than exponentially with $n$.
+
+\subsection{Complexity reduction and connection to Kolmogorov–Arnold representation theorems}
+Before ending the chapter we call the attention to the fact that equation (\ref{eq:mainresult}) resembles the structure of KANs, what deserves at least a short analysis.
+
+The previous results connect naturally to the Kolmogorov--Arnold representation
+theorem~\cite{kolmogorov1956,kolmogorov1957,braun2009}, which establishes that any
+continuous multivariate function can be expressed in terms of univariate functions and
+addition. The present derivation reaches a structurally similar conclusion by a
+completely independent route grounded in physical reasoning and functional equations.
+The KAN architecture~\cite{liu2025kan} exploits this principle computationally; this
+chapter provides the axiomatic foundation that explains why such architectures are not
+merely effective but \emph{necessary} under natural modeling assumptions.
+
+The Kolmogorov–Arnold representation theorem (KART) states that any continuous function $f: [0,1]^n \to \mathbb{R}$ can be written as
+\[
+\boxed{
+f(x_1,\dots,x_n) = \sum_{q=1}^{2n+1} \Phi_q\!\left( \sum_{p=1}^n \phi_{q,p}(x_p) \right),}
+\]
+where $\Phi_q$ and $\phi_{q,p}$ are continuous univariate functions. This representation uses $2n+1$ outer functions $\Phi_q$ and $n(2n+1)$ inner functions $\phi_{q,p}$.
+
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{KANStructure.png}
+\caption{Illustration of the KAN structure. Note that the same scheme is used for a lower and an upper scale.}
+\label{fig:fatigue}
+\end{figure}
+
+In contrast, our derived universal form under the aggregation and order‑independence assumptions is
+\[
+\boxed{
+\phi(\pi_1,\dots,\pi_n) = p\!\left( \sum_{i=1}^n p_i(\pi_i) \right),}
+\]
+which involves only $n+1$ univariate functions (one per input plus one outer function). This is a single‑term additive representation, not a sum of $2n+1$ terms.
+
+KANs are universal approximators for all continuous functions; our form is universal for the class of functions satisfying aggregation and order-independence. They are not the same thing.
+
+\subsubsection*{Why the Difference?}
+\begin{itemize}
+\item \textbf{Additional structural constraints}: Our derivation explicitly assumes that the function can be built by sequentially aggregating variables, Assumption 1, and that the final result is independent of the aggregation order, Assumption 2. These are natural properties for many physical and engineering models, but they are not satisfied by an arbitrary continuous function.
+\item \textbf{Interpretability vs. generality}: KART is a pure existence theorem: for any given $f$, the inner functions $\phi_{q,p}$ depend on $f$ in a highly non‑constructive way, and they are not unique. The representation is extremely general but offers little practical guidance for learning. Our functional form, on the other hand, is restrictive but directly leads to a learnable architecture (KAN) where the univariate functions are the only degrees of freedom.
+\item \textbf{The role of order independence}: The condition that $\phi$ can be built from bivariate aggregations that commute (order independence) forces the aggregation operation to be associative and, via the associativity equation, to be representable as a sum after a transformation. This collapses the $2n+1$ outer terms into a single term because the aggregation is not an arbitrary sum of independent branches but a linear (additive) accumulation of transformed variables.
+\end{itemize}
+
+\subsubsection*{Limitations of Our Solution}
+\begin{enumerate}
+\item \textbf{Not universal for all continuous functions}: There exist continuous functions that do not satisfy the aggregation and order‑independence assumptions. For such functions, our functional form would be insufficient; KART would still hold but with $2n+1$ terms.
+\item \textbf{Additive structure may be too rigid}: Many real‑world interactions are not separable as a sum of univariate functions after a single monotone transformation. For example, functions with strong higher‑order interactions (e.g., XOR) cannot be represented in this simple additive form without resorting to a deeper network (which would violate the sequential aggregation property).
+\item \textbf{No guarantee of learning the univariate functions}: While our form is learnable in principle, the approximation of arbitrary univariate functions from data still requires practical methods (e.g., splines, neural networks). KART does not tell us how to find the functions, only that they exist.
+\end{enumerate}
+
+\subsubsection*{When Does Our Form Suffice?}
+Our universal form is exactly the class of functions that are associatively decomposable and order‑independent. This includes:
+\begin{itemize}
+\item Generalized additive models (GAMs) when $p$ is the identity.
+\item Archimedean copulas (when the function is a joint CDF with uniform marginals).
+\item Any physical law that arises from a translation‑invariant, additive accumulation process (e.g., damage accumulation, simple interest, area of a rectangle).
+\end{itemize}
+For these problems, the single‑term additive representation is not a limitation but a desirable property that enforces physical consistency. In contrast, KART is a mathematical curiosity of great theoretical importance but rarely used directly for learning because of its extreme non‑uniqueness and the lack of constraints that would make the inner functions meaningful.
+
+
+\section{Contrast with KANs}
+Since KANs can reproduce exactly multivariate continuous functions, they are clear candidates to the solution of our problem of finding universal functions to model problems. However, adequate functions must be previously identified to this purpose.
+
+This general purpose orientation of KANs, what initially is a clear advantage can become a shortcoming for special cases, that require functions satisfying strong constraints.
+
+For example, in a general Kolmogorov–Arnold Network (KAN) used for deterministic function approximation, the univariate activation functions are not required to be monotone: they can be any splines or neural networks.  Consequently, a generic KAN does not automatically produce a valid copula.  However, if one imposes the constraints $\phi(0)=\infty$, $\phi(1)=0$, and the complete monotonicity condition (or approximates it), the KAN architecture becomes an architecturally justified model for Archimedean copulas.
+
+Given its relevance, we will come back to KANs later in this book.
+
+
+Thus, the monotonicity that was introduced as a technical hypothesis in the general functional theorem becomes a necessary structural property when the target of learning is, for example, a joint CDF or copula.  This observation bridges the deterministic learning framework (KANs) and the probabilistic dependence framework (Archimedean copulas) under a single axiomatic foundation.
+
+\subsection{When Kolmogorov--Arnold representations are truly general}
+\label{ssec:kan_general}
+
+The Kolmogorov--Arnold representation theorem establishes that any
+continuous multivariate function can be written as a finite superposition
+of univariate functions.  This result provides the mathematical foundation
+for Kolmogorov--Arnold Networks (KANs), which exploit such decompositions
+as flexible function approximators.  However, universal approximation alone is not
+sufficient for generality in the scientific sense.  The question is not
+whether a KAN \emph{can} represent a given relation, but whether its form is
+\emph{forced} by the structural properties of the phenomenon.
+
+A KAN representation of a relation $\phi(\pi_1,\ldots,\pi_n)=0$ attains
+the status of a general representation framework for scientific models only when its architecture is
+derived from invariance, additivity, or symmetry principles that constrain
+the admissible functional forms.  In particular, suppose that the phenomenon
+satisfies an order-independence or aggregation invariance property: the
+result of combining contributions from multiple variables does not depend on
+the order in which those contributions are aggregated.  As shown earlier in
+this chapter, such a requirement leads to a functional equation whose
+solutions are necessarily additive (up to a monotone outer transformation).
+In this case, the representation
+\begin{equation}
+  \phi(\pi_1,\ldots,\pi_n)
+  =
+  h\!\left(\sum_{i=1}^n g_i(\pi_i)\right)
+  \label{eq:kan_additive_general}
+\end{equation}
+is not an arbitrary modelling choice but the unique admissible structure compatible with the stated symmetry.
+
+Within this restricted class, a KAN can be understood as a parametrization
+of the admissible functions $g_i$ and $h$, rather than as a free-form
+approximator.  The role of the network is then not to search over all
+possible multivariate functions, but to represent the solution set of a
+functional equation system derived from first principles.  In this setting, the decomposition into
+univariate components acquires physical or probabilistic meaning: each
+$g_i(\pi_i)$ represents the contribution of a single mechanism or factor,
+and the outer function $h$ encodes the aggregation rule.  The resulting
+structure is interpretable and, when the underlying properties recur across
+domains, transferable, too.
+
+By contrast, a KAN trained directly on data without structural constraints
+should be regarded as a non-parametric model.  It satisfies the formal
+conditions of dimensional consistency when expressed in terms of
+dimensionless variables, but it does not, in general, satisfy the structural
+conditions of derivability or uniqueness.  Its functional form is selected
+by optimization rather than forced by properties, and its internal
+representation need not respect the symmetries of the phenomenon.  Such a
+model may achieve excellent predictive performance, but it does not, by
+itself, constitute a general representation framework for scientific models.
+
+The distinction is therefore not between KANs and other modelling
+approaches, but between two epistemic uses of the same mathematical
+structure.  When the Kolmogorov--Arnold decomposition is derived from
+properties, it yields a general equation.  When it is used as a universal
+approximator, it yields a flexible model.
+
+\subsubsection*{Summary}
+In summary, in this chapter the \emph{only} admissible functional form for order-independent aggregation of dimensionless variables has been derived, what reduces the learning problem to a collection of univariate tasks, and connects the result to both classical mathematics and the frontiers of modern machine learning. These are the foundations on which the models developed in subsequent chapters are built.
+
+
+In addition, this chapter has pointed out about the importance and power of KANs.  The natural next question is: what function should we actually learn? Chapter~\ref{ch:copulas} answers this by choosing the multivariate joint cumulative distribution function as the target or better the associated copula or Bayesian network, thereby turning the deterministic Buckingham framework into a probabilistic one.
+

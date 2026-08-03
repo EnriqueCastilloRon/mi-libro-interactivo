@@ -1,0 +1,195 @@
+\startcontents[chapter]
+\chapter{Methods to Generate Orthogonal c Vectors} \label{ch:MethodsGenerateCVectors}
+%\addcontentsline{toc}{chapter}{Methods to Generate Orthogonal c Vectors}
+\minitocboxed
+
+\section*{Introduction}
+The selection of coefficient vectors $\mathbf{c}$ in the Buckingham $\pi$ theorem determines the dimensionless groups that will serve as the building blocks of a model. Although any linearly independent set yields a valid basis, the choice has profound consequences for numerical stability and physical interpretability. This appendix addresses a practical question that arises naturally from Chapter \ref{ch:buckinghamPi}: how can one generate mutually orthogonal $\mathbf{c}$ vectors with integer or rational components? Orthogonality eliminates the risk of near‑linear dependence, which otherwise amplifies rounding errors and undermines the reliability of subsequent estimation. We present several systematic methods — from the standard basis and manual construction to Hadamard matrices and Gram–Schmidt orthogonalisation with rational constraints — and prove the underlying characterisation theorems. These techniques turn a potential source of numerical fragility into a robust, well‑conditioned foundation for the universal modelling framework.
+
+In this appendix the problem of how to generate c vectors is analyzed.
+
+Since there is an infinite number of possible solutions, the user must dedicate some time to decide whether to make an adequate selection from the point of view of physical interpretation, what is a very rasonable decision, or there are other factors, such as numerical stability, precise calculation or any other that justifies live the parameters free initially, but correctly constrained.
+
+Some ideas to face this problema are given next.
+
+\section{Methods to obtain orthogonal vectors}
+% Exploring methods for orthogonal vectors
+Several methods can generate orthogonal $\mathbf{c}$ vectors with integer or rational components, potentially aligning with the proposed ideas:
+\begin{enumerate}
+    \item \textbf{Standard Basis}:
+        \begin{itemize}
+            \item Use $\mathbf{c}^{(i)}$ as $[1, 0, \ldots, 0]^T$, $[0, 1, \ldots, 0]^T$, etc.
+            \item \textit{Pros}: Trivially orthogonal, integer components.
+            \item \textit{Cons}: May yield non-intuitive $\pi$ terms.
+        \end{itemize}
+    \item \textbf{Manual Construction}:
+        \begin{itemize}
+            \item Solve $\mathbf{c}^{(i)} \cdot \mathbf{c}^{(j)} = 0$ with integer constraints, e.g., for $\mathbf{c}^{(1)} = [a, b]^T$, $\mathbf{c}^{(2)} = [c, d]^T$, solve $a c + b d = 0$.
+            \item Example: $\mathbf{c}^{(1)} = [2, 1]^T$, $\mathbf{c}^{(2)} = [-1, 2]^T$.
+            \item \textit{Pros}: Flexible for small dimensions.
+            \item \textit{Cons}: Trial and error for higher dimensions.
+        \end{itemize}
+    \item \textbf{Hadamard Matrices}:
+        \begin{itemize}
+            \item Use columns of a Hadamard matrix (entries $\pm 1$), e.g., for $n - k = 4$:
+            \[
+            \mathbf{H} = \begin{pmatrix}
+                1 & 1 & 1 & 1 \\
+                1 & -1 & 1 & -1 \\
+                1 & 1 & -1 & -1 \\
+                1 & -1 & -1 & 1
+            \end{pmatrix}
+            \]
+            \item \textit{Pros}: Systematic, integer components.
+            \item \textit{Cons}: Exists only for specific $n - k$ (e.g., 2, 4, 8, \ldots).
+        \end{itemize}
+    \item \textbf{Gram-Schmidt with Rational Constraints}:
+        \begin{itemize}
+            \item Start with physically meaningful $\mathbf{c}$ vectors and orthogonalize, adjusting to keep components rational.
+            \item Example: In $\mathbb{R}^2$, start with $[1, 0]^T$, $[1, 1]^T$; orthogonalize to $[1, 0]^T$, $[0, 1]^T$.
+            \item \textit{Pros}: Can incorporate physical insight.
+            \item \textit{Cons}: May introduce complex rational numbers.
+        \end{itemize}
+\end{enumerate}
+
+Though these methods are valid ones, in this section we concentrate on new methods.
+
+Note that our $\pi$ vectors are the columns of matrix ${\bf A}$, Note also that if ${\bf C}$ contains in its columns the ${\bf c}$ vectors, the product $C^T C$ contains all dot products, so that the ${\bf c}$ vectors are orthogonal if and only if $C^T C$ is a diagonal matrix. In addition, since ${\bf C}$
+must be regular, all diagonal elements must be non null.  This explains the relevance of the following theorems.
+
+\section{Obtaining orthogonal C vectors}
+Next, we present two theorems that permit us obtaining a set of ${\bf c}$ orthogonal vectors.
+
+\begin{theorem}[Characterization of Matrices with Orthogonal Columns/Rows]
+Let \( A \in \mathbb{R}^{m \times n} \) be a real matrix. The following conditions are equivalent:
+
+\begin{enumerate}
+    \item \( A^\top A \) is diagonal.
+    \item The columns of \( A \) are orthogonal to each other.
+    \item There exists a decomposition \( A = Q D \), where:
+    \begin{itemize}
+        \item \( D \in \mathbb{R}^{n \times n} \) is a diagonal matrix with non-negative entries (\( D = \operatorname{diag}(d_1, \dots, d_n) \)),
+        \item \( Q \in \mathbb{R}^{m \times n} \) has orthonormal columns corresponding to \( d_i > 0 \), i.e., \( Q^\top Q = I_n \) if all columns are non-zero, or \( Q^\top Q = I_k \) for some \( k \leq n \) if only \( k \) columns are non-zero.
+    \end{itemize}
+\end{enumerate}
+
+And, dually:
+
+\begin{enumerate}
+    \setcounter{enumi}{3}
+    \item \( A A^\top \) is diagonal.
+    \item The rows of \( A \) are orthogonal to each other.
+    \item There exists a decomposition \( A = D Q \), where:
+    \begin{itemize}
+        \item \( D \in \mathbb{R}^{m \times m} \) is a diagonal matrix with non-negative entries (\( D = \operatorname{diag}(d_1, \dots, d_m) \)),
+        \item \( Q \in \mathbb{R}^{m \times n} \) has orthonormal rows corresponding to \( d_i > 0 \), i.e., \( Q Q^\top = I_m \) if all rows are non-zero, or \( Q Q^\top = I_k \) for some \( k \leq m \) if only \( k \) rows are non-zero.
+    \end{itemize}
+\end{enumerate}
+
+Moreover, in each case:
+
+\begin{itemize}
+    \item If \( m = n \) and \( A \) is full rank, then:
+    \[
+    A = Q D = D Q,
+    \]
+    and \( Q \) is an orthogonal matrix.
+    \item If \( m < n \), then \( A^\top A \) is diagonal \textbf{only if} at least \( n - m \) columns of \( A \) are zero.
+    \item If \( m > n \), then \( A A^\top \) is diagonal \textbf{only if} at least \( m - n \) rows of \( A \) are zero.
+    \item In all cases: the diagonal elements of \( A^\top A \) (or \( A A^\top \)) are the squares of the norms of the columns (or rows) of \( A \).
+\end{itemize}
+\end{theorem}
+
+This theorem provides a complete characterization of real matrices whose transpose multiplied by itself (or multiplied by its transpose) is diagonal, relating the orthogonality of columns or rows to the existence of an orthogonal-diagonal decomposition. It is a special case of the singular value decomposition when there is no mixing between directions (i.e., no non-zero inner products between distinct vectors).
+
+
+\begin{theorem}[4.2]
+Let \(A\) be an \(n \times n\) real matrix. The matrix \(A\) is invertible and satisfies that \(AA^{\top}\) is diagonal if and only if there exists an invertible diagonal matrix \(D\) and an orthogonal matrix \(Q\) (i.e., \(QQ^{\top}=I_n\)) such that
+\[
+A = DQ.
+\]
+\end{theorem}
+
+\begin{proof}
+We prove both directions of the equivalence.
+
+\paragraph{Sufficiency (\(\Leftarrow\)):}
+Assume \(A = DQ\) with \(D\) invertible diagonal and \(Q\) orthogonal.
+- \(A\) is invertible because both \(D\) (diagonal with non‑zero entries) and \(Q\) (orthogonal) are invertible; its inverse is \(A^{-1}=Q^{-1}D^{-1}=Q^{\top}D^{-1}\).
+- Compute \(AA^{\top}\):
+\[
+AA^{\top} = (DQ)(DQ)^{\top} = D Q Q^{\top} D^{\top}.
+\]
+Since \(Q\) is orthogonal, \(QQ^{\top}=I_n\); and because \(D\) is diagonal, \(D^{\top}=D\). Hence
+\[
+AA^{\top} = D I_n D = D^2 = \operatorname{diag}(d_{11}^2, d_{22}^2, \dots, d_{nn}^2),
+\]
+which is diagonal with positive diagonal entries (as \(d_{ii}\neq 0\)). Thus the condition holds.
+
+\paragraph{Necessity (\(\Rightarrow\)):}
+Now assume that \(A\) is invertible and \(AA^{\top}\) is diagonal.
+- Let \(\Lambda = AA^{\top} = \operatorname{diag}(\lambda_1,\lambda_2,\dots,\lambda_n)\). Because \(A\) is invertible, \(\Lambda\) is positive definite, so \(\lambda_i > 0\) for all \(i\).
+- Define \(D = \operatorname{diag}(\sqrt{\lambda_1}, \sqrt{\lambda_2}, \dots, \sqrt{\lambda_n})\). Then \(D\) is invertible (\(\sqrt{\lambda_i}>0\)) and satisfies \(D^2 = \Lambda\).
+- Set \(Q = D^{-1}A\). We verify that \(Q\) is orthogonal:
+\[
+QQ^{\top} = (D^{-1}A)(D^{-1}A)^{\top} = D^{-1} A A^{\top} (D^{-1})^{\top}.
+\]
+Since \(AA^{\top} = \Lambda = D^2\) and \(D\) is diagonal (hence symmetric: \(D^{\top}=D\) and \((D^{-1})^{\top}=D^{-1}\)), we obtain
+\[
+QQ^{\top} = D^{-1} D^2 D^{-1} = (D^{-1}D)(D D^{-1}) = I_n I_n = I_n.
+\]
+Thus \(Q\) is orthogonal.
+Finally, from \(Q = D^{-1}A\) we get \(A = DQ\), which completes the proof.
+\end{proof}
+
+\textbf{Remark:} The decomposition \(A = D Q\) has geometric interpretation: \(Q\) represents an orthogonal transformation (rotation/reflection), while \(D\) represents independent scaling of coordinate axes. The diagonal entries of \(D\) correspond to the norms of the rows of \(A\).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{theorem}[Characterization of Orthogonal Matrices]
+Let $A \in \mathbb{R}^{n \times n}$. The following statements are equivalent:
+\begin{enumerate}
+    \item $A$ is orthogonal, i.e., $A^\top A = I_n$.
+    \item $A^{-1} = A^\top$.
+    \item The columns of $A$ form an orthonormal basis for $\mathbb{R}^n$.
+    \item The rows of $A$ form an orthonormal basis for $\mathbb{R}^n$.
+    \item $A$ preserves inner products: $\langle Ax, Ay \rangle = \langle x, y \rangle$ for all $x, y \in \mathbb{R}^n$.
+    \item $A$ preserves norms: $\|Ax\| = \|x\|$ for all $x \in \mathbb{R}^n$.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+We prove the equivalence via the implications: \\
+$(1) \Rightarrow (2) \Rightarrow (3) \Rightarrow (5) \Rightarrow (6) \Rightarrow (1)$, and independently $(1) \Leftrightarrow (4)$.
+
+\textbf{$(1) \Rightarrow (2)$:} If $A^\top A = I_n$, then $A$ is invertible. Multiplying both sides by $A^{-1}$ gives $A^\top = A^{-1}$.
+
+\textbf{$(2) \Rightarrow (3)$:} Let $a_1, \dots, a_n$ be the columns of $A$. The $(i,j)$-entry of $A^\top A$ is $\langle a_i, a_j \rangle$. Since $A^\top A = I_n$, $\langle a_i, a_j \rangle = \Delta_{ij}$. Thus the columns form an orthonormal basis.
+
+\textbf{$(3) \Rightarrow (5)$:} For any $x, y \in \mathbb{R}^n$,
+\[
+\langle Ax, Ay \rangle = (Ax)^\top (Ay) = x^\top (A^\top A) y = x^\top I_n y = \langle x, y \rangle.
+\]
+
+\textbf{$(5) \Rightarrow (6)$:} Set $x = y$: $\|Ax\|^2 = \langle Ax, Ax \rangle = \langle x, x \rangle = \|x\|^2$. Thus $\|Ax\| = \|x\|$.
+
+\textbf{$(6) \Rightarrow (1)$:} For any $x \in \mathbb{R}^n$,
+\[
+x^\top (A^\top A - I_n) x = \|Ax\|^2 - \|x\|^2 = 0.
+\]
+As $A^\top A - I_n$ is symmetric and $x^\top (A^\top A - I_n) x = 0$ for all $x$, it follows that $A^\top A = I_n$.
+
+\textbf{$(1) \Rightarrow (4)$:} If $A^\top A = I_n$, then $A$ is invertible with $A^{-1} = A^\top$. Thus $A A^\top = I_n$. The $(i,j)$-entry of $A A^\top$ is the inner product of the $i$-th and $j$-th rows of $A$. Hence the rows form an orthonormal basis.
+
+\textbf{$(4) \Rightarrow (1)$:} If the rows form an orthonormal basis, then $A A^\top = I_n$. Since $A$ is square, $A$ is invertible with $A^{-1} = A^\top$. Thus $A^\top A = A^{-1} A = I_n$.
+\end{proof}
+
+\textbf{Note:} The condition $|\det(A)| = 1$ is \textit{necessary} for orthogonality (as $\det(A^\top A) = \det(I_n) = 1$ implies $(\det A)^2 = 1$), but not sufficient (e.g., $A = \begin{pmatrix} 1 & 1 \\ 0 & 1 \end{pmatrix}$). Thus it is not included in the equivalence.
+
+These two theorems together permit selecting a wide range of ${\bf C}$ vectors and consequently ${\pi}$ vectors, gaining in interpretability and lack of numerical problems.
+
+\section{Final remark}
+The idea of not fixing the $\pi$-ratios at the very begining is not commonly used. However, since the c vectors can have influence on the methods used in the following steps, this option has been maintained for lerning methods be free to choose between the infinitely many possible existing solutions, because the exponents of the factors belong to a whole linear space.
+
+\section*{Closing}
+The choice of $\mathbf{c}$ vectors is not a mere technicality; it is an opportunity to align the mathematical representation with physical intuition while safeguarding numerical stability. Orthogonal sets with rational components achieve both goals: they eliminate pathological cancellations and produce dimensionless groups whose exponents are simple integers. The methods collected here — from elementary constructions to matrix‑theoretic characterisations — give the practitioner full control over this degree of freedom. Armed with orthogonal $\mathbf{c}$ vectors, the dimensionless $\pi$ terms become not only mathematically sound but also computationally trustworthy, ready to be passed to the functional learning and copula stages that follow. 

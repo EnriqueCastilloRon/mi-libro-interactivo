@@ -1,0 +1,1439 @@
+\startcontents[chapter]
+\chapter{The Buckingham Pi Theorem}
+\label{ch:buckinghamPi}
+\minitocboxed
+
+\section*{Introduction}
+Since the aim of the book is to discover how the universal functions of the dimensionless $\pi$ ratios of Buckingham's theorem work, it is important to analyse how the variables must be chosen: which variables to include, what properties they must have (ranges, number, etc.), and what type or class of functions should be considered. The central question is: what must the function represent? This leads directly to the concept of property-based functions, which will later restrict the admissible classes.
+
+In this chapter we present the Buckingham $\pi$ Theorem in full generality: its classical statement, its generalisation under invertible transformations, the linear-algebraic machinery for computing all possible dimensionless groups, and a systematic classification of the cases that arise in practice. We also show how to choose the coefficient vectors $\mathbf{c}$ to obtain numerically stable and physically meaningful $\pi$-terms.
+
+\section{Introduction to the Buckingham Pi Theorem}\index{Sectioning!Sections}\label{ch03:BuckinghamPiTheorem}
+
+Dimensional analysis is a powerful tool in engineering and physics, enabling the simplification of complex physical problems by reducing the number of variables into dimensionless groups. At the heart of this methodology lies the Buckingham Pi Theorem, a cornerstone of dimensional analysis that provides a systematic approach to express physical relationships in terms of dimensionless parameters. This theorem allows any physically meaningful equation involving \( n \) dimensional variables to be reformulated as a relationship among \( p = n - k \) dimensionless parameters, denoted as \(\pi_1, \pi_2, \dots, \pi_p\), where \( k \) is the number of fundamental dimensions (e.g., mass, length, time). This relationship is expressed as \(\phi(\pi_1, \pi_2, \dots, \pi_p) = 0\), offering a universal framework for modeling physical and engineering problems. This chapter introduces the theorem, its historical development, key concepts, and applications, drawing from seminal works in the field.
+
+
+\subsection{Historical development and foundational works}\index{Sectioning!Subsections}
+
+The Buckingham Pi Theorem \cite{buckingham1914}, named after Edgar Buckingham, formalizes the process of nondimensionalization, building on earlier contributions in dimensional analysis. Although commonly attributed to Buckingham, the theorem's origins trace back to the 19th century. In 1878, Joseph Bertrand provided an early proof of the theorem, focusing on special cases in electrodynamics and heat conduction \cite{Bertrand1878}. Bertrand's work outlined the core idea that physical laws can be expressed as identities involving dimensionless combinations of variables, ensuring invariance across unit systems. This insight laid the groundwork for later generalizations.
+
+The theorem was further developed by A. Vaschy in 1892, who provided a formal generalization for systems with arbitrary quantities \cite{vaschy1892}. Independently, A. Federman and D. Riabouchinsky in 1911 also contributed to its formalization, emphasizing its applicability to diverse physical systems \cite{Federman1911, Riabouchinsky1911}. However, it was Buckingham's 1914 paper that popularized the theorem, introducing the notation \(\pi_i\) for dimensionless parameters and providing a clear methodology for their construction \cite{buckingham1914}. Buckingham's work emphasized the theorem's utility in experimental design, where dimensionless groups reduce the complexity of empirical correlations. See also \cite{Bridgman1922}. Of note is the well-known fluid mechanics book by \cite{white2011}, which explains the theorem practically and in full detail.
+
+This theorem has played a very important role in engineering applications. Below, one of its formal statements is presented.
+
+The theorem's mathematical foundation relies on linear algebra, specifically the concept of the dimensional matrix and its kernel. Buckingham demonstrated that the number of dimensionless parameters (\( p \)) equals the number of variables (\( n \)) minus the rank (\( k \)) of the dimensional matrix, which represents the fundamental dimensions of the variables \cite{buckingham1914}. This approach allows for systematic derivation of dimensionless groups, even when the governing equations are unknown.
+
+\subsection{Applications across engineering and physics}
+
+The Buckingham Pi Theorem has been widely applied across various disciplines, demonstrating its versatility in modeling physical phenomena. Below, we highlight key applications from recent and historical works:
+
+\begin{itemize}
+    \item \textbf{Fluid Mechanics}: The theorem is extensively used to derive dimensionless numbers such as the Reynolds, Nusselt, and Prandtl numbers, which characterize fluid flow and heat transfer. For instance, in a study of heat transfer in a tube, seven dimensional variables (e.g., tube diameter, thermal conductivity, fluid velocity) were reduced to three dimensionless groups (Nusselt, Reynolds, and Prandtl numbers), simplifying experimental correlations.
+
+    \item \textbf{Structural Engineering}: In the analysis of stone columns for soil stabilization, the theorem was used to formulate dimensionless parameters based on variables like friction angle, column spacing, and shear strength. This approach enabled the development of empirical equations.
+
+    \item \textbf{Microbial Fuel Cells (MFCs)}: The theorem has been applied to broaden the design perspective of MFCs by identifying dimensionless parameters that integrate engineering and biological variables, enhancing efficiency in industrial applications.
+\end{itemize}
+\begin{itemize}
+    \item \textbf{Pipeline Engineering}: In a study of corroded pipelines, the theorem facilitated the development of burst pressure models by reducing variables like defect width and pipe diameter into dimensionless groups, validated through finite element simulations \cite{AmayaGomez2019}.
+
+    \item \textbf{Solar Radiation Modeling}: The theorem has been used to estimate solar radiation in regions lacking direct measurements, deriving dimensionless parameters from meteorological variables to improve prediction accuracy.
+\end{itemize}
+
+Recent advancements have extended the theorem's scope beyond traditional applications. For instance, in complex systems like gas dynamics and plasma physics, self-similarity techniques combined with the theorem transform partial differential equations into simpler ordinary differential equations, enabling analytical solutions. Computational tools automate the derivation of dimensionless groups, making the theorem accessible for educational and research purposes \cite{BuckinghamPy2021}.
+
+\subsection{Critiques and limitations}\index{Sectioning!Subsections}
+
+While the Buckingham Pi Theorem is a robust tool, it has limitations. The choice of dimensionless parameters is not unique, and selecting the most physically meaningful set requires domain expertise. The theorem assumes that all relevant variables are identified, and omitting a critical variable can lead to incomplete models. Furthermore, it does not provide the functional form of \(\phi\), requiring experimental or numerical methods to determine the relationship among \(\pi\)-terms.
+
+\subsection{Practical relevance}\index{Sectioning!Subsections}
+
+The Buckingham Pi Theorem provides a universal framework for modeling physical and engineering problems not only by converting dimensional variables into dimensionless parameters, but by reducing the number of relevant variables involved, that is, the complexity of the models. Its ability to simplify complex systems, ensure dimensional homogeneity, and facilitate scaling has made it indispensable across disciplines. From its historical roots in the 19th century to modern applications in fluid mechanics, structural engineering, and beyond, the theorem continues to evolve, supported by computational tools and advanced similarity techniques. This chapter sets the stage for exploring the universal equation \(\phi(\pi_1, \pi_2, \dots, \pi_n) = 0\), which encapsulates the theorem's power to unify diverse physical phenomena.
+
+\section{Classical Statement of Buckingham's Pi Theorem}\index{Sectioning!Sections}
+
+\begin{theorem}[Buckingham's Pi Theorem]
+\label{thm:buckingham}
+Let a physical relationship be expressible through an equation of the form:
+\begin{equation}
+f(q_1,q_2,\ldots,q_n) = 0,
+\label{eq:physicalrelation}
+\end{equation}
+where $q_1,q_2,\ldots,q_n$ are $n$ relevant physical quantities describing a physical phenomenon, and these quantities are expressed in terms of $k$ independent fundamental dimensions and given, as usually done, within brackets $[D_1,D_2,\ldots,D_k]$ (with $k \leq n$), such that $[q_i] = D_1^{a_{i1}} D_2^{a_{i2}} \cdots D_k^{a_{ik}}$, where $a_{ij}$ are real exponents. The function $f()$ is dimensionally homogeneous and consists of one or more summed terms, where each term is a product of one or more variables $q_i$ raised to real exponents (positive or negative) multiplied by a dimensionless constant.
+
+If these conditions are met, then there exists an equivalent function:
+\begin{equation}
+\phi(\pi_1,\pi_2,\ldots,\pi_{n-k}) = 0,
+\end{equation}
+where $\pi_1,\pi_2,\ldots,\pi_{n-k}$ are $n-k$ dimensionless parameters constructed as:
+\begin{equation}
+\pi_j = q_{k+j}q_1^{x_{j1}}q_2^{x_{j2}}\cdots q_k^{x_{jk}},
+\end{equation}
+and the exponents $x_{j1}, x_{j2},\ldots, x_{jk}$ are real numbers determined such that $[\pi_j] = D_1^0D_2^0\cdots D_k^0$, i.e., they are dimensionless.
+\end{theorem}
+
+
+\begin{remarkbox}
+\begin{remarkT}
+The $f()$ function in this theorem may include trigonometric functions (such as $\sin$, $\cos$), logarithmic functions (such as $\ln$), or exponential functions (such as $\exp$). This is because transformations such as logarithmic, trigonometric, or exponential can only be applied to dimensionless variables, a property that dimensional variables do not possess; applying such transformations to dimensional variables constitutes a significant dimensional modeling error.
+\end{remarkT}
+\end{remarkbox}
+
+\begin{tcolorbox}[colback=blue!3!white, colframe=blue!40!black,
+  title={\centering The universal equation}, fonttitle=\bfseries]
+\begin{center}
+\Large $\phi(\pi_1,\,\pi_2,\,\ldots,\,\pi_{n-k}) = 0$
+\end{center}
+\medskip
+This deceptively simple expression encodes a profound truth: any physically meaningful relationship among $n$ dimensional quantities can always be rewritten in terms of $n-k$ dimensionless groups, regardless of the units chosen by the observer. Nature does not count metres or kilograms — it counts ratios.
+\end{tcolorbox}
+
+Some classical versions of the Buckingham theorem, such as \cite{buckingham1914}, assume a sum of products structure for the $f(q_1, q_2, \ldots, q_n)$ function, the so-called complete physical equations of the form:
+\begin{equation}
+f(q_1, q_2, \ldots, q_n) = \sum\limits_{i=1}^n \left( m_i \prod\limits_{j=1}^{s_i}q_j^{r_{ij}}\right)=0,
+\label{eq:generalphysical}
+\end{equation}
+where $m_i$ are dimensionless constants and $r_{ij};j=1,2, \ldots, s_i$; for $i=1,2, \ldots, n$ are integer or real numbers, depending on the authors.
+
+However, others, see for example \cite{Boyling:79}, \cite{CurtisLP:82}, do not make this explicit condition as an assumption.
+
+The practical relevance of the Buckingham theorem lies in its ability to reduce the complexity of physical and engineering problems by decreasing their dimensionality. Equally important, however, is that it suggests and enables work with dimensionless variables.
+
+It is crucial to clarify that the theorem establishes the existence of a function of the form~\eqref{eq:physicalrelation}, but makes no assertion about the uniqueness of such a function. This distinction is emphasized because some practitioners seem to assume that only one such function exists. Consequently, the theorem must be interpreted as being valid for any and all existing functions of the form~\eqref{eq:physicalrelation}. This chapter shows examples of several functions involving the same variables even in the same area of knowledge.
+
+Furthermore, the theorem maintains its validity across all types of equations and variables. This comprehensive applicability encompasses, for instance, both deterministic and stochastic variables, as well as equations of any nature. As a result, this theorem enables us to derive the corresponding models across diverse domains: deterministic models, stochastic models, classical physics models, etc.
+
+Nevertheless, knowledge of the meaning of the $\phi$ function is necessary to estimate the associated parameters, for example, by maximum likelihood or least squares methods.
+
+Before ending, let us comment on two more ideas. The function $\phi(\pi_1,\pi_2,\ldots,\pi_{n-k}) = 0$ can be written in boldface, that is, as a vector equation of a system of equations, ${\bm{\phi}}(\bm{\pi}_1,\bm{\pi}_2,\ldots,\bm{\pi}_{n-k}) = {\bf 0}$, or even inequalities ${\bm{\phi}}(\bm{\pi}_1,\bm{\pi}_2,\ldots,\bm{\pi}_{n-k}) \le {\bf 0}$. For example, a water or gas supply network can be represented mathematically by a system of equations describing the flow balance at each node. If pipe capacities are taken into account, then inequalities are also required to express them. Thus, for reasons of generality, it is convenient to interpret the equation referred to in Buckingham's Pi theorem in this broader sense.
+
+\section{Generalization of the Pi Theorem}\index{Sectioning!Sections}
+
+In this section a generalization of the Buckingham theorem is given. The idea is that transforming the variables or the dimensionless ratio terms by invertible transformations does not alter its result.
+
+\begin{theorem}
+\label{thm:generalization}
+If a physical equation involves $n$ variables $q_1,q_2,\ldots,q_n$, and we apply an invertible transformation $q'_i = T_i(q_i)$, where each $T_i$ is monotonic and invertible, then the equation in terms of the transformed variables still satisfies the $\pi$ Theorem with the same dimensionless groups.
+\end{theorem}
+
+\begin{proof}
+The proof goes through the following steps:
+\begin{enumerate}
+\item \textbf{Transformation of the Variables:} We apply the transformation $q'_i = T_i(q_i)$, which implies that we can write:
+\begin{equation}
+q_i = T_i^{-1}(q'_i).
+\label{eq:inversetransform}
+\end{equation}
+
+\item \textbf{Substitution in the Dimensionless Groups:} Since the $\pi_j$ groups are combinations of products of the original variables, substituting in terms of the transformed variables yields:
+\begin{equation}
+\pi'_j = (T_{i_1}^{-1}(q'_{i_1}))^{b_{j1}} (T_{i_2}^{-1}(q'_{i_2}))^{b_{j2}}\ldots(T_{i_k}^{-1}(q'_{i_k}))^{b_{jk}}T_j^{-1}(q'_j).
+\label{eq:transformedpi}
+\end{equation}
+The functional structure of the equation is preserved.
+
+\item \textbf{Conclusion:} The equation in terms of the transformed variables maintains the same dimensionless groups, so the $\pi$-theorem can still be applied.
+\end{enumerate}
+
+The idea is simple, the $\pi$-theorem is applied to the initial variables and the transformation is applied to the dimensionless ratios. Note that the transformations include transformations of dimensional variables to dimensionless ones and then the possibilities on the transformed space with respect to the $\pi$ theorem become limited. Thus, application of the $\pi$ theorem must precede other transformations.
+\end{proof}
+
+\section{Methods for Obtaining pi Groups}\index{Sectioning!Sections}
+\label{sec:methods}
+
+% Describing the primary methods
+Several methods exist to derive the $\pi$ groups, each suited to different problem complexities and user expertise. We briefly discuss three approaches: the dimensional matrix method, the inspection method, and Gauss-Jordan elimination, highlighting their procedures and applications \cite{Szirtes2007, white2011}.
+
+\subsection{Dimensional matrix method}\index{Sectioning!Subsections}
+\label{subsec:matrix}
+
+% Outlining the dimensional matrix method
+The dimensional matrix method is a systematic approach to derive $\pi$ groups by constructing a matrix of dimensional exponents \cite{Szirtes2007}. The steps are as follows:
+\begin{enumerate}
+    \item Identify all $n$ relevant variables and their dimensions in terms of fundamental units ($M$, $L$, $T$, etc.).
+    \item Construct a dimensional matrix where rows represent fundamental dimensions and columns correspond to variables, with entries as the exponents of each dimension.
+    \item Determine the rank $k$ of the matrix, typically equal to the number of independent dimensions.
+    \item Select $k$ variables, usually those with independent dimensions, to form the basis for the $\pi$ groups.
+    \item For each of the $n - k$ remaining variables, form a $\pi$ group by combining it with the basis variables raised to unknown powers.
+    \item Solve for the powers by ensuring the $\pi$ group is dimensionless, leading to a system of linear equations.
+\end{enumerate}
+This method is rigorous and ensures all possible $\pi$ groups are identified, though the choice of variables may affect the form of the groups \cite{Sonin2004}.
+
+\subsection{Inspection method}\index{Sectioning!Subsections}
+\label{subsec:inspection}
+
+% Discussing the inspection method
+The inspection method relies on physical intuition to form dimensionless ratios directly \cite{white2011}. It is less formal but effective for problems where standard dimensionless numbers (e.g., Reynolds number) are known. The steps involve:
+\begin{enumerate}
+    \item Identify variables that naturally form dimensionless ratios, such as ratios of lengths or forces.
+    \item Combine variables based on physical insight to cancel dimensions.
+    \item Verify the dimensionless nature of the resulting groups.
+\end{enumerate}
+This method is quick but requires familiarity with the system to avoid missing key variables.
+
+\subsection{Gauss-Jordan elimination}\index{Sectioning!Subsections}
+\label{subsec:gauss}
+
+% Explaining Gauss-Jordan elimination
+Gauss-Jordan elimination refines the dimensional matrix method by solving for the $\pi$ groups mathematically \cite{Sonin2004}. In fact, a homogeneous system of linear equations, that forces dimensionlessness, is built and solved. Its general solution provides the exponents of all possible $\pi$ groups. This approach is particularly useful for complex problems with many variables, as it automates the solution process and reduces errors. It also permits using optimization criteria and methods for obtaining the optimal solution according to different criteria.
+
+\subsection{Obtaining the set of all possible dimensionless pi ratios}\index{Sectioning!Subsections}
+In this section we describe how to obtain all possible solutions. This can become important when implementing the method in AI based methodology, where the decision of postponing the selection of particular $\pi$ variables can become important in the posterior estimation methods and also when some inadequate selection can lead to numerical problems.
+
+\begin{definition}[Dimensionless term]
+A dimensionless $\pi$ term is a combination of the form:
+\begin{equation}\label{epidef}
+\pi = q_1^{a_1} \cdot q_2^{a_2} \cdot \ldots \cdot q_n^{a_n} = \pi =\prod\limits_{i=1}^{n} q_i^{a_i},
+\end{equation}
+where the exponents $a_i$ are chosen such that $\pi$ has no physical dimensions, i.e., $[\pi] = 1$.
+\end{definition}
+
+Assume that one has $m$ fundamental dimensions, $F_1, F_2,\dots,F_m$, and that the $q$ variables can be written in terms of the fundamental dimensions as:
+\begin{equation}
+q_i = F_1^{\alpha_{i1}} F_2^{\alpha_{i2}} \cdots F_m^{\alpha_{im}} = \prod\limits_{j=1}^{m} F_j^{\alpha_{ij}},\quad i=1,2,\dots,n.
+\end{equation}
+where $\alpha_{ij}$ is the exponent of the fundamental dimension, $F_j$, associated with the $q_i$ variable.
+Then, Equation (\ref{epidef}) becomes
+\begin{equation}
+\pi = \prod\limits_{i=1}^{n} q_i^{a_i }= \prod\limits_{i=1}^{n} \prod\limits_{j=1}^{m} F_j^{\alpha_{ij}a_{i}} = \prod\limits_{j=1}^{m}F_j^{\sum\limits_{i=1}^{n}\alpha_{ij}a_{i}}=F_1^0 \cdot F_2^0 \cdot \dots \cdot F_m^0 =1.
+\end{equation}
+
+If the term has to be dimensionless, the exponents of $F_j; j=1,2,\dots,m$ must be null and then, the following homogeneous system of linear equations results:
+\begin{equation}\label{epidef1}
+   \boxed{ \sum\limits_{i=1}^{n}\alpha_{ij}a_{i} = 0;\quad j=1,2,\dots,m.}
+\end{equation}
+whose solution, the null subspace, is the linear subspace, of dimension $n-k$:
+\begin{equation}\label{epidef2}
+    {\bf a} = {\bf H} {\bf c},
+\end{equation}
+where ${\bf a}_{n \times 1}$, ${\bf H}_{n \times (n-k)}$ and ${\bf c}_{(n-k) \times 1}$ are the solution column vectors, the matrix, of dimension $n \times (n-k)$, whose columns contain a basis of the null space, and an arbitrary column vector of dimension $n-k$, respectively.
+
+The matrix ${\bf H}$ can directly be obtained using the orthogonality algorithm in \cite{castilloCJP:01}, \cite{Castillo2001OrthogonallyBased} or in \cite{CASTILLO2002131} if one is interested on the simultaneous solutions in partial dimensions. (\href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/SolveHomogeneousSystemSteps.html}{\underline{Click to open application}}).
+
+Thus, replacing the $a_i$ values from (\ref{epidef2}) into (\ref{epidef}) all the $\pi$ solutions can be obtained.
+
+Since one is normally interested not in a single $\pi$ vector but in a complete group of $\pi$ vectors, we can use any regular matrix ${\bf C}$, of dimension $(n-k) \times (n-k)$, and then, we have the matrix ${\bf A}$ of the column vectors generating the complete system when replaced in (\ref{epidef}).
+\begin{equation}\label{epidef3}
+   {\bf A} =  {\bf H} {\bf C}.
+\end{equation}
+
+This expression explains how to obtain a valid set of $\pi$  terms, focusing on the role of coefficient column vectors $\mathbf{c}^{(i)} = [c_1^{(i)}, c_2^{(i)}, \ldots, c_{n-k}^{(i)}]^T$ of ${\bf C}$ that define these terms via
+\begin{equation}\label{epidef4}
+\boxed{\pi_i' = \prod_{j=1}^{n-k}\pi_j^{c_j^{(i)}},}
+\end{equation}
+in terms of the basic terms of the null space, $\pi_1, \pi_2, \ldots, \pi_{n-k}$.
+
+Thus, expression (\ref{epidef4}) gives how to obtain all valid groups of $\pi$ terms, for any arbitrary vector, ${\bf c}$, of constants.
+
+The fact that one can choose among  infinitely many vectors, far from being an inconvenient is a clear advantage, because the user can be interested in particular ones, leading to well known dimensionless ratios, as Reynolds, Froude or Mach numbers, for example.
+
+\section[Choosing ${\bf C}$ vectors]{Choosing C vectors}
+
+The Buckingham $\pi$ Theorem is a cornerstone of dimensional analysis, enabling the reduction of physical systems into dimensionless groups (``$\pi$ terms''). For a system with $n$ variables and $k$ fundamental dimensions, there exist $n - k$ independent $\pi$ terms that form a basis for all dimensionless combinations.
+
+A key practical challenge is ensuring that a set of $(n - k)$ $\pi$ terms forms a valid basis, requiring their coefficient vectors to be linearly independent. However, linearly independent vectors that are nearly linearly dependent can lead to numerical instability. A proposed solution is to use mutually orthogonal $\mathbf{c}$ vectors with integer or rational components to enhance numerical stability and simplify interpretation.
+
+\subsection{Numerical challenges with nearly linearly dependent vectors. orthogonal {\bf{C}} vectors}
+
+% Discussing numerical instability
+While linear independence is necessary, choosing $\mathbf{c}^{(i)}$ vectors that are nearly linearly dependent (e.g., $\mathbf{c}^{(1)} = [1, 0]^T$, $\mathbf{c}^{(2)} = [1, \epsilon]^T$ with small $\epsilon$) results in an ill-conditioned matrix $\mathbf{C}$. This leads to:
+\begin{itemize}
+    \item \textbf{Numerical Instability}: Small computational errors amplify, affecting the accuracy of $\pi$ terms.
+    \item \textbf{Loss of Effective Independence}: In finite precision, nearly dependent vectors may behave as dependent, undermining the basis.
+\end{itemize}
+
+% Introducing the orthogonal vector idea
+To address numerical instability, it was proposed to select mutually orthogonal $\mathbf{c}$ vectors, i.e., $\mathbf{c}^{(i)} \cdot \mathbf{c}^{(j)} = 0$ for $i \neq j$. Orthogonality ensures:
+\textbf{Numerical Stability}, \textbf{Linear Independence} and \textbf{Maximal Separation}.
+
+Additionally, it was suggested that the $\mathbf{c}$ vectors have \textbf{integer} or \textbf{rational} components to:
+\begin{itemize}
+    \item Simplify $\pi$ term exponents, aligning with standard dimensionless groups (e.g., Reynolds number).
+    \item Avoid floating-point errors from irrational numbers.
+    \item Enhance interpretability in engineering applications.
+\end{itemize}
+
+some methods to generate orthogonal c vectors are described in \ref{ch:MethodsGenerateCVectors}
+
+
+\begin{remarkbox}
+\begin{remarkT}
+\label{sec:conclusiona}
+% Summarizing the discussion
+Selecting a valid basis of $(n - k)$ $\pi$ terms requires linearly independent $\mathbf{c}$ vectors. To avoid numerical issues from nearly linearly dependent vectors, using mutually orthogonal $\mathbf{c}$ vectors is a robust solution. Orthogonal sets with integer or rational components exist (e.g., standard basis, Hadamard columns) and simplify computations while aligning with physical conventions. The proposed ideas for generating such vectors potentially via manual construction, algorithmic solutions, or matrix methods are practical and effective, offering a numerically stable and interpretable basis for dimensional analysis.
+\end{remarkT}
+\end{remarkbox}
+
+\begin{remarkbox}
+\begin{remarkT}
+% Summarizing the methods and their utility
+The Buckingham $\pi$ theorem provides a systematic framework for deriving dimensionless $\pi$ groups, simplifying physical problems and enabling scalable solutions. The dimensional matrix method offers rigor, the inspection method exploits intuition, and Gauss-Jordan elimination provides computational efficiency. By applying these methods, as shown in the examples, researchers and engineers can uncover fundamental relationships in diverse fields \cite{Sonin2004}. The choice of method depends on the problem's complexity and the user's expertise, but all ensure the derivation of meaningful dimensionless parameters.
+\end{remarkT}
+\end{remarkbox}
+
+\begin{remarkbox}
+\begin{remarkT}
+The Buckingham $\pi$ theorem is a fundamental principle in dimensional analysis that determines the number of dimensionless groups in any physical relationship. However, most practical implementations focus on finding individual solutions rather than characterizing the complete solution space. This work presents a systematic approach to find \emph{all} possible dimensionless combinations by treating the problem as a homogeneous linear system and computing its null space.
+\end{remarkT}
+\end{remarkbox}
+
+\section{Case Classification in Buckingham Theorem Analysis}\index{Sectioning!Sections}
+\label{sec:buckinghamcases}
+
+The Buckingham $\pi$ Theorem is used to determine the number of dimensionless $\pi$ terms for a physical system with a dimensional matrix $\mathbf{D} \in \mathbb{R}^{n \times m}$, where $n$ is the number of physical variables, $m$ is the number of fundamental dimensions, and $\text{rank}(\mathbf{D}) = k$. The number of $\pi$ terms is given by $n - \text{rank}(\mathbf{D})$, the dimension of the null space of $\mathbf{D}$. The following classification categorizes all possible configurations of $\mathbf{D}$, streamlined to eliminate redundant cases.
+
+The classification consists of six cases, covering all valid and problematic configurations of $\mathbf{D}$:
+
+%(\href{run:./ObtainPiTerms55ENGLISHFINAL.html}{\textcolor{blue}{\underline{Click to open application}}}).
+\href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/PRUEBAObtainPiTerms_Flexible_LinearBUENO9a.html}{\underline{Click to open application}}.
+
+
+
+\begin{enumerate}
+    \item \textbf{Case 1: Full Rank (ERROR)}
+    \begin{itemize}
+        \item \textbf{Condition}: $\text{rank}(\mathbf{D}) = n$, implying nullity = 0.
+        \item \textbf{Nullity}: $n - \text{rank}(\mathbf{D}) = 0$, no $\pi$ terms.
+        \item \textbf{Example}: System with too few variables to form dimensionless groups.
+        \item \textbf{Description}: Over-constrained system with no dimensionless combinations, problematic for dimensional analysis.
+    \end{itemize}
+
+  \item \textbf{Case 2: Null Rows (Dimensionless)}
+    \begin{itemize}
+        \item \textbf{Condition}: $\text{rank}(\mathbf{D}) < \min(m, n)$ due to one or more zero rows (dimensionless variables).
+        \item \textbf{Nullity}: $n - \text{rank}(\mathbf{D}) > n - \min(m, n)$, with some $\pi$ terms being dimensionless variables.
+        \item \textbf{Example}: Including a dimensionless variable like Reynolds number.
+        \item \textbf{Description}: Dimensionless variables contribute directly to $\pi$ terms, reducing the rank.
+    \end{itemize}
+
+    \item \textbf{Case 3: Null Columns (WARNING)}
+    \begin{itemize}
+        \item \textbf{Condition}: $\text{rank}(\mathbf{D}) < \min(m, n)$ due to one or more zero columns (unused dimensions).
+        \item \textbf{Nullity}: $n - \text{rank}(\mathbf{D}) > n - \min(m, n)$, yielding more $\pi$ terms than expected.
+        \item \textbf{Example}: System with dimensions $[M, L, T, H]$ but no variables involving $H$.
+        \item \textbf{Description}: Occurs when some fundamental dimensions are not involved, reducing the effective number of dimensions.
+    \end{itemize}
+
+  \item \textbf{Case 4: Non-Participating Variables (INVALID)}
+    \begin{itemize}
+        \item \textbf{Condition}: Some variables have zero coefficients in all $\pi$ terms (zero rows in null space basis vectors).
+        \item \textbf{Nullity}: Determined by $\text{rank}(\mathbf{D})$, but $\pi$ terms exclude certain variables.
+        \item \textbf{Example}: A variable (e.g., length $L$) not appearing in any dimensionless group.
+        \item \textbf{Description}: Some variables do not contribute to $\pi$ terms, identified after solving $\mathbf{D} \mathbf{x} = \mathbf{0}$.
+    \end{itemize}
+
+    \item \textbf{Case 5: Linear Dependencies (VALID)}
+    \begin{itemize}
+        \item \textbf{Condition}: $\text{rank}(\mathbf{D}) < \min(m, n)$, rank reduction.
+        \item \textbf{Nullity}: $n - \text{rank}(\mathbf{D}) > n - \min(m, n)$, yielding more $\pi$ terms than expected if $\text{rank}(\mathbf{D}) = \min(m, n)$.
+        \item \textbf{Example}: Force, pressure, area ($m=n=3$, $\text{rank}(\mathbf{D})=2$), nullity $3-2=1$, one $\pi$ term (e.g., $\pi_1 = \frac{F}{P A}$).
+        \item \textbf{Description}: Rank is reduced below $\min(m, n)$, reflecting dimensional relationships that increase the number of $\pi$ terms.
+    \end{itemize}
+
+        \item \textbf{Case 6: Standard Configuration (REGULAR CASE)}
+    \begin{itemize}
+        \item \textbf{Condition}: $\text{rank}(\mathbf{D}) < n$, with no null rows or columns, and all variables participate in the $\pi$ terms.
+        \item \textbf{Nullity}: $n - \text{rank}(\mathbf{D}) \geq 1$, yielding one or more $\pi$ terms.
+
+        \item \textbf{Rank}: $\text{rank}(\mathbf{D}) = m$.
+
+        \item \textbf{Example}: Drag force problem with $n=4$, $\text{rank}(\mathbf{D})=3$, nullity $4-3=1$, one $\pi$ term (e.g., $\pi_1 = \frac{F}{\rho v^2 D^2}$).
+        \item \textbf{Description}: Typical dimensional analysis scenario with fewer independent dimensions than variables, producing dimensionless groups.
+    \end{itemize}
+\end{enumerate}
+
+This classification eliminates redundant cases and covers all possible configurations of $\mathbf{D}$, including mixed systems, by applying Cases 1 to 6 as needed. The Buckingham $\pi$ Theorem Calculator can compute $\text{rank}(\mathbf{D})$ and solve $\mathbf{D} \mathbf{x} = \mathbf{0}$ to find $\pi$ terms for any system.
+
+\subsection{Process flowchart}
+
+Figure~\ref{fig:buckinghamflowchart} illustrates the systematic approach used for analyzing dimensional matrices and classifying cases.
+
+\begin{figure}[!h]
+\centering
+\resizebox{0.95\textwidth}{!}{%
+\begin{tikzpicture}[
+    scale=0.8,
+    transform shape,
+    node distance=0.6cm and 1cm,
+    auto,
+    decision/.style={diamond, draw, fill=yellow!20, text width=1.8cm, text badly centered, inner sep=1pt},
+    process/.style={rectangle, draw, fill=blue!20, text width=2.2cm, text centered, minimum height=0.9cm},
+    terminator/.style={ellipse, draw, fill=green!20, text width=1.8cm, text centered, minimum height=0.7cm},
+    finalnode/.style={ellipse, draw, fill=green!20, text width=3.5cm, text centered, minimum height=0.8cm},
+    casevalid/.style={rectangle, draw, fill=green!20, text width=2.2cm, text centered, minimum height=0.9cm, rounded corners=3pt},
+    caseinvalid/.style={rectangle, draw, fill=red!20, text width=2.2cm, text centered, minimum height=0.9cm, rounded corners=3pt},
+    caseinfo/.style={rectangle, draw, fill=orange!20, text width=2.2cm, text centered, minimum height=0.9cm, rounded corners=3pt},
+    check/.style={rectangle, draw, fill=gray!20, text width=2.2cm, text centered, minimum height=0.9cm, rounded corners=3pt},
+    arrow/.style={->, >=stealth, line width=3pt}
+]
+
+% REORGANIZED CASES from left to right: 1, 2, 3, 4, 5, 6
+
+% FIRST LEVEL (topmost): STEP 3, then STEP 2-STEP 1-CHECK-START to the right
+\node [process] (step3) {STEP 3:\\Detect\\Null Columns};
+\node [process, right=of step3] (step2) {STEP 2:\\Create\\Corrected Matrix};
+\node [process, right=of step2] (step1) {STEP 1:\\Detect\\Null Rows};
+\node [check, right=of step1] (check) {Check\\non-Null Matrix};
+\node [terminator, right=of check] (start) {START\\Input: Matrix D};
+
+% SECOND LEVEL: Decision 1 below STEP 3
+\node [decision, below=1.5cm of step3] (dec1) {Null\\Columns\\Found?};
+
+% STEP 4 below the diamond
+\node [process, below=1.2cm of dec1] (step4) {STEP 4:\\Direct Dimensional\\Variables Identification};
+
+% SECOND LEVEL continuation: Rest of the flow to the right of the diamond - REORGANIZED
+\node [process, right=of dec1] (step5) {STEP 5:\\Calculate\\Rank \& Nullity};
+\node [process, right=of step5] (step6) {STEP 6:\\Calculate\\Null Space};
+\node [process, right=of step6] (step7) {STEP 7:\\Detect Non-\\Participating Vars};
+
+% Decision Tree for Cases - REORGANIZED in order 1-6
+\node [decision, right=of step7] (dec1case) {Full\\Rank?}; % For Case 1
+
+% Case 1 (BELOW the diamond) - LEFT MOST
+\node [caseinvalid, below=1.2cm of dec1case] (case1) {CASE 1:\\Full Rank System\\(INVALID)};
+
+% Decision for Case 2
+\node [decision, right=of dec1case] (dec2case) {Null\\Rows?}; % For Case 2
+
+% Case 2 (BELOW the diamond)
+\node [caseinfo, below=1.2cm of dec2case] (case2) {CASE 2:\\Null Rows\\Dimensionless\\Variables\\(INFO)};
+
+% Decision for Case 3
+\node [decision, right=of dec2case] (dec3case) {Null\\Cols?}; % For Case 3
+
+% Case 3 (BELOW the diamond)
+\node [caseinvalid, below=1.2cm of dec3case] (case3) {CASE 3:\\Null Columns\\Detected\\(INVALID)};
+
+% Decision for Case 4
+\node [decision, right=of dec3case] (dec4case) {Non-Part\\Vars?}; % For Case 4
+
+% Case 4 (BELOW the diamond)
+\node [caseinvalid, below=1.2cm of dec4case] (case4) {CASE 4:\\Non-Participating\\Variables\\(INVALID)};
+
+% Decision for Case 5
+\node [decision, right=of dec4case] (dec5case) {Linear\\Depend?}; % For Case 5
+
+% Case 5 (BELOW the diamond)
+\node [casevalid, below=1.2cm of dec5case] (case5) {CASE 5:\\Linear\\Dependencies\\(VALID)};
+
+% Decision for Case 6
+\node [decision, right=of dec5case] (dec6case) {Standard\\Case?}; % For Case 6
+
+% Case 6 (BELOW the diamond) - RIGHT MOST
+\node [casevalid, below=1.2cm of dec6case] (case6) {CASE 6:\\Standard Case\\(VALID)};
+
+% COMMON HORIZONTAL LEVEL COORDINATE
+\coordinate (commonLevel) at ($(case6.south) + (0,-1.5cm)$);
+
+% VERTICAL CONNECTIONS TO COMMON LEVEL - all ending at same height with arrows
+\draw [arrow] (case1.south) -- (case1.south |- commonLevel) coordinate (c1bottom);
+\draw [arrow] (case2.south) -- (case2.south |- commonLevel) coordinate (c2bottom);
+\draw [arrow] (case3.south) -- (case3.south |- commonLevel) coordinate (c3bottom);
+\draw [arrow] (case4.south) -- (case4.south |- commonLevel) coordinate (c4bottom);
+\draw [arrow] (case5.south) -- (case5.south |- commonLevel) coordinate (c5bottom);
+\draw [arrow] (case6.south) -- (case6.south |- commonLevel) coordinate (c6bottom);
+
+% Final Analysis - positioned at the SAME HEIGHT as c1bottom but to the left
+\node [finalnode] at ($(c1bottom) - (4cm,0)$) (end) {END\\FINAL ANALYSIS OUTPUT};
+
+% Main flow arrows FIRST LEVEL
+\draw [arrow] (start) -- (check);
+\draw [arrow] (check) -- (step1);
+\draw [arrow] (step1) -- (step2);
+\draw [arrow] (step2) -- (step3);
+
+% Arrow from STEP 3 downward to the diamond
+\draw [arrow] (step3) -- (dec1);
+
+% Arrows from the diamond to STEP 4 and STEP 5
+\draw [arrow] (dec1.south) -- node[right] {YES} (step4.north);
+\draw [arrow] (dec1.east) -- node[above] {NO} (step5.west);
+
+% Connection from STEP 4 to STEP 5
+\draw [arrow] (step4.east) -| (step5.south);
+
+% Main horizontal flow SECOND LEVEL - REORGANIZED
+\draw [arrow] (step5) -- (step6);
+\draw [arrow] (step6) -- (step7);
+\draw [arrow] (step7) -- (dec1case);
+\draw [arrow] (dec1case) -- node[above] {NO} (dec2case);
+\draw [arrow] (dec2case) -- node[above] {NO} (dec3case);
+\draw [arrow] (dec3case) -- node[above] {NO} (dec4case);
+\draw [arrow] (dec4case) -- node[above] {NO} (dec5case);
+\draw [arrow] (dec5case) -- node[above] {NO} (dec6case);
+
+% Case decision arrows (DOWNWARD as requested) - REORGANIZED
+\draw [arrow] (dec1case.south) -- node[right] {YES} (case1.north);
+\draw [arrow] (dec2case.south) -- node[right] {YES} (case2.north);
+\draw [arrow] (dec3case.south) -- node[right] {YES} (case3.north);
+\draw [arrow] (dec4case.south) -- node[right] {YES} (case4.north);
+\draw [arrow] (dec5case.south) -- node[right] {YES} (case5.north);
+\draw [arrow] (dec6case.south) -- node[right] {YES} (case6.north);
+
+% HORIZONTAL CONNECTIONS at common level - from left to right: 1→2→3→4→5→6
+\draw [arrow] (c1bottom) -- (c2bottom);
+\draw [arrow] (c2bottom) -- (c3bottom);
+\draw [arrow] (c3bottom) -- (c4bottom);
+\draw [arrow] (c4bottom) -- (c5bottom);
+\draw [arrow] (c5bottom) -- (c6bottom);
+
+% Final HORIZONTAL arrow from Case 1 connection point to RIGHT side of END ellipse
+\draw [arrow] (c1bottom) -- (end.east);
+
+\end{tikzpicture}
+}
+%\includegraphics[width=0.8\textwidth]{BuckinghamThOrganigram.pdf}
+\caption{\label{fig:buckinghamflowchart} Decision flowchart for analyzing dimensional matrices in Buckingham $\pi$ theorem applications. The algorithm systematically checks for special cases and determines whether the analysis will yield valid or problematic results.}
+\centering
+\href{https://enriquecastilloron.github.io/mi-libro-interactivo/apps/PRUEBAObtainPiTerms_Flexible_LinearBUENO9a.html}{\underline{Click to open application}}.
+\end{figure}
+
+\subsection{Educational implications}\index{Sectioning!Subsections}
+
+Understanding these cases is crucial for engineering students learning dimensional analysis because:
+
+\begin{enumerate}
+    \item \textbf{Problem Formulation Skills:} Students learn to identify when their problem setup is incomplete or incorrect.
+    \item \textbf{Physical Insight:} Each case type provides insight into the underlying physical relationships.
+    \item \textbf{Mathematical Rigor:} Students understand the mathematical foundations behind the Buckingham $\pi$ theorem.
+    \item \textbf{Practical Application:} Real engineering problems often exhibit these special cases, making this knowledge directly applicable.
+\end{enumerate}
+
+\begin{remarkbox}
+\begin{remarkT}
+The systematic classification of cases in Buckingham $\pi$ theorem analysis provides a robust framework for handling all scenarios that arise in engineering dimensional analysis. By understanding the mathematical characteristics and physical implications of each case, engineers can:
+
+\begin{itemize}
+    \item Identify and resolve problematic problem formulations
+    \item Extract maximum insight from valid analyses
+    \item Apply appropriate solution strategies for each case type
+    \item Develop more sophisticated understanding of dimensional relationships
+\end{itemize}
+
+This comprehensive approach ensures that dimensional analysis becomes a reliable and powerful tool in engineering design and analysis, capable of handling the complexity and variety of real-world engineering systems.
+\end{remarkT}
+\end{remarkbox}
+
+\section{Real-World Engineering Applications}\index{Sectioning!Sections}\label{real-world}
+        This section presents the dimensional analysis for $9$ physical systems using the Buckingham $\pi$ theorem. Each analysis includes the system variables, dimensional matrices, and resulting dimensionless groups.
+        For each engineering application, we:
+\begin{enumerate}
+    \item Identify the typical physical variables involved.
+    \item List their dimensions in the [M, L, T, H, C, I] system.
+    \item Confirm these are standard and commonly used in real-world engineering analyses.
+    \item Highlight any potential discrepancies or non-standard choices.
+\end{enumerate}
+
+%\input{BuckinghamTheoremExamples.tex}
+
+\subsection{Analysis 1: drag force on sphere}
+\label{sec:Drag_Force_on_Sphere}
+
+\begin{problembox}
+\textbf{Physical Problem:} Determine the drag force acting on a sphere moving through a viscous fluid at steady velocity.
+\end{problembox}
+\begin{codebox}
+This analysis examines how the drag force $F$ depends on fluid properties (density $\rho$ and dynamic viscosity $\mu$), sphere characteristics (diameter $D$), and flow conditions (velocity $v$). The problem is fundamental in fluid mechanics with diverse applications: aerodynamic design of vehicles and aircraft, particle settling in industrial separations, sediment transport in environmental systems, and drug delivery through biological fluids.
+
+Understanding the drag force relationship enables engineers to optimize shapes for minimal resistance, predict terminal velocities of falling objects, design efficient filtration systems, and model pollutant dispersion in natural waters. The analysis also reveals the transition between viscous-dominated (Stokes) and inertia-dominated flow regimes, providing insight into when different physical mechanisms control the drag behavior. This is used in aerospace (aircraft drag), automotive (vehicle aerodynamics), and marine engineering (ship resistance). These variables are consistent across textbooks and experimental studies.
+\end{codebox}
+
+\subsubsection*{System Variables: } The system variables are given in this table.
+
+\begin{table}[htpb]
+\centering
+\begin{tabular}{|c|l|r|r|r|}
+\hline
+\textbf{Variable} & \textbf{Description} & \textbf{[M]} & \textbf{[L]} & \textbf{[T]} \\
+\hline
+$F$ & Drag force & 1 & 1 & -2 \\
+$\rho$ & Fluid density & 1 & -3 & 0 \\
+$v$ & Velocity & 0 & 1 & -1 \\
+$D$ & Sphere diameter & 0 & 1 & 0 \\
+$\mu$ & Dynamic viscosity & 1 & -1 & -1 \\
+\hline
+\end{tabular}
+\caption{Variables and dimensions for Drag Force on Sphere}
+\end{table}
+
+The dimensional analysis has been performed using the methods described previously to identify the dimensionless $\pi$ parameters that govern this problem. The key parameters of the analysis are summarized below.
+
+\subsubsection*{Analysis Summary}
+\begin{itemize}
+\item Number of variables: $n = 5$
+\item Number of dimensions: $m = 3$
+\item Matrix rank: $k = 3$
+\item Number of $\pi$ terms: $n - k = 2$
+\end{itemize}
+
+\subsubsection*{Analysis Status}
+System status: \textcolor{orange}{\textbf{VALID}} - Case 6: Standard Case: The system is valid and produces meaningful dimensionless $\pi$ terms.
+
+\subsubsection*{Variable Classification}
+\begin{itemize}
+\item \textbf{Pivot columns:} 1, 2, 3
+\item \textbf{Basic variables:} $F$, $\rho$, $v$
+\item \textbf{Free variables:} $D$, $\mu$
+\end{itemize}
+
+\subsubsection*{Dimensional Matrices}
+The homogeneous linear system generated from the original dimensional matrix $\mathbf{D}$ has been solved to obtain the basis vectors for the solution null space.
+
+\textbf{Original Dimensional Matrix $\mathbf{D}$ and Final Matrix $\mathbf{B}$:}
+\begin{equation}\mathbf{D} = \begin{array}{r|rrr}
+& \text{[}M\text{]} & \text{[}L\text{]} & \text{[}T\text{]} \\
+\hline
+F & 1 & 1 & -2 \\
+\rho & 1 & -3 & 0 \\
+v & 0 & 1 & -1 \\
+D & 0 & 1 & 0 \\
+\mu & 1 & -1 & -1 \\
+\end{array}
+\qquad
+\mathbf{B} = \begin{array}{r|rrrrr}
+& Pivot & Pivot & Pivot & \pi_{1} & \pi_{2} \\
+\hline
+F & 1.50 & 0.50 & 0.50 & -0.50 & -0.50 \\
+\rho & -0.50 & -0.50 & -0.50 & 0.50 & -0.50 \\
+v & -3 & -1 & -2 & 1 & 0 \\
+D & 0 & 0 & 0 & 1 & 0 \\
+\mu & 0 & 0 & 0 & 0 & 1 \\
+\end{array}\end{equation}
+
+\subsubsection*{Dimensionless $\pi$ Terms:}
+\begin{equation}
+\pi_{1} = \frac{\rho \, v^{2} \, D^{2}}{F}, \qquad
+\pi_{2} = \frac{\mu^{2}}{F \, \rho}
+\end{equation}
+Note that this solution is different from the usual one, but valid too. The reader is invited to try other solutions and investigate the possible advantages.
+
+\subsubsection*{Functional Relationship}
+The general relationship governing this problem is:
+\begin{equation}
+\pi_1 = f(\pi_2)
+\end{equation}
+This relationship must be determined through experimental data or additional theoretical analysis to establish the associated model.
+
+\subsection{Analysis 2: simple pendulum period}
+\label{sec:Simple_Pendulum_Period}
+
+\begin{problembox}
+\textbf{Physical Problem:} Determine the oscillation period of a simple pendulum under small angle approximations.
+\end{problembox}
+\begin{codebox}
+This system examines how the period $T$ depends on pendulum length $L$, gravitational acceleration $g$, and mass $m$. The dimensional analysis reveals a fundamental insight: the period is independent of mass, demonstrating the universality of gravitational motion. This result connects to Galileo's principle of equivalence and forms the basis for precision timekeeping devices.
+
+The analysis extends beyond simple pendulums to compound pendulums, torsional oscillators, and seismic detection systems. Understanding the $T \propto \sqrt{L/g}$ scaling law enables the design of pendulum clocks, earthquake monitoring instruments, and gravitational measurement devices. The mass independence also explains why pendulum-based gravimeters can measure local gravitational variations without calibration for different test masses, making them valuable tools in geophysics and resource exploration.  This is standard in physics and mechanical engineering for pendulum dynamics. The small-angle approximation simplifies the analysis, and $Theta$ is included only for large oscillations.
+\end{codebox}
+\subsubsection*{System Variables: } The system variables are given in this table.
+
+\begin{table}[htpb]
+\centering
+\begin{tabular}{|c|l|r|r|r|}
+\hline
+\textbf{Variable} & \textbf{Description} & \textbf{[M]} & \textbf{[L]} & \textbf{[T]} \\
+\hline
+$T$ & Oscillation period & 0 & 0 & 1 \\
+$L$ & Pendulum length & 0 & 1 & 0 \\
+$g$ & Gravitational acceleration & 0 & 1 & -2 \\
+$m$ & Pendulum mass & 1 & 0 & 0 \\
+\hline
+\end{tabular}
+\caption{Variables and dimensions for Simple Pendulum Period}
+\end{table}
+
+The dimensional analysis has been performed using the methods described previously to identify the dimensionless $\pi$ parameters that govern this problem. The key parameters of the analysis are summarized below.
+
+\subsubsection*{Analysis Summary}
+\begin{itemize}
+\item Number of variables: $n = 4$
+\item Number of dimensions: $m = 3$
+\item Matrix rank: $k = 3$
+\item Number of $\pi$ terms: $n - k = 1$
+\end{itemize}
+
+\subsubsection*{Analysis Status}
+System status: \textcolor{red}{\textbf{INVALID}} - Case 4: Non-Participating Variables: Some variables do not participate in any $\pi$ term. This is an error - all dimensional variables must participate, assuming that we consider relations in which non-participating variables are excluded. Otherwise, we must admit as valid infinitely many cases.
+
+\textbf{Note:} This analysis contains configuration errors and cannot produce valid $\pi$ terms.
+
+\subsubsection*{Variable Classification}
+\begin{itemize}
+\item \textbf{Pivot columns:} 4, 2, 1
+\item \textbf{Basic variables:} $m$, $L$, $T$
+\item \textbf{Free variables:} $g$
+\end{itemize}
+
+\subsubsection*{Dimensional Matrices}
+The homogeneous linear system generated from the original dimensional matrix $\mathbf{D}$ has been solved to obtain the basis vectors for the solution null space.
+
+\textbf{Original Dimensional Matrix $\mathbf{D}$ and Final Matrix $\mathbf{B}$:}
+\begin{equation}\mathbf{D} = \begin{array}{r|rrr}
+& \text{[}M\text{]} & \text{[}L\text{]} & \text{[}T\text{]} \\
+\hline
+T & 0 & 0 & 1 \\
+L & 0 & 1 & 0 \\
+g & 0 & 1 & -2 \\
+m & 1 & 0 & 0 \\
+\end{array}
+\qquad
+\mathbf{B} = \begin{array}{r|rrrr}
+& Pivot & Pivot & \pi_{1} & Pivot \\
+\hline
+T & 1 & 0 & 2 & 0 \\
+L & 0 & 1 & -1 & 0 \\
+g & 0 & 0 & 1 & 0 \\
+m & 0 & 0 & 0 & 1 \\
+\end{array}\end{equation}
+
+\subsubsection*{Dimensionless $\pi$ Terms: }
+\textit{No dimensionless $\pi$ terms were generated due to configuration errors identified above.}
+
+\subsection{Analysis 3: basic fatigue analysis}
+\label{sec:Basic_Fatigue_Analysis}
+
+\begin{problembox}
+\textbf{Physical Problem:} Analyze the relationship between stress levels and fatigue life in materials under cyclic loading.
+\end{problembox}
+
+\begin{codebox}
+This system examines how the number of cycles to failure, $N$, depends on the minimum stress, $\sigma_{min}$, and maximum stress, $\sigma_{max}$. The dimensional analysis reveals the fundamental scaling relationships underlying S--N curves (Wöhler curves) and their connection to Paris' law for crack propagation. Understanding these relationships enables prediction of component lifetime and optimization of stress ratios for enhanced durability.
+
+The analysis also extends to mean stress effects, stress concentration factors, and variable-amplitude loading encountered in real engineering applications. Critical insights include the roles of the number of cycles, $N$, the reference number of cycles, $N_0$, and the stress ratio,
+\begin{equation}
+R = \frac{\sigma_{min}}{\sigma_{max}},
+\end{equation}
+in determining fatigue behavior. This framework supports design methodologies for offshore structures, wind turbines, bridges, and biomedical implants, where accurate fatigue-life prediction helps prevent catastrophic failures and enables condition-based maintenance strategies.
+
+Applications are common in aerospace engineering (aircraft components), civil engineering (bridges), and mechanical engineering (machine parts). Although the variables are standard, their interpretation may depend on the specific application context.
+\end{codebox}
+
+\subsubsection*{System Variables:}
+The system variables are summarized in Table~\ref{tab:fatigue_variables}.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|l|r|r|r|r|}
+\hline
+\textbf{Variable} & \textbf{Description} & \textbf{[M]} & \textbf{[L]} & \textbf{[T]} & \textbf{[C]} \\
+\hline
+$\sigma_{max}$ & Maximum stress & 1 & -1 & -2 & 0 \\
+$\sigma_{min}$ & Minimum stress & 1 & -1 & -2 & 0 \\
+$N_0$ & Reference number of cycles & 0 & 0 & 0 & 1 \\
+$N$ & Number of cycles & 0 & 0 & 0 & 1 \\
+\hline
+\end{tabular}
+\caption{Variables and dimensions for the basic fatigue analysis.}
+\label{tab:fatigue_variables}
+\end{table}
+
+The dimensional analysis has been performed using the methods described previously to identify the dimensionless $\pi$ parameters governing this problem. The key results of the analysis are summarized below.
+
+\subsubsection*{Analysis Summary}
+\begin{itemize}
+    \item Number of variables: $n = 4$
+    \item Number of dimensions: $m = 4$
+    \item Matrix rank: $k = 2$
+    \item Number of $\pi$ terms: $n-k = 2$
+\end{itemize}
+
+\subsubsection*{Analysis Status}
+System status: \textcolor{orange}{\textbf{VALID}} --- Case 5: Linear dependencies reduce the matrix rank, thereby increasing the number of independent $\pi$ terms.
+
+\subsubsection*{Variable Classification}
+\begin{itemize}
+    \item \textbf{Pivot columns:} 1, 3
+    \item \textbf{Basic variables:} $\sigma_{max}$, $N_0$
+    \item \textbf{Free variables:} $\sigma_{min}$, $N$
+\end{itemize}
+
+\subsubsection*{Dimensional Matrices}
+The homogeneous linear system generated from the original dimensional matrix $\mathbf{D}$ has been solved to obtain the basis vectors of the null space solution.
+
+\textbf{Original Dimensional Matrix $\mathbf{D}$ and Final Matrix $\mathbf{B}$:}
+\begin{equation}
+\mathbf{D} =
+\begin{array}{r|rrrr}
+& \text{[}M\text{]} & \text{[}L\text{]} & \text{[}T\text{]} & \text{[}C\text{]} \\
+\hline
+\sigma_{min} & 1 & -1 & -2 & 0 \\
+\sigma_{max} & 1 & -1 & -2 & 0 \\
+N_0 & 0 & 0 & 0 & 1 \\
+N & 0 & 0 & 0 & 1 \\
+\end{array}
+\qquad
+\mathbf{B} =
+\begin{array}{r|rrr}
+& \text{Pivot} & \pi_1 & \text{Pivot} \\
+\hline
+\sigma_{min} & 1 & -1 & 0 \\
+\sigma_{max} & 0 & 1 & 0 \\
+N_0 & 0 & 0 & 1 \\
+N & 0 & 0 & 1 \\
+\end{array}
+\end{equation}
+
+\subsubsection*{Dimensionless $\pi$ Terms}
+The resulting dimensionless groups that characterize this problem are:
+
+\begin{equation}
+\pi_1 = \frac{\sigma_{min}}{\sigma_{max}}\quad
+\pi_2 = \frac{N}{N_0}.
+\end{equation}
+
+\subsubsection*{Functional Relationship}
+The general relationship governing this problem can therefore be expressed as
+
+\begin{equation}
+\pi_1 = f(\pi_2)\quad \mbox{ or equivalently, }\frac{\sigma_{min}}{\sigma_{max}}
+=
+f\left(\frac{N}{N_0}\right).
+\end{equation}
+
+The explicit form of this relationship must be determined experimentally or through additional theoretical modeling.
+
+\subsection{Analysis 4: endurance fatigue analysis}
+\label{sec:Endurance_Fatigue_Analysis}
+
+\begin{problembox}
+\textbf{Physical Problem:} Analyze fatigue life incorporating material endurance limits and reference cycle counts for comprehensive life prediction.
+\end{problembox}
+\begin{codebox}
+This system examines how fatigue life $N$ depends on stress levels ($\sigma_{min}$, $\sigma_{max}$) relative to the endurance limit $\sigma_e$ and reference cycle count $N_0$. The dimensional analysis reveals the scaling relationships that govern the transition from finite-life to infinite-life regimes, enabling design strategies for both high-cycle fatigue (HCF) and very high-cycle fatigue (VHCF) applications.
+
+The endurance limit concept, while idealized for steels, provides crucial design benchmarks and connects to probabilistic fatigue models where scatter factors and reliability requirements determine safe operating stresses. This framework supports fatigue-tolerant design in power generation equipment, railway infrastructure, and marine structures operating under millions of load cycles. Advanced applications include fretting fatigue analysis, multiaxial loading conditions, and environmental effects where the apparent endurance limit shifts due to corrosion, temperature, or frequency-dependent mechanisms.  These models are used in design of rotating machinery, turbines, and structural components.
+\end{codebox}
+
+\subsubsection*{System Variables: } The system variables are given in this table.
+
+\begin{table}[htpb]
+\centering
+\begin{tabular}{|c|l|r|r|r|r|}
+\hline
+\textbf{Variable} & \textbf{Description} & \textbf{[M]} & \textbf{[L]} & \textbf{[T]} & \textbf{[C]} \\
+\hline
+$\sigma_e$ & Reference stress & 1 & -1 & -2 & 0 \\
+$\sigma_{min}$ & Minimum stress & 1 & -1 & -2 & 0 \\
+$\sigma_{max}$ & Maximum stress & 1 & -1 & -2 & 0 \\
+$N_0$ & Limit number of cycles & 0 & 0 & 0 & 1 \\
+$N$ & Number of cycles & 0 & 0 & 0 & 1 \\
+\hline
+\end{tabular}
+\caption{Variables and dimensions for Endurance Fatigue Analysis}
+\end{table}
+
+The dimensional analysis has been performed using the methods described previously to identify the dimensionless $\pi$ parameters that govern this problem. The key parameters of the analysis are summarized below.
+
+\subsubsection*{Analysis Summary}
+\begin{itemize}
+\item Number of variables: $n = 5$
+\item Number of dimensions: $m = 4$
+\item Matrix rank: $k = 2$
+\item Number of $\pi$ terms: $n - k = 3$
+\end{itemize}
+
+\subsubsection*{Analysis Status}
+System status: \textcolor{orange}{\textbf{VALID}} - Case 5: Linear Dependencies: Linear dependencies reduce the matrix rank, increasing the number of $\pi$ terms.
+
+\subsubsection*{Variable Classification}
+\begin{itemize}
+\item \textbf{Pivot columns:} 1, 4
+\item \textbf{Basic variables:} $\sigma_e$, $N_0$
+\item \textbf{Free variables:} $\sigma_{min}$, $\sigma_{max}$, $N$
+\end{itemize}
+
+\subsubsection*{Dimensional Matrices}
+The homogeneous linear system generated from the original dimensional matrix $\mathbf{D}$ has been solved to obtain the basis vectors for the solution null space.
+
+\textbf{Original Dimensional Matrix $\mathbf{D}$ and Final Matrix $\mathbf{B}$:}
+\begin{equation}\mathbf{D} = \begin{array}{r|rrrr}
+& \text{[}M\text{]} & \text{[}L\text{]} & \text{[}T\text{]} & \text{[}C\text{]} \\
+\hline
+\sigma_e & 1 & -1 & -2 & 0 \\
+\sigma_{min} & 1 & -1 & -2 & 0 \\
+\sigma_{max} & 1 & -1 & -2 & 0 \\
+N_0 & 0 & 0 & 0 & 1 \\
+N & 0 & 0 & 0 & 1 \\
+\end{array}
+\qquad
+\mathbf{B} = \begin{array}{r|rrrrr}
+& Pivot & \pi_{1} & \pi_{2} & Pivot & \pi_{3} \\
+\hline
+\sigma_e & 1 & -1 & -1 & 0 & 0 \\
+\sigma_{min} & 0 & 1 & 0 & 0 & 0 \\
+\sigma_{max} & 0 & 0 & 1 & 0 & 0 \\
+N_0 & 0 & 0 & 0 & 1 & -1 \\
+N & 0 & 0 & 0 & 0 & 1 \\
+\end{array}\end{equation}
+
+\subsubsection*{Dimensionless $\pi$ Terms:}
+\begin{equation}
+\pi_{1} = \frac{\sigma_{min}}{\sigma_e}, \qquad
+\pi_{2} = \frac{\sigma_{max}}{\sigma_e}, \qquad
+\pi_{3} = \frac{N}{N_0}
+\end{equation}
+
+\subsubsection*{Functional Relationship}
+The general relationship governing this problem is:
+\begin{equation}
+\pi_1 = f(\pi_2,\pi_3)
+\end{equation}
+This relationship must be determined through experimental data or additional theoretical analysis to establish the associated model.
+
+\subsection{Analysis 5: convective heat transfer}
+\label{sec:Convective_Heat_Transfer}
+
+\begin{problembox}
+\textbf{Physical Problem:} Determine the heat transfer coefficient for forced convection over a surface in fluid flow.
+\end{problembox}
+\begin{codebox}
+This system examines how the heat transfer coefficient $h$ depends on thermal conductivity $k$, characteristic length $L$, fluid density $\rho$, velocity $v$, and specific heat $c_p$. The dimensional analysis reveals the fundamental scaling relationships underlying the Nusselt, Reynolds, and Prandtl numbers, which form the cornerstone of convective heat transfer correlations used in engineering design.
+
+Understanding these dimensionless groups enables prediction of heat transfer rates across vastly different scales and applications: from microprocessor cooling with characteristic lengths in micrometers to industrial heat exchangers with meter-scale dimensions. The analysis connects momentum and thermal boundary layer development, explaining why high-velocity flows and high-conductivity fluids enhance heat transfer. This framework extends to natural convection (incorporating buoyancy effects), mixed convection regimes, and phase-change heat transfer, supporting the design of electronics cooling systems, power plant condensers, and renewable energy systems.
+\end{codebox}
+
+\subsubsection*{System Variables: } The system variables are given in this table.
+
+\begin{table}[htpb]
+\centering
+\begin{tabular}{|c|l|r|r|r|r|}
+\hline
+\textbf{Variable} & \textbf{Description} & \textbf{[M]} & \textbf{[L]} & \textbf{[T]} & \textbf{[H]} \\
+\hline
+$h$ & Transfer coefficient & 1 & 0 & -3 & -1 \\
+$k$ & Thermal conductivity & 1 & 1 & -3 & -1 \\
+$L$ & Characteristic length & 0 & 1 & 0 & 0 \\
+$\rho$ & Density & 1 & -3 & 0 & 0 \\
+$v$ & Velocity & 0 & 1 & -1 & 0 \\
+$cp$ & Specific heat & 0 & 2 & -2 & -1 \\
+\hline
+\end{tabular}
+\caption{Variables and dimensions for Convective Heat Transfer}
+\end{table}
+
+The dimensional analysis has been performed using the methods described previously to identify the dimensionless $\pi$ parameters that govern this problem. The key parameters of the analysis are summarized below.
+
+\subsubsection*{Analysis Summary}
+\begin{itemize}
+\item Number of variables: $n = 6$
+\item Number of dimensions: $m = 4$
+\item Matrix rank: $k = 4$
+\item Number of $\pi$ terms: $n - k = 2$
+\end{itemize}
+
+\subsubsection*{Analysis Status}
+System status: \textcolor{orange}{\textbf{VALID}} - Case 6: Standard Case: The system is valid and produces meaningful dimensionless $\pi$ terms.
+
+\subsubsection*{Variable Classification}
+\begin{itemize}
+\item \textbf{Pivot columns:} 1, 2, 4, 5
+\item \textbf{Basic variables:} $h$, $k$, $\rho$, $v$
+\item \textbf{Free variables:} $L$, $cp$
+\end{itemize}
+
+\subsubsection*{Dimensional Matrices}
+The homogeneous linear system generated from the original dimensional matrix $\mathbf{D}$ has been solved to obtain the basis vectors for the solution null space.
+
+\textbf{Original Dimensional Matrix $\mathbf{D}$ and Final Matrix $\mathbf{B}$:}
+\begin{equation}\mathbf{D} = \begin{array}{r|rrrr}
+& \text{[}M\text{]} & \text{[}L\text{]} & \text{[}T\text{]} & \text{[}H\text{]} \\
+\hline
+h & 1 & 0 & -3 & -1 \\
+k & 1 & 1 & -3 & -1 \\
+L & 0 & 1 & 0 & 0 \\
+\rho & 1 & -3 & 0 & 0 \\
+v & 0 & 1 & -1 & 0 \\
+cp & 0 & 2 & -2 & -1 \\
+\end{array}
+\qquad
+\mathbf{B} = \begin{array}{r|rrrrrr}
+& Pivot & Pivot & \pi_{1} & Pivot & Pivot & \pi_{2} \\
+\hline
+h & -3 & -1 & 1 & -1 & -1 & -1 \\
+k & 3 & 1 & -1 & 1 & 0 & 0 \\
+L & 0 & 0 & 1 & 0 & 0 & 0 \\
+\rho & 1 & 0 & 0 & 0 & 1 & 1 \\
+v & 0 & 0 & 0 & -1 & 3 & 1 \\
+cp & 0 & 0 & 0 & 0 & 0 & 1 \\
+\end{array}\end{equation}
+
+\subsubsection*{Dimensionless $\pi$ Terms:}
+\begin{equation}
+\pi_{1} = \frac{h \, L}{k}, \qquad
+\pi_{2} = \frac{\rho \, v \, cp}{h}
+\end{equation}
+
+\subsubsection*{Functional Relationship}
+The general relationship governing this problem is:
+\begin{equation}
+\pi_1 = f(\pi_2)
+\end{equation}
+This relationship must be determined through experimental data or additional theoretical analysis to establish the associated model.
+
+\subsection{Analysis 6: pipe flow pressure drop}
+\label{sec:Pipe_Flow_Pressure_Drop}
+
+\begin{problembox}
+\textbf{Physical Problem:} Determine pressure drop in pipe flow systems for hydraulic design applications.
+\end{problembox}
+\begin{codebox}
+This system examines how pressure drop $D_P$ depends on fluid density $\rho$, average velocity $v$, pipe diameter $D$, length $L$, and surface roughness $\varepsilon$. The dimensional analysis yields the fundamental relationships underlying the Darcy-Weisbach equation and Moody diagram, connecting the friction factor to Reynolds number and relative roughness for both laminar and turbulent flow regimes.
+
+Understanding these scaling laws enables prediction of pressure losses across diverse applications: from microfluidic devices with Reynolds numbers below unity to large-scale water distribution systems with highly turbulent flows. The analysis reveals why doubling pipe diameter reduces pressure drop by a factor of 32 for laminar flow, and explains the transition from smooth-pipe to rough-pipe behavior in turbulent flows. This framework extends to complex geometries including pipe networks, fittings, and valves, supporting the design of oil pipelines, chemical process equipment, and biomedical flow systems where precise pressure control is critical. This is applied in HVAC systems, heat exchangers, and aerospace (cooling systems).
+\end{codebox}
+\subsubsection*{System Variables: } The system variables are given in this table.
+
+\begin{table}[htpb]
+\centering
+\begin{tabular}{|c|l|r|r|r|}
+\hline
+\textbf{Variable} & \textbf{Description} & \textbf{[M]} & \textbf{[L]} & \textbf{[T]} \\
+\hline
+$D_p$ & Pressure drop & 1 & -1 & -2 \\
+$\rho$ & Density & 1 & -3 & 0 \\
+$v$ & Velocity & 0 & 1 & -1 \\
+$D$ & Pipe diameter & 0 & 1 & 0 \\
+$L$ & Pipe length & 0 & 1 & 0 \\
+$\epsilon$ & Roughness & 0 & 1 & 0 \\
+$\mu$ & Viscosity & 1 & -1 & -1 \\
+\hline
+\end{tabular}
+\caption{Variables and dimensions for Pipe Flow Pressure Drop}
+\end{table}
+
+The dimensional analysis has been performed using the methods described previously to identify the dimensionless $\pi$ parameters that govern this problem. The key parameters of the analysis are summarized below.
+
+\subsubsection*{Analysis Summary}
+\begin{itemize}
+\item Number of variables: $n = 7$
+\item Number of dimensions: $m = 3$
+\item Matrix rank: $k = 3$
+\item Number of $\pi$ terms: $n - k = 4$
+\end{itemize}
+
+\subsubsection*{Analysis Status}
+System status: \textcolor{orange}{\textbf{VALID}} - Case 6: Standard Case: The system is valid and produces meaningful dimensionless $\pi$ terms.
+
+\subsubsection*{Variable Classification}
+\begin{itemize}
+\item \textbf{Pivot columns:} 1, 2, 4
+\item \textbf{Basic variables:} $D_p$, $\rho$, $D$
+\item \textbf{Free variables:} $v$, $L$, $\epsilon$, $\mu$
+\end{itemize}
+
+\subsubsection*{Dimensional Matrices}
+The homogeneous linear system generated from the original dimensional matrix $\mathbf{D}$ has been solved to obtain the basis vectors for the solution null space.
+
+\textbf{Original Dimensional Matrix $\mathbf{D}$ and Final Matrix $\mathbf{B}$:}
+\begin{equation}\mathbf{D} = \begin{array}{r|rrr}
+& \text{[}M\text{]} & \text{[}L\text{]} & \text{[}T\text{]} \\
+\hline
+D_p & 1 & -1 & -2 \\
+\rho & 1 & -3 & 0 \\
+v & 0 & 1 & -1 \\
+D & 0 & 1 & 0 \\
+L & 0 & 1 & 0 \\
+\epsilon & 0 & 1 & 0 \\
+\mu & 1 & -1 & -1 \\
+\end{array}
+\qquad
+\mathbf{B} = \begin{array}{r|rrrrrrr}
+& Pivot & Pivot & \pi_{1} & Pivot & \pi_{2} & \pi_{3} & \pi_{4} \\
+\hline
+D_p & 0 & 0 & -0.50 & -0.50 & 0 & 0 & -0.50 \\
+\rho & 1 & 0 & 0.50 & 0.50 & 0 & 0 & -0.50 \\
+v & 0 & 0 & 1 & 0 & 0 & 0 & 0 \\
+D & 3 & 1 & 0 & 1 & -1 & -1 & -1 \\
+L & 0 & 0 & 0 & 0 & 1 & 0 & 0 \\
+\epsilon & 0 & 0 & 0 & 0 & 0 & 1 & 0 \\
+\mu & 0 & 0 & 0 & 0 & 0 & 0 & 1 \\
+\end{array}\end{equation}
+
+\subsubsection*{Dimensionless $\pi$ Terms:}
+\begin{equation}
+\pi_{1} = \frac{\rho \, v^{2}}{D_p}, \qquad
+\pi_{2} = \frac{L}{D}, \qquad
+\pi_{3} = \frac{\epsilon}{D}, \qquad
+\pi_{4} = \frac{\mu^{2}}{D_p \, \rho \, D^{2}}
+\end{equation}
+Note that the usual solution is not this one. This is the result of working with more degrees of freedom.
+
+\subsubsection*{Functional Relationship}
+The general relationship governing this problem is:
+\begin{equation}
+\pi_1 = f(\pi_2, \ldots, \pi_{4})
+\end{equation}
+This relationship must be determined through experimental data or additional theoretical analysis to establish the associated model.
+
+\subsection{Analysis 7: thermal expansion}
+\label{sec:Thermal_Expansion}
+
+\begin{problembox}
+\textbf{Physical Problem:} Analyze dimensional changes in materials due to temperature variations.
+\end{problembox}
+\begin{codebox}
+This system examines how length change $D_L$ depends on initial length $L_0$, thermal expansion coefficient $\alpha$, and temperature change $D_T$. The dimensional analysis reveals the linear relationship $D_L = \alpha L_0 D_T$, demonstrating that thermal strain is independent of material size, a fundamental principle enabling predictable scaling from laboratory specimens to massive structures.
+
+This scaling invariance is crucial for designing thermal expansion joints in bridges, pipelines, and buildings, where differential expansion between materials can generate enormous stresses. The analysis extends to bimetallic strips in thermostats, precision instrument design where thermal stability is critical, and semiconductor manufacturing where nanometer-scale thermal expansion affects device performance. Understanding thermal expansion also enables thermal stress analysis in composite materials, jet engine components operating across extreme temperature gradients, and space structures experiencing rapid thermal cycling between sunlit and shadowed conditions. It is used in civil engineering (bridges, buildings), mechanical engineering (machine parts), and material science.
+\end{codebox}
+
+\subsubsection*{System Variables: } The system variables are given in this table.
+
+\begin{table}[htpb]
+\centering
+\begin{tabular}{|c|l|r|r|}
+\hline
+\textbf{Variable} & \textbf{Description} & \textbf{[L]} & \textbf{[H]} \\
+\hline
+$D_L$ & Length change & 1 & 0 \\
+$L_0$ & Initial length & 1 & 0 \\
+$\alpha$ & Thermal expansion coefficient & 0 & -1 \\
+$D_T$ & Temperature change & 0 & 1 \\
+\hline
+\end{tabular}
+\caption{Variables and dimensions for Thermal Expansion}
+\end{table}
+
+The dimensional analysis has been performed using the methods described previously to identify the dimensionless $\pi$ parameters that govern this problem. The key parameters of the analysis are summarized below.
+
+\subsubsection*{Analysis Summary}
+\begin{itemize}
+\item Number of variables: $n = 4$
+\item Number of dimensions: $m = 2$
+\item Matrix rank: $k = 2$
+\item Number of $\pi$ terms: $n - k = 2$
+\end{itemize}
+
+\subsubsection*{Analysis Status}
+System status: \textcolor{orange}{\textbf{VALID}} - Case 6: Standard Case: The system is valid and produces meaningful dimensionless $\pi$ terms.
+
+\subsubsection*{Variable Classification}
+\begin{itemize}
+\item \textbf{Pivot columns:} 1, 3
+\item \textbf{Basic variables:} $D_L$, $\alpha$
+\item \textbf{Free variables:} $L_0$, $D_T$
+\end{itemize}
+
+\subsubsection*{Dimensional Matrices}
+The homogeneous linear system generated from the original dimensional matrix $\mathbf{D}$ has been solved to obtain the basis vectors for the solution null space.
+
+\textbf{Original Dimensional Matrix $\mathbf{D}$ and Final Matrix $\mathbf{B}$:}
+\begin{equation}\mathbf{D} = \begin{array}{r|rr}
+& \text{[}L\text{]} & \text{[}H\text{]} \\
+\hline
+D_L & 1 & 0 \\
+L_0 & 1 & 0 \\
+\alpha & 0 & -1 \\
+D_T & 0 & 1 \\
+\end{array}
+\qquad
+\mathbf{B} = \begin{array}{r|rrrr}
+& Pivot & \pi_{1} & Pivot & \pi_{2} \\
+\hline
+D_L & 1 & -1 & 0 & 0 \\
+L_0 & 0 & 1 & 0 & 0 \\
+\alpha & 0 & 0 & -1 & 1 \\
+D_T & 0 & 0 & 0 & 1 \\
+\end{array}\end{equation}
+
+\subsubsection*{Dimensionless $\pi$ Terms:}
+\begin{equation}
+\pi_{1} = \frac{L_0}{D_L}, \qquad
+\pi_{2} = \alpha \, D_T
+\end{equation}
+
+\subsubsection*{Functional Relationship}
+The general relationship governing this problem is:
+\begin{equation}
+\pi_1 = f(\pi_2)
+\end{equation}
+This relationship must be determined through experimental data or additional theoretical analysis to establish the associated model.
+
+\subsection{Analysis 8: electrical circuit (EC)}
+\label{sec:Electrical_Circuit_EC}
+
+\begin{problembox}
+\textbf{Physical Problem:} Analyze the dimensional relationships in a DC electrical circuit containing resistive elements.
+\end{problembox}
+\begin{codebox}
+This system examines the fundamental electrical quantities: voltage $V$ (potential difference), current $I$ (electrical flow), resistance $R$ (opposition to current flow), power $P$ (energy transfer rate), time $t$, and electric charge $Q$. The dimensional analysis reveals how these variables combine to form dimensionless groups, providing insight into circuit scaling laws, energy efficiency relationships, and transient response characteristics.
+
+Understanding these dimensionless relationships is essential for circuit optimization, thermal management (through power dissipation analysis), and designing circuits across different scales, from microelectronics to power systems. The analysis also illuminates the connection between Ohm's law, Joule heating, and charge-current relationships, forming the foundation for more complex circuit behaviors including RC time constants and energy storage mechanisms.
+\end{codebox}
+
+\subsubsection*{System Variables: } The system variables are given in this table.
+
+\begin{table}[htpb]
+\centering
+\begin{tabular}{|c|l|r|r|r|r|}
+\hline
+\textbf{Variable} & \textbf{Description} & \textbf{[M]} & \textbf{[L]} & \textbf{[T]} & \textbf{[I]} \\
+\hline
+$V$ & Voltage & 1 & 2 & -3 & -1 \\
+$I$ & Current & 0 & 0 & 0 & 1 \\
+$R$ & Resistance & 1 & 2 & -3 & -2 \\
+$P$ & Power & 1 & 2 & -3 & 0 \\
+$T$ & Time & 0 & 0 & 1 & 0 \\
+$Q$ & Electric charge & 0 & 0 & 1 & 1 \\
+\hline
+\end{tabular}
+\caption{Variables and dimensions for Electrical Circuit (EC)}
+\end{table}
+
+The dimensional analysis has been performed using the methods described previously to identify the dimensionless $\pi$ parameters that govern this problem. The key parameters of the analysis are summarized below.
+
+\subsubsection*{Analysis Summary}
+\begin{itemize}
+\item Number of variables: $n = 6$
+\item Number of dimensions: $m = 4$
+\item Matrix rank: $k = 3$
+\item Number of $\pi$ terms: $n - k = 3$
+\end{itemize}
+
+\subsubsection*{Analysis Status}
+System status: \textcolor{orange}{\textbf{VALID}} - Case 5: Linear Dependencies: Linear dependencies reduce the matrix rank, increasing the number of $\pi$ terms.
+
+\subsubsection*{Variable Classification}
+\begin{itemize}
+\item \textbf{Pivot columns:} 1, 5, 2
+\item \textbf{Basic variables:} $V$, $T$, $I$
+\item \textbf{Free variables:} $R$, $P$, $Q$
+\end{itemize}
+
+\subsubsection*{Dimensional Matrices}
+The homogeneous linear system generated from the original dimensional matrix $\mathbf{D}$ has been solved to obtain the basis vectors for the solution null space.
+
+\textbf{Original Dimensional Matrix $\mathbf{D}$ and Final Matrix $\mathbf{B}$:}
+\begin{equation}\mathbf{D} = \begin{array}{r|rrrr}
+& \text{[}M\text{]} & \text{[}L\text{]} & \text{[}T\text{]} & \text{[}I\text{]} \\
+\hline
+V & 1 & 2 & -3 & -1 \\
+I & 0 & 0 & 0 & 1 \\
+R & 1 & 2 & -3 & -2 \\
+P & 1 & 2 & -3 & 0 \\
+T & 0 & 0 & 1 & 0 \\
+Q & 0 & 0 & 1 & 1 \\
+\end{array}
+\qquad
+\mathbf{B} = \begin{array}{r|rrrrrr}
+& Pivot & Pivot & \pi_{1} & \pi_{2} & Pivot & \pi_{3} \\
+\hline
+V & 1 & 0 & -1 & -1 & 0 & 0 \\
+I & 1 & 1 & 1 & -1 & 0 & -1 \\
+R & 0 & 0 & 1 & 0 & 0 & 0 \\
+P & 0 & 0 & 0 & 1 & 0 & 0 \\
+T & 3 & 0 & 0 & 0 & 1 & -1 \\
+Q & 0 & 0 & 0 & 0 & 0 & 1 \\
+\end{array}\end{equation}
+
+\subsubsection*{Dimensionless $\pi$ Terms:}
+\begin{equation}
+\pi_{1} = \frac{I \, R}{V}, \qquad
+\pi_{2} = \frac{P}{V \, I}, \qquad
+\pi_{3} = \frac{Q}{I \, T}
+\end{equation}
+
+Since $\pi_{2} = \frac{P}{V \, I}=1$ it can be eliminated.
+
+\subsubsection*{Functional Relationship}
+The general relationship governing this problem is:
+\begin{equation}
+\pi_1 = f(\pi_2,\pi_3)
+\end{equation}
+This relationship must be determined through experimental data or additional theoretical analysis to establish the associated model.
+
+\subsection{Analysis 9: turbulent evaporation}
+\label{sec:Turbulent_Evaporation}
+
+\begin{problembox}
+\textbf{Physical Problem:} Turbulent evaporation from a free surface in the presence of wind.
+\end{problembox}
+\begin{codebox}
+In the problem of turbulent evaporation from a free surface in the presence of wind, the following variables are considered important. The dimensions are given in brackets and expressed in terms of length $L$ and time $T$: (a) Evaporation under turbulent conditions $V_T$ $[LT^{-1}]$,  (b) Humidity difference $q_s-q$ (saturation deficit), where $q$ is the specific humidity of air and $q_s$ is the specific saturation humidity at the water surface temperature (both dimensionless), (c) Turbulent diffusion coefficient $K$ for water vapor in air $[L^2T^{-1}]$, (d) Wetted surface area $S$ $[L^2]$, (e) Mean wind velocity $U$ $[LT^{-1}]$. The influence of the different variables are analyzed.
+\end{codebox}
+
+\paragraph{System Variables: } The system variables are given in this table.
+
+\begin{table}[htpb]
+\centering
+\begin{tabular}{|c|l|r|r|}
+\hline
+\textbf{Variable} & \textbf{Description} & \textbf{[L]} & \textbf{[T]} \\
+\hline
+$Vt$ & Evaporation rate & 1 & -1 \\
+$hdif$ & Humidity difference & 0 & 0 \\
+$K$ & Turbulent diffusion coefficient & 2 & -1 \\
+$S$ & Surface area & 2 & 0 \\
+$U$ & Wind velocity & 1 & -1 \\
+\hline
+\end{tabular}
+\caption{Variables and dimensions for Turbulent Evaporation}
+\end{table}
+
+The dimensional analysis has been performed using the methods described previously to identify the dimensionless $\pi$ parameters that govern this problem. The key parameters of the analysis are summarized below.
+
+\paragraph{Analysis Summary}
+\begin{itemize}
+\item Number of variables: $n = 5$
+\item Number of dimensions: $m = 2$
+\item Matrix rank: $k = 2$
+\item Number of $\pi$ terms: $n - k = 3$
+\end{itemize}
+
+\paragraph{Analysis Status}
+System status: \textcolor{orange}{\textbf{VALID}} - Case 2 + 6: Multiple conditions detected simultaneously.
+
+\paragraph{Variable Classification}
+\begin{itemize}
+\item \textbf{Pivot columns:} 1, 3
+\item \textbf{Basic variables:} $Vt$, $K$
+\item \textbf{Free variables:} $hdif$, $S$, $U$
+\end{itemize}
+
+\paragraph{Dimensional Matrices}
+The homogeneous linear system generated from the original dimensional matrix $\mathbf{D}$ has been solved to obtain the basis vectors for the solution null space.
+
+\textbf{Original Dimensional Matrix $\mathbf{D}$ and Final Matrix $\mathbf{B}$:}
+\begin{equation}\mathbf{D} = \begin{array}{r|rr}
+& \text{[}L\text{]} & \text{[}T\text{]} \\
+\hline
+Vt & 1 & -1 \\
+hdif & 0 & 0 \\
+K & 2 & -1 \\
+S & 2 & 0 \\
+U & 1 & -1 \\
+\end{array}
+\qquad
+\mathbf{B} = \begin{array}{r|rrrrr}
+& Pivot & \pi_{1} & Pivot & \pi_{2} & \pi_{3} \\
+\hline
+Vt & -1 & 0 & -2 & 2 & -1 \\
+hdif & 0 & 1 & 0 & 0 & 0 \\
+K & 1 & 0 & 1 & -2 & 0 \\
+S & 0 & 0 & 0 & 1 & 0 \\
+U & 0 & 0 & 0 & 0 & 1 \\
+\end{array}\end{equation}
+
+\paragraph{Dimensionless $\pi$ Terms:}
+\begin{equation}
+\pi_{1} = hdif, \qquad
+\pi_{2} = \frac{Vt^{2} \, S}{K^{2}}, \qquad
+\pi_{3} = \frac{U}{Vt}
+\end{equation}
+
+\paragraph{Functional Relationship}
+The general relationship governing this problem is:
+\begin{equation}
+\pi_1 = f(\pi_2,\pi_3)
+\end{equation}
+This relationship must be determined through experimental data or additional theoretical analysis to establish the associated model.
+
+\section{On the Use of Dimensionless Variables}
+It is sometimes accepted that certain variables, such as cycles or angles, are dimensionless. In my opinion this is not the best decision. Cycles can be measured in units, tens, hundreds, etc. Thus, an scale parameter is a natural one, as it is natural in lengths. Thus, in most cases we can use at least another cycle variable, such as, for example, the limit number of cycles, $N_0$, in fatigue to allow for dimensionless possibilities. In the case of trigonometric variables, such as sine, cosine or tangent, for example, since they are the quotients of two lengths, they are really dimensionless. However, the associated angles are dimensional variables.
+
+Consequently, the user must be aware of these possibilities and their implications in dimensional analysis.
+
+\section{Closing Remarks}
+The Buckingham $\pi$ Theorem, born in 1914 yet rooted in nineteenth-century
+insight, stands as one of the most elegant results in applied mathematics.
+Its power lies not merely in reducing the number of variables — although that
+reduction, from $n$ to $n-k$, is often the difference between a tractable
+experiment and an intractable one — but in revealing the \emph{intrinsic geometry}
+of the solution space. Every dimensionless group $\pi_j$ is a coordinate in that
+space; the function $\phi$ is the manifold on which physical reality lives.
+
+Figure \ref{fig:PiTheoremImage1} illustrates the relevance of the Buckingham Pi theorem and summarizes how it can help people to simplify and understand the physical problems better.
+
+\begin{figure}[!h]
+\centering
+%\includegraphics[width=0.95\textwidth]{BuckinghamTheoremImage1.png}
+\begin{tikzpicture}[
+    scale=1.1,
+    transform shape]
+    \node[
+    outer box,
+    fill=yellow!20,
+    text width=7.5cm,
+    minimum height=12.2cm
+    ] (container) {};
+    \node[anchor=north, yshift=-20pt, text=mainblue, font=\bfseries\Large] (title) at (container.north) {BUCKINGHAM $\boldsymbol{\Pi}$ THEOREM};
+    \node[blue box, yshift=-2.2cm] (b1) at (container.north) {
+        \textbf{Original variables}\\
+        \vspace{2pt}
+        $q_1, q_2, \dots, q_k$
+    };
+    \node[green box, below=0.7cm of b1, minimum height=1cm] (b2) {
+        \textbf{Dimensional Analysis}
+    };
+    \node[orange box, below=0.7cm of b2, minimum height=1.6cm] (b3) {
+        \textbf{$\Pi_1, \Pi_2, \dots, \Pi_n$}\\
+        \textbf{Dimensionless Groups}\\
+        \vspace{2pt}
+        \small $(n = k - m)$
+    };
+    \node[green box, below=0.7cm of b3, minimum height=1.4cm] (b4) {
+        \textbf{Fundamental Relationship}\\
+        \vspace{2pt}
+        $\phi(\Pi_1, \Pi_2, \dots, \Pi_n) = 0$
+    };
+    \node[orange box, below=0.7cm of b4, minimum height=1.4cm] (b5) {
+        \textbf{Reduced Model}\\
+        \textbf{in Dimensionless Space}
+    };
+    \draw[downarrow] (b1.south) -- (b2.north);
+    \draw[downarrow] (b2.south) -- (b3.north);
+    \draw[downarrow] (b3.south) -- (b4.north);
+    \draw[downarrow] (b4.south) -- (b5.north);
+\end{tikzpicture}
+\caption{Illustration of the process to be followed in order to obtain models with no unnecessary complexity.}
+\label{fig:PiTheoremImage1}
+\end{figure}
+
+Throughout this chapter we have seen this geometry at work across domains as
+diverse as fluid drag, pendulum oscillation, fatigue failure, convective heat
+transfer, pipe-flow resistance, thermal expansion, electrical circuits, and
+turbulent evaporation. In each case the same algorithm — construct the dimensional
+matrix, compute its null space, extract a basis — yields the governing dimensionless
+parameters with no prior knowledge of the underlying differential equations.
+
+Three properties make the theorem indispensable:
+\begin{enumerate}
+  \item \textbf{Reduction.} Fewer independent parameters mean fewer experiments, fewer
+    simulations, and cleaner correlations. The Reynolds number, the Nusselt number,
+    the Prandtl number — all are gifts of this reduction.
+  \item \textbf{Universality.} The theorem places no restriction on the nature of the
+    physical law: deterministic or stochastic, the conclusion
+    holds. The stress-life curve of a fatigue specimen and the wavefunction of a
+    particle both live in dimensionless spaces.
+  \item \textbf{Scalability.} Once $\phi$ is known at one scale — from a wind-tunnel model,
+    from a laboratory specimen — it transfers, exactly, to every other scale that
+    preserves the same $\pi$ values. This is why a 1:50 ship model in a towing tank
+    can predict the resistance of an ocean liner.
+\end{enumerate}
+
+We also saw that the basis of $\pi$-terms is \emph{not unique}: any invertible
+transformation of the null-space basis yields an equally valid set. The optimal
+choice — orthogonal coefficient vectors with integer or rational components — is
+not merely a computational convenience. It aligns the dimensionless groups with
+physical intuition, avoids numerical ill-conditioning, and renders the model
+interpretable at a glance. Choosing $\pi$-groups, in this sense, is where
+rigorous mathematics becomes craft.
+
+\begin{center}
+\itshape
+``The $\pi$-theorem does not solve equations; it reveals the hidden geometry
+of the solution space.''
+\end{center}
+
+The computational tools presented here — the Buckingham $\pi$ Calculator, the
+case-classification algorithm, the orthogonal-$\mathbf{C}$ construction — lower
+the barrier to entry without sacrificing rigour. They are an invitation: bring
+your physical system, state your variables, and let dimensional analysis show you
+the minimal coordinates in which the problem lives.
+
+The following chapters build on this foundation, applying the theorem to richer
+systems and demonstrating how the choice of $\pi$-groups shapes every subsequent
+step of modelling, estimation, and prediction.
+
+After this chapter, we have established that the Buckingham $\pi$ theorem reduces the complexity by lowering the number of variables and making them dimensionless. We now know which variables and which function properties are essential. The next chapter (Chapter~\ref{ch:functionalequations}) shows how functional equations can further restrict the admissible function structures based on those properties, turning the general dimensionless form into a concrete, learnable model. 
