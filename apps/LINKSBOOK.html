@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LINKSBOOK – Todos los enlaces del libro</title>
+    <style>
+        /* ── reset / base ── */
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        /* ── tabla ── */
+        .table-container {
+            width: 100%;
+            max-width: 1200px;
+            overflow-x: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11pt;
+        }
+        th {
+            background-color: #d9e1f2;
+            color: #1a2b4c;
+            padding: 12px 8px;
+            text-align: left;
+            border: 1px solid #b0c4de;
+        }
+        td {
+            padding: 10px 8px;
+            border: 1px solid #b0c4de;
+            vertical-align: middle;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f6fc;
+        }
+        tr:hover {
+            background-color: #e6f0fa;
+        }
+
+        /* ── enlaces ── */
+        a {
+            color: #0056b3;
+            text-decoration: none;
+            word-break: break-all;
+        }
+        a:hover {
+            text-decoration: underline;
+            color: #00337a;
+        }
+
+        /* ── etiqueta de tipo ── */
+        .tag {
+            display: inline-block;
+            background-color: #e7f0fa;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10pt;
+            color: #1a3a5c;
+            border: 1px solid #b0c4de;
+            white-space: nowrap;
+        }
+
+        /* ── URL cruda (formato http…) ── */
+        .raw-url {
+            display: block;
+            font-size: 9pt;
+            color: #6c757d;
+            word-break: break-all;
+            margin-top: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* ── pie ── */
+        footer {
+            margin-top: 30px;
+            font-size: 10pt;
+            color: #6c757d;
+            text-align: center;
+        }
+
+        /* ── responsive ── */
+        @media (max-width: 600px) {
+            body {
+                margin: 20px 10px;
+            }
+            .table-container {
+                padding: 12px;
+            }
+            table {
+                font-size: 10pt;
+            }
+            td,
+            th {
+                padding: 6px 4px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>📚 LINKSBOOK – Todos los enlaces del libro</h1>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th><b>No.</b></th>
+                    <th><b>Capítulo(s)</b></th>
+                    <th><b>Nombre del enlace (tal como aparece en el libro)</b></th>
+                    <th><b>Tipo</b></th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <!-- 1 -->
+                <tr>
+                    <td>1</td>
+                    <td>3 y Apéndice C</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/apps/SolveHomogeneousSystemSteps.html">Homogeneous System Solver</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/apps/SolveHomogeneousSystemSteps.html</span>
+                    </td>
+                    <td><span class="tag">Web app</span></td>
+                </tr>
+
+                <!-- 2 -->
+                <tr>
+                    <td>2</td>
+                    <td>3 y Apéndice C</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/apps/PRUEBAObtainPiTerms_Flexible_LinearBUENO9a.html">Buckingham Pi Theorem Calculator</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/apps/PRUEBAObtainPiTerms_Flexible_LinearBUENO9a.html</span>
+                    </td>
+                    <td><span class="tag">Web app</span></td>
+                </tr>
+
+                <!-- 29 -->
+                <tr>
+                    <td>2</td>
+                    <td>3 y Apéndice C</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/codigo/Examples4Python.py">Buckingham Pi Theorem Calculator python</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/codigo/Examples4Python.py</span>
+                    </td>
+                    <td><span class="tag">Web app</span></td>
+                </tr>
+
+
+                <!-- 3 -->
+                <tr>
+                    <td>3</td>
+                    <td>9</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/codigo/Bernsteincopulasbook.py">Bernsteincopulasbook.py</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/codigo/Bernsteincopulasbook.py</span>
+                    </td>
+                    <td><span class="tag">Código Python</span></td>
+                </tr>
+
+                <!-- 4 -->
+                <tr>
+                    <td>4</td>
+                    <td>10</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/apps/GraphsAllPairs.html">GraphsAllPairs.html</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/apps/GraphsAllPairs.html</span>
+                    </td>
+                    <td><span class="tag">Web app</span></td>
+                </tr>
+
+                <!-- 5 -->
+                <tr>
+                    <td>5</td>
+                    <td>10</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/manuales/GraphsAllPairsPYManual.pdf">GraphsAllPairsPYManual.pdf</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/manuales/GraphsAllPairsPYManual.pdf</span>
+                    </td>
+                    <td><span class="tag">PDF manual</span></td>
+                </tr>
+
+                <!-- 6 · vídeo MP4 (ya tenía raw‑url, pero la mantenemos) -->
+                <tr>
+                    <td>6</td>
+                    <td>10</td>
+                    <td>
+                        <a href="https://www.youtube.com/watch?v=AD-Xq77a2nc" target="_blank">Video: GraphsAllPairs demonstration</a>
+                        <span class="raw-url">https://www.youtube.com/watch?v=AD-Xq77a2nc</span>
+                    </td>
+                    <td><span class="tag">Vídeo MP4</span></td>
+                </tr>
+
+                <!-- 7 -->
+                <tr>
+                    <td>7</td>
+                    <td>10</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/apps/Fatigue3DModel.html">Fatigue3DModel.html</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/apps/Fatigue3DModel.html</span>
+                    </td>
+                    <td><span class="tag">Web app</span></td>
+                </tr>
+
+                <!-- 8 -->
+                <tr>
+                    <td>8</td>
+                    <td>10</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/manuales/Fatigue3DModel_UserManual.pdf">Fatigue3DModel_UserManual.pdf</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/manuales/Fatigue3DModel_UserManual.pdf</span>
+                    </td>
+                    <td><span class="tag">PDF manual</span></td>
+                </tr>
+
+                <!-- 9 -->
+                <tr>
+                    <td>9</td>
+                    <td>13</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/apps/weibull_hyperbola45.html">Run Weibull Application (weibull_hyperbola45.html)</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/apps/weibull_hyperbola45.html</span>
+                    </td>
+                    <td><span class="tag">Web app</span></td>
+                </tr>
+
+                <!-- 10 -->
+                <tr>
+                    <td>10</td>
+                    <td>13</td>
+                    <td>
+                        <a href="https://github.com/enriquecastilloron-coder/PRUEBA/raw/main/Fatigue3DModel_UserManual.pdf">User Manual (PDF) for Weibull app</a>
+                        <span class="raw-url">https://github.com/enriquecastilloron-coder/PRUEBA/raw/main/Fatigue3DModel_UserManual.pdf</span>
+                    </td>
+                    <td><span class="tag">PDF manual (externo)</span></td>
+                </tr>
+
+                <!-- 11 -->
+                <tr>
+                    <td>11</td>
+                    <td>13 y 15</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/codigo/Examples4Python.py">Examples4Python.py</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/codigo/Examples4Python.py</span>
+                    </td>
+                    <td><span class="tag">Código Python</span></td>
+                </tr>
+
+                <!-- 12 -->
+                <tr>
+                    <td>12</td>
+                    <td>18</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/apps/weibull_hyperbola44.html">weibull_hyperbola44.html</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/apps/weibull_hyperbola44.html</span>
+                    </td>
+                    <td><span class="tag">Web app</span></td>
+                </tr>
+
+                <!-- 13 · sitio externo (no vídeo) -->
+                <tr>
+                    <td>13</td>
+                    <td>19</td>
+                    <td>
+                        <a href="http://www.openbugs.net/" target="_blank">OpenBUGS official website</a>
+                        <span class="raw-url">http://www.openbugs.net/</span>
+                    </td>
+                    <td><span class="tag">Sitio web externo</span></td>
+                </tr>
+
+                <!-- 14 -->
+                <tr>
+                    <td>14</td>
+                    <td>20 y 21</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/apps/ConditionalExplorerFINAL.html">ConditionalExplorerFINAL.html</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/apps/ConditionalExplorerFINAL.html</span>
+                    </td>
+                    <td><span class="tag">Web app</span></td>
+                </tr>
+
+                <!-- 15 · vídeo MP4 (ya tenía raw‑url) -->
+                <tr>
+                    <td>15</td>
+                    <td>22</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/videos/VideoN623.mp4" target="_blank">VideoN623.mp4 (Road safety)</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/videos/VideoN623.mp4</span>
+                    </td>
+                    <td><span class="tag">Vídeo MP4</span></td>
+                </tr>
+
+                <!-- 16 -->
+                <tr>
+                    <td>16</td>
+                    <td>22</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/PRUEBA/COVID5.html">COVID5.html</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/PRUEBA/COVID5.html</span>
+                    </td>
+                    <td><span class="tag">Web app</span></td>
+                </tr>
+
+                <!-- 17 · vídeo MP4 (ya tenía raw‑url) -->
+                <tr>
+                    <td>17</td>
+                    <td>22</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/videos/VIDEOAPPCORTO.mp4" target="_blank">VIDEOAPPCORTO.mp4</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/videos/VIDEOAPPCORTO.mp4</span>
+                    </td>
+                    <td><span class="tag">Vídeo MP4</span></td>
+                </tr>
+
+                <!-- 18 -->
+                <tr>
+                    <td>18</td>
+                    <td>23</td>
+                    <td>
+                        <a href="https://enriquecastilloron.github.io/mi-libro-interactivo/apps/MultivarVis_Analysis.html">MultivarVis_Analysis.html</a>
+                        <span class="raw-url">https://enriquecastilloron.github.io/mi-libro-interactivo/apps/MultivarVis_Analysis.html</span>
+                    </td>
+                    <td><span class="tag">Web app</span></td>
+                </tr>
+
+                <!-- 19 · vídeo MP4 (ya tenía raw‑url) -->
+                <tr>
+                    <td>19</td>
+                    <td>23</td>
+                    <td>
+                        <a href="https://youtu.be/nn_Ii6je3Yg" target="_blank">Video: MultivarVis Analysis demonstration</a>
+                        <span class="raw-url">https://youtu.be/nn_Ii6je3Yg</span>
+                    </td>
+                    <td><span class="tag">Vídeo MP4</span></td>
+                </tr>
+
+                <!-- 20 -->
+                <tr>
+                    <td>20</td>
+                    <td>–</td>
+                    <td>
+                        <a href="https://github.com/EnriqueCastilloRon/mi-libro-interactivo" target="_blank">Main repository (GitHub)</a>
+                        <span class="raw-url">https://github.com/EnriqueCastilloRon/mi-libro-interactivo</span>
+                    </td>
+                    <td><span class="tag">Repositorio</span></td>
+                </tr>
+
+ 
+
+            </tbody>
+        </table>
+    </div>
+
+    <footer>
+        <p>Última actualización: agosto 2026 · Todos los enlaces verificados y funcionales.</p>
+    </footer>
+
+</body>
+</html>
