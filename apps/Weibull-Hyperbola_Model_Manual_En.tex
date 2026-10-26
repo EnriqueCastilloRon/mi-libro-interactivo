@@ -1,0 +1,627 @@
+\documentclass[11pt,a4paper]{article}
+
+% ─── Packages ───────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{fontawesome5}
+\usepackage{multicol}
+\usepackage{parskip}
+
+% ─── Colours ────────────────────────────────────────────────
+\definecolor{accent}{HTML}{B07A00}
+\definecolor{greenhl}{HTML}{1A7F37}
+\definecolor{bluehl}{HTML}{0969DA}
+\definecolor{redhl}{HTML}{CF2626}
+\definecolor{warnhl}{HTML}{9A6700}
+\definecolor{lightbg}{HTML}{FDF6E3}
+\definecolor{surf2}{HTML}{F5EDCE}
+\definecolor{border}{HTML}{DDD0A8}
+
+% ─── Hyperref setup ─────────────────────────────────────────
+\hypersetup{
+  colorlinks=true,
+  linkcolor=accent,
+  urlcolor=bluehl,
+  citecolor=greenhl,
+  pdftitle={Weibull-Hyperbola Model v8 - User Manual},
+  pdfauthor={},
+  pdfsubject={User Manual}
+}
+
+% ─── Header / Footer ────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{accent}{\textbf{Weibull--Hyperbola Model}}}
+\fancyhead[R]{\small v8}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ─── Section styling ────────────────────────────────────────
+\titleformat{\section}
+  {\Large\bfseries\color{accent}}{\thesection}{0.6em}{}
+\titleformat{\subsection}
+  {\large\bfseries\color{black!80}}{\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}
+  {\normalsize\bfseries\color{black!70}}{\thesubsubsection}{0.4em}{}
+
+% ─── Custom boxes ───────────────────────────────────────────
+\newtcolorbox{notebox}[1][]{
+  colback=lightbg, colframe=accent, boxrule=0.6pt,
+  arc=2mm, left=4mm, right=4mm, top=2mm, bottom=2mm,
+  fonttitle=\bfseries\small, title={#1}
+}
+\newtcolorbox{warnbox}[1][]{
+  colback=orange!6, colframe=warnhl, boxrule=0.6pt,
+  arc=2mm, left=4mm, right=4mm, top=2mm, bottom=2mm,
+  fonttitle=\bfseries\small, title={#1}
+}
+\newtcolorbox{tipbox}[1][]{
+  colback=green!5, colframe=greenhl, boxrule=0.6pt,
+  arc=2mm, left=4mm, right=4mm, top=2mm, bottom=2mm,
+  fonttitle=\bfseries\small, title={#1}
+}
+
+% ─── Listings ───────────────────────────────────────────────
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{lightbg},
+  frame=single,
+  rulecolor=\color{border},
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+}
+
+% ─── Convenience macros ─────────────────────────────────────
+\newcommand{\piz}{\ensuremath{\pi_3}}
+\newcommand{\pit}{\ensuremath{\pi_2}}
+\newcommand{\pio}{\ensuremath{\pi_1}}
+\newcommand{\sm}{\ensuremath{\sigma_m}}
+\newcommand{\sM}{\ensuremath{\sigma_M}}
+\newcommand{\sMzero}{\ensuremath{\sigma_{M0}}}
+\newcommand{\Nzero}{\ensuremath{N_0}}
+\newcommand{\Weibull}{\textsc{Weibull}}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+
+\begin{document}
+
+% ════════════════════════════════════════════════════════════
+% TITLE PAGE
+% ════════════════════════════════════════════════════════════
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+
+{\Huge\bfseries\color{accent} Weibull--Hyperbola Model}\\[0.4cm]
+{\LARGE\bfseries User Manual}\\[1.5cm]
+
+{\large Version 8}\\[0.3cm]
+{\large Interactive Web Application for Fatigue Data Analysis}\\[3cm]
+
+\begin{tabular}{rl}
+\textbf{Application type:} & Single-page web application \\
+\textbf{Models:} & M0--M7 (8 nested models) \\
+\textbf{Estimation:} & Maximum likelihood + grid search \\
+\textbf{Simulation:} & Physical-branch guaranteed \\
+\textbf{Exports:} & CSV, LaTeX, PDF, PNG \\
+\end{tabular}
+
+\vfill
+
+{\small This document describes how to use the Weibull--Hyperbola Model web application for fitting, simulating, and analysing fatigue life data.}
+
+\end{titlepage}
+
+% ════════════════════════════════════════════════════════════
+\tableofcontents
+\newpage
+
+% ════════════════════════════════════════════════════════════
+\section{Introduction}
+% ════════════════════════════════════════════════════════════
+
+The \textbf{Weibull--Hyperbola Model} is a browser-based tool for analysing fatigue data. It combines a hyperbolic stress--life relationship with a three-parameter \Weibull{} distribution to model the scatter in fatigue life.
+
+The application allows you to:
+\begin{itemize}[leftmargin=1.4em]
+  \item Simulate synthetic fatigue data on a guaranteed physical branch.
+  \item Fit up to eight nested models (M0--M7) to experimental data.
+  \item Estimate reference parameters $\sMzero$ and $\Nzero$ automatically.
+  \item Compare models using AIC and BIC.
+  \item Visualise percentile curves in both transformed and original coordinates.
+  \item Export results as CSV, LaTeX tables, PDF and PNG figures.
+\end{itemize}
+
+\begin{notebox}[No installation required]
+The application is a single HTML file. It runs entirely in your browser --- no server, no installation, no data leaves your computer. All computation is performed locally in JavaScript.
+\end{notebox}
+
+% ════════════════════════════════════════════════════════════
+\section{The Mathematical Model}
+% ════════════════════════════════════════════════════════════
+
+\subsection{Transformed variables}
+
+The model uses three dimensionless variables:
+\begin{align}
+  \pio &= \frac{\sm}{\sM} && \text{(stress ratio)} \\[2pt]
+  \pit &= \frac{\sM}{\sMzero} - 1 && \text{(normalised amplitude stress)} \\[2pt]
+  \piz &= \log_{10}\!\left(\frac{N}{\Nzero}\right) && \text{(normalised log-life)}
+\end{align}
+where $\sm$ is the mean stress, $\sM$ is the stress amplitude, $N$ is the number of cycles to failure, and $\sMzero$, $\Nzero$ are reference values.
+
+\subsection{The hyperbola}
+
+The core relationship is:
+\begin{equation}
+  V = w_1\pio + w_{12}\pio\pit + w_{13}\pio\piz + \pit\piz + w_{123}\pio\pit\piz
+  \label{eq:V}
+\end{equation}
+Solving for $\pit$ as a function of $\piz$ at fixed $\pio$ gives a hyperbola:
+\begin{equation}
+  \pit = \frac{V - w_1\pio - w_{13}\pio\piz}{\piz + w_{12}\pio + w_{123}\pio\piz}
+\end{equation}
+The vertical asymptote is at $\piz^{\text{asym}} = -w_{12}\pio/(1+w_{123}\pio)$ and the horizontal asymptote at $\pit^{\text{asym}} = -w_{13}\pio/(1+w_{123}\pio)$.
+
+\subsection{The Weibull distribution}
+
+The quantity $V$ follows a three-parameter \Weibull{} distribution:
+\begin{equation}
+  f(v) = \frac{\beta}{\delta}\left(\frac{v-\lambda}{\delta}\right)^{\beta-1}
+         \exp\!\left[-\left(\frac{v-\lambda}{\delta}\right)^{\beta}\right], \quad v > \lambda
+\end{equation}
+with location $\lambda$, scale $\delta$, and shape $\beta$.
+
+\subsection{The eight nested models}
+
+\begin{center}
+\begin{tabular}{cl}
+\toprule
+\textbf{Model} & \textbf{Free parameters} \\
+\midrule
+M0 & $w_1, w_{12}, w_{13}, w_{123}$ \\
+M1 & $w_1, w_{12}, w_{13}$ \\
+M2 & $w_1, w_{13}, w_{123}$ \\
+M3 & $w_1, w_{12}, w_{123}$ \\
+M4 & $w_1, w_{123}$ \\
+M5 & $w_1, w_{13}$ \\
+M6 & $w_1, w_{12}$ \\
+M7 & $w_1$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Parameters not listed are fixed to zero. All models are nested within M0.
+
+% ════════════════════════════════════════════════════════════
+\section{Getting Started}
+% ════════════════════════════════════════════════════════════
+
+\subsection{Opening the application}
+
+Open the HTML file in any modern browser (Chrome, Firefox, Edge, Safari). No installation or internet connection is required after the first load, except for the Chart.js and jsPDF libraries which are loaded from local files.
+
+\subsection{Interface overview}
+
+The interface is organised into collapsible sections:
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Section} & \textbf{Purpose} \\
+\midrule
+\textcolor{bluehl}{\textbf{Model \& Parameters}} & Choose the model, edit $w$ parameters, \Weibull{} parameters, and references. \\
+\textcolor{greenhl}{\textbf{Simulation Settings}} & Define the simulation ranges and run it. \\
+\textcolor{orange}{\textbf{Data Extrema}} & Automatic read-only display of data ranges. \\
+\textcolor{redhl}{\textbf{Fitting \& Estimation}} & Load CSV, estimate references, fit models. \\
+\textcolor{accent}{\textbf{Results}} & Tables, charts, and export options. \\
+\textcolor{purple}{\textbf{Console Log}} & Messages, warnings, and progress information. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Click any section header to expand or collapse it. The top-right button \textbf{Expand all / Collapse all} toggles all sections at once.
+
+\subsection{The status indicator}
+
+A coloured dot in the top-right corner of the header shows the application state:
+\begin{itemize}[leftmargin=1.4em]
+  \item \textcolor{greenhl}{\textbf{Green}} --- ready / idle.
+  \item \textcolor{redhl}{\textbf{Red}} --- computing. Do not close the tab.
+\end{itemize}
+
+\subsection{The Case / Title field}
+
+The text field in the header is used as the \textbf{filename prefix} for all exports. If you load a CSV file, it is set automatically from the filename.
+
+% ════════════════════════════════════════════════════════════
+\section{Workflow 1: Simulating Data}
+% ════════════════════════════════════════════════════════════
+
+This workflow generates synthetic data from known parameters.
+
+\subsection{Step 1 --- Set the model and parameters}
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item Expand \textbf{Model \& Parameters}.
+  \item Choose a model from the \textit{Model} selector (e.g., M0). The free $w$ fields update automatically.
+  \item Enter the $w$ values. A good starting set is $w_1=0.5$, $w_{12}=-0.2$, $w_{13}=0.3$, $w_{123}=-0.1$.
+  \item Enter the \Weibull{} parameters: $\lambda=0.5$, $\delta=0.3$, $\beta=2.5$ (defaults).
+  \item Enter the references: $\sMzero=40$, $\Nzero=1000$ (defaults).
+\end{enumerate}
+
+\begin{warnbox}[Reference constraints]
+$\sMzero$ must be strictly less than $\sM^{\min}$ in your simulation range. $\Nzero$ must be less than the runout threshold. The application auto-corrects violations and reports them in the console.
+\end{warnbox}
+
+\subsection{Step 2 --- Set the simulation ranges}
+
+Expand \textbf{Simulation Settings} and set:
+\begin{itemize}[leftmargin=1.4em]
+  \item $\sM^{\min}$, $\sM^{\max}$ --- amplitude stress range (e.g., 50--200 MPa).
+  \item $\sm^{\min}$, $\sm^{\max}$ --- mean stress range (e.g., 10--150 MPa).
+  \item \textbf{N points} --- number of points to generate (default 1000).
+  \item \textbf{Runout threshold} --- cycles above which a point is censored (default $10^7$).
+  \item \textbf{Apply runout censoring} --- if checked, points above the threshold are marked as runouts.
+\end{itemize}
+
+\subsection{Step 3 --- Simulate}
+
+Click \textbf{\textcolor{greenhl}{\textgreater Simulate Data}}. The console reports:
+\begin{itemize}[leftmargin=1.4em]
+  \item Number of valid points generated.
+  \item Rejection rate (percentage of attempts rejected by physical constraints).
+\end{itemize}
+
+\begin{tipbox}[Reading the rejection rate]
+A rejection rate below 80\% is normal. Above 80\% suggests your $w$ parameters, ranges, or references are poorly matched. The console will warn you.
+\end{tipbox}
+
+\subsection{Step 4 --- Plot the curves}
+
+Click \textbf{\textcolor{accent}{\textbf{[Plot]} Plot Curves (sim.)}} to display the percentile curves. This uses the parameters currently in the \textbf{Model \& Parameters} section (it does \emph{not} fit anything).
+
+% ════════════════════════════════════════════════════════════
+\section{Workflow 2: Fitting Experimental Data}
+% ════════════════════════════════════════════════════════════
+
+This workflow estimates parameters from measured fatigue data.
+
+\subsection{Step 1 --- Prepare your CSV file}
+
+Your file must be comma-separated with the following required columns:
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\textbf{Column} & \textbf{Description} & \textbf{Units} \\
+\midrule
+\texttt{sigmam} & Mean stress $\sm$ & MPa \\
+\texttt{sigmaM} & Stress amplitude $\sM$ & MPa \\
+\texttt{N} & Cycles to failure & cycles \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+An optional \texttt{runout} column (0/1) can be included. If absent, it is inferred from the runout threshold.
+
+Example:
+\begin{lstlisting}
+sigmam,sigmaM,N
+20,180,15000
+30,160,42000
+40,140,98000
+...
+\end{lstlisting}
+
+\subsection{Step 2 --- Load the file}
+
+Either:
+\begin{itemize}[leftmargin=1.4em]
+  \item Drag the file onto the drop zone, or
+  \item Click the drop zone to browse for the file.
+\end{itemize}
+
+Upon loading, the application:
+\begin{enumerate}[leftmargin=1.4em]
+  \item Clears all previous results.
+  \item Sets the \textit{Model} selector to \textbf{All} and checks all model checkboxes.
+  \item Updates the \textbf{Data Extrema} section with the min/max of each variable.
+  \item Sets the \textbf{Case / Title} from the filename.
+  \item Displays the data table in the \textbf{Results} tab.
+\end{enumerate}
+
+\subsection{Step 3 --- Configure the fitting}
+
+Expand \textbf{Fitting \& Estimation}:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{Models to fit} --- tick the models to include (all ticked by default).
+  \item \textbf{Estimation method}:
+    \begin{itemize}
+      \item \textbf{Option 1 (recommended)} --- each model independently estimates $\sMzero$ and $\Nzero$.
+      \item \textbf{Option 2} --- joint estimation: one $\sMzero/\Nzero$ pair for all models, then re-fit.
+    \end{itemize}
+  \item \textbf{Grid search configuration}:
+    \begin{itemize}
+      \item \textbf{Grid points} (3--20) --- resolution of the initial coarse grid.
+      \item \textbf{Grid restarts} (1--15) --- L-BFGS restarts during the grid phase.
+      \item \textbf{Refinement restarts} (3--30) --- L-BFGS restarts during the final refinement.
+    \end{itemize}
+\end{enumerate}
+
+\begin{notebox}[Performance tip]
+Default values (3, 3, 5) are fast. For publication-quality fits, use 5--7 grid points and 5--10 restarts. Larger values take proportionally longer.
+\end{notebox}
+
+\subsection{Step 4 --- Estimate or fit}
+
+Two buttons are available:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{\textcolor{warnhl}{\textbf{[Plot]} Estimate $\sMzero$ \& $\Nzero$}} --- runs the full grid search + refinement.
+  \item \textbf{\textcolor{accent}{\textbf{[Fit]} Fit (manual $\sMzero$, $\Nzero$)}} --- fits models at the reference values currently entered in \textbf{Model \& Parameters}, skipping the search.
+\end{itemize}
+
+During execution, the status dot turns \textcolor{redhl}{red}. Progress is shown in the progress bar and the console.
+
+\subsection{Step 5 --- Review results}
+
+Once fitting completes, the \textbf{Results} section becomes visible with five tabs:
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Tab} & \textbf{Content} \\
+\midrule
+\textbf{Data} & Loaded experimental data (paginated). \\
+\textbf{Model Comparison} & Parameter estimates, AIC, BIC for all fitted models. \\
+\textbf{Percentile Curves} & Interactive charts (see Section~\ref{sec:charts}). \\
+\textbf{Simulated Data} & Table of simulated data (if any). \\
+\textbf{Export} & CSV, LaTeX, PDF and PNG download buttons. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+The best model (lowest AIC) is highlighted with a green background and a \textbf{*} in the model comparison table. Its equation is shown above the tabs.
+
+% ════════════════════════════════════════════════════════════
+\section{The Results Tabs in Detail}
+% ════════════════════════════════════════════════════════════
+
+\subsection{Data tab}
+
+Shows the loaded experimental data with an additional column $R = \sm/\sM$ (stress ratio). Tables are paginated at 10 rows per page.
+
+\subsection{Model Comparison tab}
+
+Displays one row per fitted model with columns:
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Column} & \textbf{Meaning} \\
+\midrule
+\textbf{*} & Marks the best model (lowest AIC) \\
+Model & Model identifier M0--M7 \\
+$k$ & Number of free parameters \\
+$\sMzero$, $\Nzero$ & Estimated references \\
+$w_1,w_{12},w_{13},w_{123}$ & Estimated $w$ parameters \\
+$\lambda$, $\delta$, $\beta$ & \Weibull{} parameters \\
+$\ell$ & Log-likelihood \\
+AIC, BIC & Information criteria \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Percentile Curves tab}
+\label{sec:charts}
+
+Shows the fitted model as a family of percentile curves ($p = 0.01, 0.05, 0.25, 0.50, 0.75, 0.95, 0.99$) at six values of $\pio$.
+
+\subsubsection*{Coordinate systems}
+
+Use the toggle in \textbf{Model \& Parameters} to switch between:
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{$\pit$ vs $\piz$} --- transformed coordinates.
+  \item \textbf{$\sM$ vs $N$} --- original physical coordinates (default).
+\end{itemize}
+
+\subsubsection*{Opacity slider}
+
+The slider above the charts controls how the scatter points fade with distance from the slice $\pio$ value:
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{0} --- all points equally opaque.
+  \item \textbf{4.6} --- points at the median distance are nearly invisible; points near the slice stay bright.
+\end{itemize}
+This helps visualise which data points belong to each $\pio$ slice.
+
+\subsubsection*{Scrolling}
+
+The charts are laid out horizontally. Scroll sideways (or swipe on touch devices) to see all slices.
+
+\subsubsection*{Overlaid data}
+
+When \textbf{Include simulated data} is active (see Section~\ref{sec:include-sim}), the simulated points are shown in blue and the real experimental data in red.
+
+\subsection{Simulated Data tab}
+
+Shows the generated synthetic data (when simulation was run). Paginated like the other tables.
+
+\subsection{Export tab}
+
+Offers:
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{\textbf{[Download]} Data CSV} --- experimental data as CSV.
+  \item \textbf{\textbf{[Download]} Models CSV} --- parameter estimates as CSV.
+  \item \textbf{\textbf{[Download]} Data LaTeX} --- experimental data as a booktabs table.
+  \item \textbf{\textbf{[Download]} Models LaTeX} --- parameter table as booktabs.
+  \item \textbf{\textbf{[Download]} Simulated CSV} --- simulated data as CSV.
+  \item \textbf{\textbf{[Plot]} Export Figures (PDF)} --- one PDF per chart, A4 landscape.
+  \item \textbf{\textbf{[Plot]} Export Figures (PNG)} --- one PNG per chart, 3× resolution.
+\end{itemize}
+
+All filenames use the \textbf{Case / Title} as prefix. Below the buttons, thumbnails of each figure appear; clicking a thumbnail downloads that figure as PNG.
+
+% ════════════════════════════════════════════════════════════
+\section{Reference Parameters and Auto-Correction}
+% ════════════════════════════════════════════════════════════
+
+\subsection{Constraints}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item $\sMzero$ must be \textbf{strictly less} than the minimum $\sM$ in the data (otherwise $\pit \le 0$).
+  \item $\Nzero$ must be \textbf{strictly less} than the minimum $N$ in the data (otherwise $\piz \le 0$).
+\end{itemize}
+
+\subsection{Auto-correction}
+
+When you click \textbf{Simulate Data} or \textbf{Fit (manual)}, if either reference violates its constraint, the application automatically corrects it to $0.9\times$ the corresponding minimum and writes a warning to the console.
+
+When you click \textbf{Estimate $\sMzero$ \& $\Nzero$}, the search ranges are automatically chosen inside the feasible region.
+
+\begin{notebox}[Why does this matter?]
+The hyperbola has two branches. Only one branch gives physically valid fatigue data (positive $\sM$, positive $N$). The application enforces a constraint $\piz + w_{12}\pio + w_{123}\pio\piz > 0$ for all data points, which guarantees the correct branch.
+\end{notebox}
+
+% ════════════════════════════════════════════════════════════
+\section{Including Simulated Data in Curves}
+\label{sec:include-sim}
+% ════════════════════════════════════════════════════════════
+
+The toggle \textbf{Include simulated data} (in Simulation Settings) has three effects:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item \textbf{After a fit} --- a new simulation is generated using the fitted parameters. The curves are drawn from the simulated points, and the real data is overlaid in red.
+  \item \textbf{After Plot Curves (sim.)} --- the curves are drawn from the last simulation, and (if a real dataset is loaded) the real data is overlaid in red.
+  \item \textbf{When off} --- the curves use only the simulated or fitted data, without overlay.
+\end{enumerate}
+
+\begin{tipbox}[Use case]
+This is useful when your experimental dataset is small: the percentile curves are better defined by a dense simulation matched to the fitted parameters.
+\end{tipbox}
+
+% ════════════════════════════════════════════════════════════
+\section{Resetting the Application}
+% ════════════════════════════════════════════════════════════
+
+The button \textbf{\textbf{[Warning]} Reset and load file} (in \textbf{Fitting \& Estimation}) performs a full reset:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item Shows a confirmation dialog.
+  \item Clears all data, results, charts, and settings.
+  \item Reloads the page.
+  \item Opens the file dialog for a fresh CSV.
+\end{enumerate}
+
+\begin{warnbox}[Irreversible]
+This action cannot be undone. All unsaved work (including figures you have not exported) is lost.
+\end{warnbox}
+
+% ════════════════════════════════════════════════════════════
+\section{Reading the Console}
+% ════════════════════════════════════════════════════════════
+
+The console (bottom of the page) uses colour coding:
+
+\begin{center}
+\begin{tabular}{ll}
+\toprule
+\textbf{Colour} & \textbf{Meaning} \\
+\midrule
+\textcolor{greenhl}{Green \textbf{[OK]}} & Success, completion. \\
+\textcolor{warnhl}{Orange \textbf{[Warning]}} & Warning --- non-fatal issue. \\
+\textcolor{redhl}{Red \textbf{[Error]}} & Error --- action failed. \\
+\textcolor{bluehl}{Blue} & Informational message. \\
+\textcolor{accent}{\textbf{Gold bold}} & Section header / start of operation. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Important messages to watch for:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textit{``Reference auto-corrected to \ldots''} --- your reference was infeasible; the application fixed it.
+  \item \textit{``Rejection rate: XX\%''} --- percentage of simulation attempts rejected by physical constraints.
+  \item \textit{``Only XX/YYY valid points''} --- simulation could not reach the requested count.
+  \item \textit{``Best model: M\textit{n}''} --- best fit by AIC.
+\end{itemize}
+
+% ════════════════════════════════════════════════════════════
+\section{Troubleshooting}
+% ════════════════════════════════════════════════════════════
+
+\begin{description}[leftmargin=0em, style=nextline]
+  \item[``No valid points were generated''] 
+  The simulation constraints are too tight. Reduce $\sM^{\min}$ closer to $\sMzero$, widen the ranges, or check that $\sMzero < \sM^{\min}$.
+
+  \item[``CSV parse error''] 
+  Verify the header contains \texttt{sigmam}, \texttt{sigmaM}, \texttt{N}. Check that no cells are empty or contain non-numeric characters.
+
+  \item[``Fit did not converge''] 
+  Try more restarts (e.g., 10 grid, 10 refine), or manually enter plausible $\sMzero$ / $\Nzero$ and use \textbf{Fit (manual)}.
+
+  \item[Curves are missing or truncated] 
+  The plotted range may be too narrow. Increase the simulation range or extend the data.
+
+  \item[``Only 1 valid $\pio$ slice'' in console] 
+  The data does not admit multiple slices that satisfy all percentile curves in the positive quadrant. Widen the $w$ parameters or review the fit.
+
+  \item[PDF export does nothing]
+  Check that the jsPDF library is available (network access to the CDN or local file present). The console will show an error if not.
+\end{description}
+
+% ════════════════════════════════════════════════════════════
+\section{Quick Reference}
+% ════════════════════════════════════════════════════════════
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Button} & \textbf{Action} \\
+\midrule
+\textgreater Simulate Data & Generate synthetic points from the current parameters. \\
+\textbf{[Plot]} Plot Curves (sim.) & Draw percentile curves from the simulation parameters. \\
+\textbf{[Plot]} Estimate $\sMzero$ \& $\Nzero$ & Grid search + refinement across all selected models. \\
+\textbf{[Fit]} Fit (manual) & Fit at the manually entered references. \\
+\textbf{[Warning]} Reset and load file & Full reset and load a fresh CSV. \\
+\textbf{[Download]} CSV / LaTeX & Download tables. \\
+\textbf{[Plot]} PDF / \textbf{[Plot]} PNG & Download figures. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{notebox}[Recommended workflow]
+\begin{enumerate}
+  \item Load your CSV.
+  \item Estimate $\sMzero$ \& $\Nzero$ (Option 1, defaults).
+  \item Inspect the Model Comparison tab; note the best model.
+  \item Review the Percentile Curves; adjust the opacity slider if needed.
+  \item Tick \textit{Include simulated data} and re-plot for a denser curve family.
+  \item Export figures and tables for reporting.
+\end{enumerate}
+\end{notebox}
+
+% ════════════════════════════════════════════════════════════
+\section*{Version History}
+\addcontentsline{toc}{section}{Version History}
+% ════════════════════════════════════════════════════════════
+
+\textbf{v8} --- Physical-branch guarantee in simulation; rejection-rate reporting; per-model independent estimation (Option 1); per-figure PDF export; export previews; strict $\pio$-slice validation for percentile curves; opacity slider; model equation display.
+
+\end{document}

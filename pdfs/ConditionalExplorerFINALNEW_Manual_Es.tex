@@ -1,0 +1,477 @@
+\documentclass[11pt,a4paper]{article}
+
+% ─── Paquetes ───────────────────────────────────────────────
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{listings}
+\usepackage{tcolorbox}
+\usepackage{fontawesome5}
+\usepackage{parskip}
+
+% ─── Colores (paleta de tonos tierra de la aplicación) ──────
+\definecolor{accent}{HTML}{2E7D32}       % green (app accent)
+\definecolor{brown}{HTML}{5D4037}        % dark brown (toolbar)
+\definecolor{brownmid}{HTML}{6B4C3A}     % body background
+\definecolor{brownlight}{HTML}{BCAAA4}   % panel
+\definecolor{cream}{HTML}{EFEBE9}        % surface
+\definecolor{paper}{HTML}{FFF8F0}        % plot background
+\definecolor{warnhl}{HTML}{9A6700}
+\definecolor{redhl}{HTML}{8B2E2E}
+\definecolor{border}{HTML}{BCAAA4}
+
+% ─── Configuración de Hyperref ──────────────────────────────
+\hypersetup{
+  colorlinks=true,
+  linkcolor=accent,
+  urlcolor=brown,
+  citecolor=accent,
+  pdftitle={Conditional Dimensional Explorer - Manual de usuario},
+  pdfsubject={Manual de usuario}
+}
+
+% ─── Encabezado / pie de página ─────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{brown}{\textbf{Conditional Dimensional Explorer}}}
+\fancyhead[R]{\small Edición en tonos tierra}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ─── Estilo de secciones ────────────────────────────────────
+\titleformat{\section}
+  {\Large\bfseries\color{brown}}{\thesection}{0.6em}{}
+\titleformat{\subsection}
+  {\large\bfseries\color{black!80}}{\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}
+  {\normalsize\bfseries\color{black!70}}{\thesubsubsection}{0.4em}{}
+
+% ─── Recuadros personalizados ──────────────────────────────
+\newtcolorbox{notebox}[1][]{
+  colback=cream, colframe=brown, boxrule=0.6pt,
+  arc=2mm, left=4mm, right=4mm, top=2mm, bottom=2mm,
+  fonttitle=\bfseries\small, title={#1}
+}
+\newtcolorbox{tipbox}[1][]{
+  colback=accent!6, colframe=accent, boxrule=0.6pt,
+  arc=2mm, left=4mm, right=4mm, top=2mm, bottom=2mm,
+  fonttitle=\bfseries\small, title={#1}
+}
+\newtcolorbox{warnbox}[1][]{
+  colback=orange!6, colframe=warnhl, boxrule=0.6pt,
+  arc=2mm, left=4mm, right=4mm, top=2mm, bottom=2mm,
+  fonttitle=\bfseries\small, title={#1}
+}
+
+% ─── Listados de código ─────────────────────────────────────
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{cream},
+  frame=single,
+  rulecolor=\color{border},
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{5pt}
+
+\begin{document}
+
+% ════════════════════════════════════════════════════════════
+% TITLE PAGE
+% ════════════════════════════════════════════════════════════
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+
+{\Huge\bfseries\color{accent} Conditional Dimensional Explorer}\\[0.4cm]
+{\LARGE\bfseries Manual de usuario}\\[1.5cm]
+
+{\large Edición en tonos tierra}\\[0.3cm]
+{\large Herramienta interactiva de visualización condicional de datos}\\[3cm]
+
+\begin{tabular}{rl}
+\textbf{Tipo de aplicación:} & Aplicación web de una sola página (HTML) \\
+\textbf{Motor de representación gráfica:} & Plotly.js 3.1.0 \\
+\textbf{Vistas:} & Histograma, dispersión (2D), dispersión 3D \\
+\textbf{Condicionamiento:} & Mediante controles deslizantes y filtro por umbral de distancia \\
+\textbf{Entrada de datos:} & Carga de CSV y generadores de datos sintéticos \\
+\textbf{Exportaciones:} & CSV \\
+\end{tabular}
+
+\vfill
+
+{\small Este documento explica cómo utilizar Conditional Dimensional Explorer: cómo cargar o generar datos, condicionar la nube de puntos, alternar entre vistas unidimensionales, bidimensionales y tridimensionales, y exportar los resultados.}
+
+\end{titlepage}
+
+% ════════════════════════════════════════════════════════════
+\tableofcontents
+\newpage
+
+% ════════════════════════════════════════════════════════════
+\section{Introducción}
+% ════════════════════════════════════════════════════════════
+
+La herramienta \textbf{Conditional Dimensional Explorer} permite visualizar de forma interactiva y condicional datos multivariantes desde un navegador. Transforma cada variable a una escala uniforme $[0,\,1]$ mediante la función de distribución acumulada empírica (ECDF) y permite explorar subconjuntos de datos seleccionados mediante variables de \emph{condicionamiento}. Los puntos más próximos al punto de condicionamiento elegido se resaltan, mientras que los demás se vuelven progresivamente transparentes.
+
+La aplicación ofrece tres modos de visualización, según el número de variables que se elijan para representar:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{1 variable} --- un histograma de los valores originales de la variable seleccionada.
+  \item \textbf{2 variables} --- un diagrama de dispersión en el cuadrado unidad.
+  \item \textbf{3 variables} --- un diagrama de dispersión tridimensional interactivo.
+\end{itemize}
+
+\subsection{Características principales}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item Cargar cualquier archivo CSV numérico (separado por comas, punto y coma o tabuladores).
+  \item Generar dos conjuntos de datos sintéticos: una muestra estructurada fija de 15 variables y una muestra realista correlacionada de 10 variables.
+  \item Condicionar por cualquier subconjunto de variables mediante controles deslizantes.
+  \item Atenuación según la distancia: el control deslizante «umbral de distancia» determina la rapidez con la que se atenúa la nube de puntos.
+  \item Guardar el conjunto de datos activo como CSV.
+  \item Ver los datos en una tabla y examinar una matriz de correlaciones de Pearson.
+  \item Modo de pantalla completa y botón de salida.
+\end{itemize}
+
+\begin{notebox}[No se requiere instalación]
+La aplicación consta de un único archivo HTML. Solo necesita conexión a Internet durante la primera carga, porque obtiene Plotly.js de una CDN. Todos los cálculos se realizan localmente en el navegador.
+\end{notebox}
+
+% ════════════════════════════════════════════════════════════
+\section{Cómo funciona la visualización}
+% ════════════════════════════════════════════════════════════
+
+\subsection{Normalización mediante la función de distribución acumulada empírica}
+
+Cada variable se transforma a una escala uniforme en $[0,1]$ mediante su \textbf{función de distribución acumulada empírica} (ECDF):
+\begin{equation}
+  q_{ij} = \frac{\operatorname{rank}(x_{ij})}{n+1}
+\end{equation}
+donde $n$ es el número de filas y $\operatorname{rank}(x_{ij})$ es el rango del valor de la columna $j$ en la fila $i$ (el rango 1 corresponde al menor valor). De este modo, todos los ejes son comparables, independientemente de las unidades o de la escala.
+
+\subsection{Condicionamiento y umbral de distancia}
+
+Si selecciona $k$ variables de condicionamiento $\{c_1,\dots,c_k\}$, aparecerán también $k$ controles deslizantes en el panel derecho. Para cada punto se calcula una distancia en el espacio normalizado:
+
+\begin{equation}
+  d_i = \sqrt{\sum_{m=1}^{k} \left(q_{i c_m} - \theta_{c_m}\right)^2}
+\end{equation}
+donde $\theta_{c_m}$ es el valor del control deslizante de la variable de condicionamiento. Los puntos que cumplen $d_i < \tau$ (siendo $\tau$ el \emph{umbral de distancia}) se muestran con una opacidad
+
+\begin{equation}
+  \alpha_i = \max\left(0.2,\; 1 - \frac{d_i}{\tau}\right).
+\end{equation}
+
+Los puntos con $d_i \ge \tau$ se ocultan. Al reducir $\tau$, la atención se concentra en un entorno pequeño; al aumentarlo, se muestran más puntos.
+
+\subsection{Los tres modos de visualización}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Variables representadas} & \textbf{Qué se muestra} \\
+\midrule
+1 variable & Un histograma de los valores originales (sin normalizar) de esa variable, filtrado según el condicionamiento actual. \\
+2 variables & Un diagrama de dispersión 2D de sus coordenadas ECDF $[0,1]\times[0,1]$, con un marco verde. \\
+3 variables & Un diagrama de dispersión 3D de sus coordenadas ECDF dentro de un cubo unidad. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{tipbox}[En 2D y 3D, los ejes siempre son coordenadas ECDF]
+En las vistas 2D y 3D, los ejes muestran valores \textbf{normalizados} entre 0 y 1, por lo que las posiciones de los puntos son comparables en todos los ejes. En la vista de histograma (1 variable), el eje x muestra los valores originales.
+\end{tipbox}
+
+% ════════════════════════════════════════════════════════════
+\section{Primeros pasos}
+% ════════════════════════════════════════════════════════════
+
+\subsection{Abrir la aplicación}
+
+Abra el archivo HTML en un navegador moderno (Chrome, Firefox, Edge o Safari). En la primera carga, la aplicación genera automáticamente la muestra estructurada fija de 15 variables, de modo que puede empezar a explorar de inmediato.
+
+\subsection{Descripción de la interfaz}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Zona} & \textbf{Contenido} \\
+\midrule
+Barra de herramientas superior & Título, carga de archivos, tamaño de muestra, generadores de datos, selección de variables y botones para guardar, mostrar la tabla, ver correlaciones, activar pantalla completa y salir. \\
+Gráfico central & La figura activa (histograma, dispersión o gráfico 3D). \\
+Panel derecho & Umbral de distancia, contador de puntos y controles deslizantes de condicionamiento. \\
+Ventanas modales & Selección de variables, tabla de datos y matriz de correlaciones. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{El contador de puntos}
+
+Debajo del control deslizante del umbral de distancia aparece un indicador del tipo \texttt{2000 / 2000 pts}. El primer número indica cuántos puntos cumplen actualmente el umbral de distancia; el segundo es el número total de filas. Así puede comprobar inmediatamente lo restrictivo que es el condicionamiento.
+
+% ════════════════════════════════════════════════════════════
+\section{La barra de herramientas en detalle}
+% ════════════════════════════════════════════════════════════
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Botón} & \textbf{Acción} \\
+\midrule
+\faFolderOpen{} \textbf{Cargar CSV} & Abre un selector de archivos. Carga un CSV numérico y detecta automáticamente si está separado por comas, punto y coma o tabuladores. \\
+\textbf{n =} (field) & Tamaño de muestra para los generadores sintéticos (200--20\,000). \\
+\faBolt{} \textbf{Inicializar datos} & Genera el conjunto de datos estructurado fijo de 15 variables. \\
+\faDna{} \textbf{Realista \textpm\ corr (10 vars)} & Genera una muestra correlacionada de 10 variables (Ingresos, Educación, Deuda, \dots). \\
+\faSlidersH{} \textbf{Selección de variables} & Abre la ventana modal para elegir las variables representadas y las de condicionamiento. \\
+\faSave{} \textbf{Guardar CSV} & Descarga el conjunto de datos actual. \\
+\faClipboard{} \textbf{Mostrar tabla de datos} & Abre una ventana modal con las primeras 500 filas. \\
+\faChartLine{} \textbf{Matriz de correlaciones} & Abre un mapa de calor de las correlaciones de Pearson. \\
+\faExpand{} \textbf{Pantalla completa} & Activa o desactiva la pantalla completa. \\
+\faPowerOff{} \textbf{Exit} & Intenta cerrar la pestaña (sujeto a las restricciones del navegador). \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{notebox}[El tamaño de muestra solo afecta a los generadores]
+El campo \texttt{n =} determina cuántas filas generan los dos generadores sintéticos. No afecta a los archivos CSV que cargue; el campo se actualiza para reflejar el número de filas del archivo cargado.
+\end{notebox}
+
+% ════════════════════════════════════════════════════════════
+\section{Carga de datos}
+% ════════════════════════════════════════════════════════════
+
+\subsection{Desde un archivo CSV}
+
+Haga clic en \textbf{Cargar CSV} y seleccione un archivo. La aplicación:
+
+\begin{enumerate}[leftmargin=1.4em]
+  \item Detecta el separador (coma, punto y coma o tabulador) a partir de la primera línea no vacía.
+  \item Analiza el archivo (admite campos entre comillas y saltos de línea entrecomillados).
+  \item Conserva únicamente las filas cuyas celdas sean todas numéricas y estén completas.
+  \item Si hay filas no válidas, muestra un cuadro de confirmación con los primeros números de fila afectados antes de cargar el subconjunto válido.
+\end{enumerate}
+
+La primera fila debe contener la cabecera (nombres de las variables); cada fila posterior debe tener exactamente tantos valores numéricos como nombres haya en la cabecera.
+
+\subsubsection*{Coma decimal}
+
+Cuando el archivo está separado por punto y coma o tabuladores, se admiten comas decimales (por ejemplo, \texttt{3,14}). En los archivos separados por comas, el separador decimal debe ser un punto.
+
+\subsection{Sustituir el conjunto de datos activo}
+
+Cada vez que cargue o genere un conjunto de datos nuevo, si ya hay uno activo la aplicación preguntará si desea guardarlo primero como CSV. Así se evita perder trabajo accidentalmente.
+
+\begin{warnbox}[Sustitución irreversible]
+Si decide no guardarlo, se descartarán el conjunto de datos activo, sus gráficos, sus ventanas modales y el estado de condicionamiento. Los datos nuevos se cargarán con un estado inicial: dos variables representadas, una variable de condicionamiento, umbral 0.80 y todos los controles deslizantes en 0.50.
+\end{warnbox}
+
+\subsection{Conjuntos de datos sintéticos}
+
+Hay dos generadores integrados disponibles:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Inicializar datos} --- una estructura fija de 15 variables con nombres de materias académicas (matemáticas, física, química, \dots, coordinación), generada mediante un modelo latente de cinco factores, con una matriz de cargas fija y una pequeña matriz de factores correlacionados.
+  \item \textbf{Realista \textpm\ corr} --- 10 variables (ingresos, educación, deuda, ahorros, estrés, salud, puntuación social, tolerancia al riesgo, horas de trabajo y tiempo libre), generadas a partir de una matriz de correlación objetivo de dimensión $10\times10$, ajustada para que sea definida positiva mediante una pequeña regularización y muestreadas después mediante un factor de Cholesky.
+\end{itemize}
+
+Ambos generadores limitan todos los valores al intervalo $[0,100]$ y los redondean a una cifra decimal.
+
+% ════════════════════════════════════════════════════════════
+\section{Selección de variables}
+% ════════════════════════════════════════════════════════════
+
+Haga clic en \textbf{Selección de variables} para abrir la ventana modal. Contiene dos listas:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Variables representadas} --- una, dos o tres. Son las variables que se representan en el gráfico.
+  \item \textbf{Variables de condicionamiento} --- cualquier número. Cada una tendrá su propio control deslizante.
+\end{itemize}
+
+\subsection{Reglas}
+
+\begin{itemize}[leftmargin=1.4em]
+  \item Debe seleccionar al menos una variable representada.
+  \item Puede seleccionar como máximo tres variables representadas.
+  \item Las variables de condicionamiento no pueden coincidir con las variables representadas; la aplicación desactiva esas opciones en la lista de condicionamiento.
+  \item Puede elegir \textbf{Ninguna (sin condicionamiento)} para eliminar todos los controles deslizantes de condicionamiento.
+\end{itemize}
+
+Click \textbf{Apply \& close} to accept. The app rebuilds the sliders and the plot immediately, and then requests fullscreen (a convenience feature that some browsers may block if no user gesture is detected).
+
+\begin{tipbox}[Flujos de trabajo habituales]
+\textbf{One-dimensional}: represente una variable y condicione por otras 2--3 para observar cómo cambia su distribución. \\
+\textbf{Two-dimensional}: represente dos variables y condicione por otras 1--2 para observar la forma de la nube en secciones próximas. \\
+\textbf{Three-dimensional}: represente tres variables, sin condicionamiento, para examinar el cubo completo.
+\end{tipbox}
+
+% ════════════════════════════════════════════════════════════
+\section{Condicionamiento y umbral}
+% ════════════════════════════════════════════════════════════
+
+Cuando haya al menos una variable de condicionamiento, su control deslizante aparecerá en el panel derecho. Cada control varía entre 0 y 1 (unidades ECDF).
+
+\subsection{El umbral de distancia}
+
+El control deslizante superior del panel derecho, denominado \emph{umbral de distancia}, varía entre 0 y 3. Su valor $\tau$ determina:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item \textbf{Puntos ocultos}: todos los puntos que cumplan $d_i \ge \tau$.
+  \item \textbf{Opacidad}: $\alpha_i = \max(0.2,\, 1 - d_i/\tau)$ for the points kept.
+\end{itemize}
+
+Por tanto, un valor \textbf{menor} de $\tau$ produce un enfoque más estricto (menos puntos, más destacados y próximos al punto de condicionamiento), mientras que un valor \textbf{mayor} produce un enfoque más amplio (más puntos y una opacidad más uniforme).
+
+\subsection{El contador de puntos}
+
+El indicador situado debajo del umbral muestra \texttt{kept / total pts} (puntos conservados / puntos totales). Utilícelo para cuantificar lo restrictiva que es la configuración actual.
+
+\begin{tipbox}[Cómo obtener un enfoque útil]
+Empiece con el umbral en 0.80. Si el indicador muestra demasiados puntos (por ejemplo, más de la mitad del conjunto de datos), reduzca el umbral; si muestra muy pocos, auméntelo. Al mover un control de condicionamiento, el indicador se actualiza inmediatamente.
+\end{tipbox}
+
+% ════════════════════════════════════════════════════════════
+\section{Los tres modos de visualización}
+% ════════════════════════════════════════════════════════════
+
+\subsection{Histograma (1 variable representada)}
+
+El histograma cuenta los valores originales, sin normalizar, de esa variable entre los puntos que superan el filtro de condicionamiento. El eje x muestra los valores originales, no las coordenadas ECDF. Es la forma más rápida de ver cómo responde la distribución de una variable al condicionamiento.
+
+\subsection{Diagrama de dispersión (2 variables representadas)}
+
+Los puntos se muestran dentro del cuadrado unidad $[0,1]\times[0,1]$ en coordenadas ECDF, con un marco verde que indica los límites. La transparencia de cada punto refleja su proximidad al punto de condicionamiento; los límites de los ejes son siempre $[0,1]$.
+
+\subsection{Diagrama de dispersión 3D (3 variables representadas)}
+
+Un diagrama de dispersión 3D interactivo de las coordenadas ECDF dentro del cubo unidad. Los controles de cámara de Plotly están habilitados (arrastre para girar y use la rueda para acercar o alejar). La posición de la cámara se conserva al mover los controles deslizantes, de modo que puede centrarse en la región de interés sin que la vista cambie bruscamente en cada actualización.
+
+\begin{notebox}[La apariencia está fijada]
+En las vistas 2D y 3D, los ejes siempre están fijados en $[0,1]$ para que las comparaciones entre secciones sigan siendo significativas. Para restablecer la vista, utilice el botón «Home» de la barra de herramientas de Plotly.
+\end{notebox}
+
+% ════════════════════════════════════════════════════════════
+\section{La tabla de datos y la matriz de correlaciones}
+% ════════════════════════════════════════════════════════════
+
+\subsection{Tabla de datos}
+
+Haga clic en \textbf{Mostrar tabla de datos} para ver las primeras 500 filas. Las columnas conservan exactamente los nombres de la cabecera y los valores numéricos se redondean a tres decimales para facilitar la lectura. Si el conjunto contiene más de 500 filas, una fila al pie indica cuántas se han ocultado.
+
+\subsection{Matriz de correlaciones}
+
+Haga clic en \textbf{Matriz de correlaciones} para calcular la correlación de Pearson de cada par de variables y mostrarla en un mapa de calor. La escala va de $[-1,1]$ (de azul a rojo) y cada celda incluye el valor numérico. Esto permite comprobar si una variable de condicionamiento está correlacionada o no con una variable representada antes de seleccionarla.
+
+% ════════════════════════════════════════════════════════════
+\section{Guardar el trabajo}
+% ════════════════════════════════════════════════════════════
+
+Haga clic en \textbf{Guardar CSV} para descargar el conjunto de datos actual en un archivo separado por comas. Se conservan todos los nombres de las variables y cada valor se escribe sin modificaciones, de modo que al volver a importarlo se obtienen los mismos datos. Se añade una marca de orden de bytes UTF-8 al principio para que Excel reconozca la codificación.
+
+\begin{warnbox}[Guardar antes de generar]
+Al cargar un CSV o pulsar un generador, se le preguntará si desea guardar los datos activos, si los hay. Acepte siempre el aviso si quiere conservar su trabajo.
+\end{warnbox}
+
+% ════════════════════════════════════════════════════════════
+\section{Pantalla completa y salida}
+% ════════════════════════════════════════════════════════════
+
+El botón \textbf{Fullscreen} activa o desactiva el modo de pantalla completa para toda la página. También se activa automáticamente al aplicar una nueva selección de variables.
+
+El botón \textbf{Exit} solicita confirmación e intenta cerrar la pestaña. Por motivos de seguridad del navegador, una página solo puede cerrarse a sí misma si fue abierta mediante un script. Si no puede cerrarse, aparece un aviso que recuerda que debe cerrar la pestaña manualmente.
+
+% ════════════════════════════════════════════════════════════
+\section{Solución de problemas}
+% ════════════════════════════════════════════════════════════
+
+\begin{description}[leftmargin=0em, style=nextline]
+  \item[``Plotly library could not be loaded'']
+  La página no puede acceder a la CDN de Plotly. Conéctese a Internet y vuelva a cargar la página. Sin Plotly, la aplicación no puede generar gráficos.
+
+  \item[``El archivo debe contener al menos dos variables'']
+  El CSV solo tiene una columna. Asegúrese de que la fila de cabecera contiene al menos dos nombres.
+
+  \item[``No valid numeric rows found'']
+  Una o varias filas no contienen exclusivamente valores numéricos. Si utiliza comas decimales, asegúrese de que el archivo esté separado por punto y coma o tabuladores, no por comas.
+
+  \item[``Unbalanced quotes'']
+  A un campo entrecomillado le falta la comilla de cierre. Corrija el CSV e inténtelo de nuevo.
+
+  \item[Solo se ven unos pocos puntos]
+  El umbral de distancia es demasiado pequeño. Auméntelo o mueva los controles deslizantes de condicionamiento hacia el centro (0.5).
+
+  \item[La variable seleccionada no aparece como eje]
+  Probablemente se encuentra en la lista de condicionamiento. La aplicación desactiva las opciones coincidentes en la ventana modal; vuelva a abrirla y ajuste la selección.
+
+  \item[La pantalla completa no se abre automáticamente]
+  Algunos navegadores bloquean la pantalla completa automática si no se activa mediante una acción directa del usuario. En ese caso, utilice el botón Pantalla completa.
+\end{description}
+
+% ════════════════════════════════════════════════════════════
+\section{Referencia rápida}
+% ════════════════════════════════════════════════════════════
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\textbf{Tarea} & \textbf{Acción} \\
+\midrule
+Cargar un CSV & Cargar CSV \textrightarrow{} seleccionar archivo. \\
+Generar datos predeterminados & Inicializar datos. \\
+Generar datos correlacionados & Realista \textpm\ corr (10 vars). \\
+Cambiar las variables representadas & Selección de variables \textrightarrow{} pick 1, 2 or 3 \textrightarrow{} Apply. \\
+Cambiar el condicionamiento & Same modal; pick conditioning variables. \\
+Enfocar más & Reducir el control deslizante del umbral de distancia. \\
+Examinar filas & Mostrar tabla de datos. \\
+Examinar correlaciones & Matriz de correlaciones. \\
+Exportar datos & Guardar CSV. \\
+Pantalla completa & Botón Pantalla completa (o automáticamente después de Apply). \\
+Salir & Botón Exit. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\begin{notebox}[Flujo de trabajo recomendado]
+\begin{enumerate}
+  \item Cargue o genere el conjunto de datos.
+  \item Examine la matriz de correlaciones para comprender las relaciones.
+  \item Abra Selección de variables y, para empezar, elija dos variables representadas y una variable de condicionamiento.
+  \item Mueva el control deslizante de condicionamiento para explorar distintas secciones.
+  \item Reduzca el umbral de distancia para centrarse en un entorno local.
+  \item Cambie a tres variables representadas para ver el cubo completo.
+  \item Guarde el CSV si ha modificado los datos.
+\end{enumerate}
+\end{notebox}
+
+% ════════════════════════════════════════════════════════════
+\section*{Notas de la versión}
+\addcontentsline{toc}{section}{Notas de la versión}
+% ════════════════════════════════════════════════════════════
+
+Este manual corresponde a la versión guardada como \texttt{ConditionalExplorerFINALNEW.html}. Sus características distintivas respecto de versiones anteriores incluyen:
+
+\begin{itemize}[leftmargin=1.4em]
+  \item Sustitución completa al cargar un conjunto de datos nuevo (se borran el estado anterior, los gráficos y las ventanas modales).
+  \item Sustitución segura del CSV con una pregunta opcional para guardar antes de reemplazar.
+  \item Analizador CSV robusto, con detección automática del separador y validación de cada fila.
+  \item Conservación de la posición de la cámara de Plotly al actualizar los controles deslizantes en la vista 3D.
+  \item Opción «Ninguna (sin condicionamiento)» en la lista de condicionamiento.
+  \item Activación automática de la pantalla completa al aplicar una nueva selección de variables.
+  \item Funcionamiento del umbral de distancia: los puntos con $d_i \ge \tau$ se ocultan y la opacidad disminuye según $1 - d_i/\tau$.
+\end{itemize}
+
+\end{document}
