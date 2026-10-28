@@ -295,7 +295,7 @@
                     <h4>Initial Population</h4>
                     <div class="parameter">
                         <label>Young Susceptibles (Sy):</label>
-                        <input type="range" id="sj_init" min="1000" max="500000" value="50000" step="1000" oninput="updateValue('sj_init'); runSimulation()">
+                        <input type="range" id="sj_init" min="1000" max="500000" value="40000" step="1000" oninput="updateValue('sj_init'); runSimulation()">
                         <input type="text" class="parameter-value" id="sj_init_value" value="50,000" onblur="updateSliderFromInput('sj_init')" onkeypress="handleEnterKey(event, 'sj_init')">
                     </div>
                     <div class="parameter">
@@ -406,7 +406,7 @@
                     <h4>Simulation</h4>
                     <div class="parameter">
                         <label>Days to Simulate:</label>
-                        <input type="range" id="days" min="30" max="1000" value="365" step="5" oninput="updateValue('days'); runSimulation()">
+                        <input type="range" id="days" min="30" max="1000" value="80" step="5" oninput="updateValue('days'); runSimulation()">
                         <input type="text" class="parameter-value" id="days_value" value="365" onblur="updateSliderFromInput('days')" onkeypress="handleEnterKey(event, 'days')">
                     </div>
                 </div>
@@ -422,45 +422,13 @@
             </div>
 
             <div class="chart-container">
-                <canvas id="chartCanvas"></canvas>
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #3498db;"></div>
-                        <span>Non-Susceptible</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #f39c12;"></div>
-                        <span>Cumulative Exposed (E₀)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #e74c3c;"></div>
-                        <span>Cumulative Young Infected (Y₀)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #e67e22;"></div>
-                        <span>Cumulative Elder Infected (E₀)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #9b59b6;"></div>
-                        <span>Cumulative Hospitalized (H₀)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #8e44ad;"></div>
-                        <span>Cumulative ICU (U₀)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #27ae60;"></div>
-                        <span>Recovered (R)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #34495e;"></div>
-                        <span>Deceased (F)</span>
-                    </div>
-                </div>
+                <div id="chartCanvas" style="width:100%;height:520px;"></div>
+
             </div>
         </div>
     </div>
 
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <script>
         class ModifiedSEIRModel {
             constructor(params) {
@@ -815,130 +783,31 @@
         }
 
         function drawChart(results) {
-            const canvas = document.getElementById('chartCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Configure canvas
-            canvas.width = canvas.offsetWidth * 2;
-            canvas.height = canvas.offsetHeight * 2;
-            ctx.scale(2, 2);
-            
-            const width = canvas.width / 2;
-            const height = canvas.height / 2;
-            const margin = { top: 20, right: 20, bottom: 50, left: 80 };
-            const chartWidth = width - margin.left - margin.right;
-            const chartHeight = height - margin.top - margin.bottom;
+            const traces = [
+                {x: results.time, y: results.nonSusceptible, name: 'Non-Susceptible', line: {color: '#3498db', width: 3}},
+                {x: results.time, y: results.E0, name: 'Cumulative Exposed (E₀)', line: {color: '#f39c12', width: 3}},
+                {x: results.time, y: results.J0, name: 'Cumulative Young Infected (J₀)', line: {color: '#e74c3c', width: 3}},
+                {x: results.time, y: results.M0, name: 'Cumulative Elder Infected (M₀)', line: {color: '#e67e22', width: 3}},
+                {x: results.time, y: results.H0, name: 'Cumulative Hospitalized (H₀)', line: {color: '#9b59b6', width: 3}},
+                {x: results.time, y: results.U0, name: 'Cumulative ICU (U₀)', line: {color: '#8e44ad', width: 3}},
+                {x: results.time, y: results.R, name: 'Recovered (R)', line: {color: '#27ae60', width: 3}},
+                {x: results.time, y: results.F, name: 'Deceased (F)', line: {color: '#34495e', width: 3}}
+            ].map(t => ({...t, type: 'scatter', mode: 'lines', hovertemplate: '%{x} days<br>%{y:,.0f}<extra>%{fullData.name}</extra>'}));
 
-            // Clear canvas
-            ctx.clearRect(0, 0, width, height);
-
-            // Find maximum values for scaling
-            const maxValue = Math.max(
-                Math.max(...results.nonSusceptible),
-                Math.max(...results.E0),
-                Math.max(...results.J0),
-                Math.max(...results.M0),
-                Math.max(...results.H0),
-                Math.max(...results.U0),
-                Math.max(...results.R),
-                Math.max(...results.F)
-            );
-
-            const maxTime = Math.max(...results.time);
-
-            // Function to scale coordinates
-            const scaleX = (x) => margin.left + (x / maxTime) * chartWidth;
-            const scaleY = (y) => margin.top + chartHeight - (y / maxValue) * chartHeight;
-
-            // Colors for each compartment
-            const colors = {
-                nonSusceptible: '#3498db',
-                E0: '#f39c12',
-                J0: '#e74c3c',
-                M0: '#e67e22',
-                H0: '#9b59b6',
-                U0: '#8e44ad',
-                R: '#27ae60',
-                F: '#34495e'
+            const layout = {
+                title: {text: 'Modified SEIR COVID-19 Model', x: 0.5},
+                xaxis: {title: 'Days', rangemode: 'tozero', gridcolor: '#ecf0f1'},
+                yaxis: {title: 'Cumulative Population', rangemode: 'tozero', gridcolor: '#ecf0f1', tickformat: ',d'},
+                margin: {l: 75, r: 25, t: 60, b: 65},
+                paper_bgcolor: '#ffffff',
+                plot_bgcolor: '#ffffff',
+                font: {family: 'Segoe UI, Arial, sans-serif', color: '#2c3e50'},
+                legend: {orientation: 'h', y: -0.22, x: 0, itemclick: 'toggle', itemdoubleclick: 'toggleothers'},
+                hovermode: 'x unified',
+                autosize: true
             };
-
-            // Draw axes
-            ctx.strokeStyle = '#bdc3c7';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(margin.left, margin.top);
-            ctx.lineTo(margin.left, margin.top + chartHeight);
-            ctx.lineTo(margin.left + chartWidth, margin.top + chartHeight);
-            ctx.stroke();
-
-            // Draw grid lines
-            ctx.strokeStyle = '#ecf0f1';
-            ctx.lineWidth = 0.5;
-            for (let i = 0; i <= 10; i++) {
-                const y = margin.top + (chartHeight / 10) * i;
-                ctx.beginPath();
-                ctx.moveTo(margin.left, y);
-                ctx.lineTo(margin.left + chartWidth, y);
-                ctx.stroke();
-            }
-
-            // Function to draw a curve
-            function drawCurve(data, color, lineWidth = 2) {
-                ctx.strokeStyle = color;
-                ctx.lineWidth = lineWidth;
-                ctx.beginPath();
-                
-                for (let i = 0; i < data.length; i++) {
-                    const x = scaleX(results.time[i]);
-                    const y = scaleY(data[i]);
-                    
-                    if (i === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
-                        ctx.lineTo(x, y);
-                    }
-                }
-                
-                ctx.stroke();
-            }
-
-            // Draw all curves with thicker lines
-            drawCurve(results.nonSusceptible, colors.nonSusceptible, 4);
-            drawCurve(results.E0, colors.E0, 4);
-            drawCurve(results.J0, colors.J0, 5); // Extra thick line for young infected
-            drawCurve(results.M0, colors.M0, 5); // Extra thick line for elder infected
-            drawCurve(results.H0, colors.H0, 4);
-            drawCurve(results.U0, colors.U0, 4);
-            drawCurve(results.R, colors.R, 4);
-            drawCurve(results.F, colors.F, 4);
-
-            // Axis labels
-            ctx.fillStyle = '#2c3e50';
-            ctx.font = '12px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('Days', margin.left + chartWidth / 2, height - 10);
-            
-            ctx.save();
-            ctx.translate(15, margin.top + chartHeight / 2);
-            ctx.rotate(-Math.PI / 2);
-            ctx.fillText('Cumulative Population', 0, 0);
-            ctx.restore();
-
-            // Y-axis numeric labels
-            ctx.textAlign = 'right';
-            for (let i = 0; i <= 5; i++) {
-                const value = (maxValue / 5) * i;
-                const y = scaleY(value);
-                ctx.fillText(Math.round(value).toLocaleString(), margin.left - 10, y + 5);
-            }
-
-            // X-axis numeric labels
-            ctx.textAlign = 'center';
-            for (let i = 0; i <= 5; i++) {
-                const value = (maxTime / 5) * i;
-                const x = scaleX(value);
-                ctx.fillText(Math.round(value), x, margin.top + chartHeight + 20);
-            }
+            const config = {responsive: true, displaylogo: false};
+            Plotly.react('chartCanvas', traces, layout, config);
         }
 
         function displayStats(stats) {
@@ -996,9 +865,9 @@
 
         // Resize chart when window size changes
         window.onresize = function() {
-            const canvas = document.getElementById('chartCanvas');
-            if (canvas.getContext) {
-                runSimulation();
+            const chart = document.getElementById('chartCanvas');
+            if (chart && window.Plotly) {
+                Plotly.Plots.resize(chart);
             }
         };
     </script>
